@@ -5,7 +5,7 @@ namespace TexStacks\Renderers;
 use TexStacks\Renderers\Renderer;
 use TexStacks\Parsers\Node;
 
-class HtmlRenderer extends Renderer
+class SectionCommandRenderer extends Renderer
 {
 
   public function renderNode(Node $node, string|null $body = null): string

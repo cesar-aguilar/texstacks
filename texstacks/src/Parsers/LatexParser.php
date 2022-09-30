@@ -39,6 +39,18 @@ class LatexParser
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
     $html_src = preg_replace('/\$(.+?)\$/s', '\\($1\\)', $html_src);
 
-    return $html_src;
+    return self::commandsOnNewLine($html_src);
+  }
+
+  private static function commandsOnNewLine(string $latex_src): string
+  {
+
+    $commands = ['begin', 'end', 'chapter', 'section', 'subsection', 'subsubsection'];
+
+    foreach ($commands as $command) {
+      $latex_src = preg_replace('/^(.+)\\\\' . $command . '\{(.*?)\}/m', "$1\n\\$command{" . "$2" . "}", $latex_src);
+    }
+
+    return $latex_src;
   }
 }

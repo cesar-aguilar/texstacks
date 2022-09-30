@@ -3,6 +3,7 @@
 namespace TexStacks;
 
 use TexStacks\Parsers\LatexParser;
+use TexStacks\Parsers\AuxParser;
 use TexStacks\Parsers\LatexTree;
 use TexStacks\Renderers\Renderer;
 
@@ -13,7 +14,7 @@ class LatexArticle
   private $html_src;
   private $basename;
   private $dir;
-  private $aux_file;
+  private $ref_labels;
 
   public $section_names = [];
   public $section_ids = [];
@@ -40,7 +41,7 @@ class LatexArticle
 
     $aux_path = $this->dir . DIRECTORY_SEPARATOR . $this->basename . '.aux';
 
-    $this->aux_file = file_exists($aux_path) ? file_get_contents($aux_path) : null;
+    $this->ref_labels = (new AuxParser($aux_path))->getLabelsAsArray();
 
     $this->html_src = LatexParser::normalizeLatexSource($this->latex_src);
 
