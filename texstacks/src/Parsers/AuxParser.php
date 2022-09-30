@@ -1,6 +1,6 @@
 <?php
 
-namespace TexStacks;
+namespace TexStacks\Parsers;
 
 use SplFileObject;
 use TexStacks\Helpers\StrHelper;
