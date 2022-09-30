@@ -1,0 +1,16 @@
+{
+    "name": "texstacks/texstacks",
+    "description": "Publish LaTeX documents on the web",
+    "autoload": {
+        "psr-4": {
+            "TexStacks\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Cesar Aguilar",
+            "email": "complexplane@gmail.com"
+        }
+    ],
+    "require": {}
+}
