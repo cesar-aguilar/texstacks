@@ -6,7 +6,7 @@ use TexStacks\Parsers\LatexParser;
 
 /**
  * A node in the graph of the LaTeX document
- * Represents a LaTeX command with possibly a label: 
+ * Could represent a LaTeX command with possibly a label: 
  * 
  *  latex_command = \command{content}\label{label}
  * 
@@ -15,7 +15,7 @@ use TexStacks\Parsers\LatexParser;
  * label: the label of the command (label)
  * 
  * type: layout, environment, or text (in which case latex_command is null)
- * body: the LaTeX source within the node
+ * body: the LaTeX source within the node or empty if children are present
  */
 class Node
 {
@@ -24,29 +24,26 @@ class Node
   protected array $children = [];
   protected string|null $command_label = '';
   protected string|null $command_content = '';
-  protected bool $is_leaf = false;
-
+  protected string|null $command_options = '';
+  
   public function __construct(
-    protected int $index,
+    protected int $id,
     protected string $type,
     protected string $body,
-    protected string|null $name = null,
-    protected string|null  $latex_command = null,
-    protected string|null $child_name = null
+    protected string|null $command_name = null,
+    protected string|null  $latex_command = null,    
   ) {
 
     if ($latex_command) {
       $this->setCommandContentAndLabel();
     }
 
-    $this->is_leaf = $this->child_name === null;
-
     $this->init();
   }
 
-  public function index()
+  public function id()
   {
-    return $this->index;
+    return $this->id;
   }
 
   public function type()
@@ -54,29 +51,9 @@ class Node
     return $this->type;
   }
 
-  public function name()
+  public function commandName()
   {
-    return $this->name;
-  }
-
-  public function children()
-  {
-    return $this->children;
-  }
-
-  public function childName()
-  {
-    return $this->child_name;
-  }
-
-  public function body()
-  {
-    return $this->body;
-  }
-
-  public function isLeaf()
-  {
-    return $this->is_leaf;
+    return $this->command_name;
   }
 
   public function commandLabel()
@@ -89,6 +66,26 @@ class Node
     return $this->command_content;
   }
 
+  public function children()
+  {
+    return $this->children;
+  }
+  
+  public function body()
+  {
+    return $this->body;
+  }
+
+  public function isLeaf()
+  {
+    return empty($this->children);
+  }
+
+  public function isText()
+  {
+    return $this->type === 'text';
+  }
+
   public function addChild(Node $child)
   {
     $this->children[] = $child;
@@ -99,13 +96,19 @@ class Node
     $this->parent = $parent;
   }
 
+  public function setBody(string $body)
+  {
+    $this->body = $body;
+  }
+
   protected function setCommandContentAndLabel()
   {
 
-    $result = LatexParser::parseCommandAndLabel(name: $this->name, str: $this->latex_command);
+    $result = LatexParser::parseCommandOptionsAndLabel(name: $this->command_name, str: $this->latex_command);
 
     $this->command_label = $result['label'];
     $this->command_content = $result['content'];
+    $this->command_options = $result['options'];
   }
 
   protected function init()

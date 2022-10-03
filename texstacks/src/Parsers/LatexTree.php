@@ -9,8 +9,7 @@ abstract class LatexTree
 
   protected array $nodes = [];
   protected Node $root;
-  protected string|null $latex_src;
-
+  
   public function __construct(protected $root_name = 'document')
   {
   }

@@ -19,15 +19,14 @@ class LayoutTree extends LatexTree
 
   public function build($latex_src)
   {
-    $this->latex_src = $latex_src;
     $this->root = new LayoutNode(
-      index: 0,
+      id: 0,
       type: 'layout',
-      body: $this->latex_src,
-      name: $this->root_name,
-      child_name: self::SECTION_NAMES[$this->root_name]
-    );
-
+      body: $latex_src,
+      command_name: $this->root_name);
+      
+    $this->root->setDescendantName(self::SECTION_NAMES[$this->root_name]);
+      
     $this->addNode($this->root);
   }
 
@@ -43,13 +42,13 @@ class LayoutTree extends LatexTree
     }
 
     // Base case
-    if ($node->isLeaf()) {
+    if ($node->descendantName() === null) {
       return;
     }
 
-    // Recursive case: Split the node body into child nodes using
-    // the first occurring sectioning command of descendant sectioning commands
-    $descendant_names = $this->getDescendantSectionNames($node->name());
+    // Recursive case: Split the node body into child nodes
+    // usin the first occurring descendant sectioning command
+    $descendant_names = $this->getDescendantSectionNames($node->commandName());
 
     while ($descendant_names) {
 
@@ -57,42 +56,46 @@ class LayoutTree extends LatexTree
 
       $pattern = '/(\\\\' . $descendant_name . '.*)/';
 
-      $splitted = preg_split($pattern, $node->body(), flags: PREG_SPLIT_DELIM_CAPTURE);
+      $lines = preg_split($pattern, $node->body(), flags: PREG_SPLIT_DELIM_CAPTURE);
 
-      if (count($splitted) > 1) {
+      if (count($lines) > 1) {
         break;
       }
     }
 
-    // The first element of $splitted is the text (could be empty)
+    // The first element of $lines is the text (could be empty)
     // that comes before the first sectioning command
-    $child_body = trim(array_shift($splitted));
+    $child_body = trim(array_shift($lines));
     $child_node = new LayoutNode(
-      index: count($this->nodes),
-      type: 'text',
+      id: count($this->nodes),
+      type: 'layout',
       body: $child_body
     );
 
     $node->addChild($child_node);
     $this->addNode($child_node, $node);
 
-    // The rest of $splitted contains the sectioning commands and their content
-    while ($splitted) {
-      $latex_command = array_shift($splitted);
-      $child_body = trim(array_shift($splitted));
+    // The rest of $lines contains the sectioning commands and their content
+    while ($lines) {
+      $latex_command = array_shift($lines);
+      $child_body = trim(array_shift($lines));
 
       $child_node = new LayoutNode(
-        index: count($this->nodes),
+        id: count($this->nodes),
         type: 'layout',
         body: $child_body,
-        name: $descendant_name,
-        child_name: self::SECTION_NAMES[$descendant_name],
+        command_name: $descendant_name,
         latex_command: $latex_command
       );
+      
+      $child_node->setDescendantName(self::SECTION_NAMES[$descendant_name]);
 
       $node->addChild($child_node);
       $this->addNode($child_node, $node);
     }
+
+    $node->setBody('');
+
   }
 
   /**

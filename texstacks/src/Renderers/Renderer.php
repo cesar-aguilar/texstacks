@@ -11,7 +11,7 @@ abstract class Renderer
     return $this->renderRecursively($root);
   }
 
-  abstract public function renderNode(Node $node, string|null $body = null): string;
+  abstract protected function renderNode(Node $node, string $body = null): string;
 
   /**
    * 
@@ -19,9 +19,9 @@ abstract class Renderer
   private function renderRecursively($node): string
   {
     if ($node->isLeaf()) {
-      return $this->renderNode($node);
+      return $this->renderNode($node, $node->body());
     }
-
+    
     return $this->renderNode(
       $node,
       implode('', array_map(fn ($child) => $this->renderRecursively($child), $node->children()))
