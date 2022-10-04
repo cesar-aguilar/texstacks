@@ -175,7 +175,7 @@ class LatexParser
     }
   }
 
-  public static function parseCommandAndLabel(string $name, string $str): array
+  private static function parseCommandAndLabel(string $name, string $str): array
   {
 
     $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
@@ -187,7 +187,7 @@ class LatexParser
     return ['content' => $content, 'label' => $label];
   }
 
-  public static function parseCommandOptionsAndLabel(string $name, string $str): array
+  private static function parseCommandOptionsAndLabel(string $name, string $str): array
   {
 
     $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
