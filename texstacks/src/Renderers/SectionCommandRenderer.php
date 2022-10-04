@@ -2,28 +2,28 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Renderers\Renderer;
-use TexStacks\Parsers\Node;
+use TexStacks\Parsers\SectionNode;
 
-class SectionCommandRenderer extends Renderer
+class SectionCommandRenderer
 {
 
-  protected function renderNode(Node $node, string $body = null): string
+  public static function renderNode(SectionNode $node, string $body = null): string
   {
     if (!trim($body)) return '';
 
     $html = '';
 
-    if ($node->type() === 'layout') {
-      $html .= $this->renderLayoutElement($node, $body);
-    } else  {
+    if ($node->type() === 'section-cmd') {
+      $html .= self::renderLayoutElement($node, $body);
+    } else if ($node->type === 'environment') {
+    } else {
       $html .= "<div>$body</div>";
     }
 
     return $html;
   }
 
-  private function renderLayoutElement(Node $node, string $body = null): string
+  private static function renderLayoutElement(SectionNode $node, string $body = null): string
   {
 
     if ($node->commandName() === 'document') {
@@ -42,7 +42,7 @@ class SectionCommandRenderer extends Renderer
 
       return "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>{$node->commandContent()}</h4>$body</section>";
     } else {
-      
+
       return "<div>$body</div>";
     }
   }

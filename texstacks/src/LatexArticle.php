@@ -5,6 +5,7 @@ namespace TexStacks;
 use TexStacks\Parsers\LatexParser;
 use TexStacks\Parsers\AuxParser;
 use TexStacks\Parsers\LatexTree;
+use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Renderers\Renderer;
 
 class LatexArticle
@@ -22,7 +23,7 @@ class LatexArticle
 
   public function __construct(
     private $absolute_path,
-    private LatexTree $tree,
+    public LatexParser $parser,
     private Renderer $renderer
   ) {
 
@@ -43,9 +44,9 @@ class LatexArticle
 
     $this->ref_labels = (new AuxParser($aux_path))->getLabelsAsArray();
 
-    $this->html_src = LatexParser::normalizeLatexSource($this->latex_src);
+    $this->html_src = $this->latex_src;
 
-    $this->tree->build($this->html_src);
+    $this->parser->parse($this->html_src);
   }
 
   public function getLatex()
@@ -60,11 +61,11 @@ class LatexArticle
 
   public function convert()
   {
-    return $this->renderer->renderTree($this->tree->root());
+    return $this->renderer->renderTree($this->getRoot());
   }
 
   public function getRoot()
   {
-    return $this->tree->root();
+    return $this->parser->getRoot();
   }
 }

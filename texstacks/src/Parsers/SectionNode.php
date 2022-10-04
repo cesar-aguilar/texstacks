@@ -2,12 +2,10 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Parsers\CommandNode;
 
-class LayoutNode extends Node
+class SectionNode extends CommandNode
 {
-
-  protected $descendant_name = null;
 
   const PREFIXES = [
     'document' => 'doc',
@@ -17,18 +15,31 @@ class LayoutNode extends Node
     'subsubsection' => 'sssec',
   ];
 
-  public function setDescendantName($name)
+  public function __construct($args)
   {
-    $this->descendant_name = $name;
-    return $this;
+    parent::__construct($args);
+    $this->setLabel();
   }
 
-  public function descendantName()
+  public function depthLevel()
   {
-    return $this->descendant_name;
+    switch ($this->commandName()) {
+      case 'document':
+        return 0;
+      case 'chapter':
+        return 1;
+      case 'section':
+        return 2;
+      case 'subsection':
+        return 3;
+      case 'subsubsection':
+        return 4;
+      default:
+        return 5;
+    }
   }
 
-  protected function init()
+  private function setLabel()
   {
 
     // Section commands are special in that they should always have

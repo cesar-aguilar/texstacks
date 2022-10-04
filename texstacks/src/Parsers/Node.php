@@ -22,23 +22,17 @@ class Node
 
   protected Node $parent;
   protected array $children = [];
-  protected string|null $command_label = '';
-  protected string|null $command_content = '';
-  protected string|null $command_options = '';
-  
-  public function __construct(
-    protected int $id,
-    protected string $type,
-    protected string $body,
-    protected string|null $command_name = null,
-    protected string|null  $latex_command = null,    
-  ) {
+  protected int $id;
+  protected string $type;
+  protected string $body;
+  protected bool $is_terminal;
 
-    if ($latex_command) {
-      $this->setCommandContentAndLabel();
-    }
-
-    $this->init();
+  public function __construct($args)
+  {
+    $this->id = $args['id'];
+    $this->type = $args['type'];
+    $this->body = $args['body'] ?? '';
+    $this->is_terminal = $args['is_terminal'] ?? false;
   }
 
   public function id()
@@ -51,29 +45,19 @@ class Node
     return $this->type;
   }
 
-  public function commandName()
-  {
-    return $this->command_name;
-  }
-
-  public function commandLabel()
-  {
-    return $this->command_label;
-  }
-
-  public function commandContent()
-  {
-    return $this->command_content;
-  }
-
   public function children()
   {
     return $this->children;
   }
-  
+
   public function body()
   {
     return $this->body;
+  }
+
+  public function parent()
+  {
+    return $this->parent;
   }
 
   public function isLeaf()
@@ -99,19 +83,5 @@ class Node
   public function setBody(string $body)
   {
     $this->body = $body;
-  }
-
-  protected function setCommandContentAndLabel()
-  {
-
-    $result = LatexParser::parseCommandOptionsAndLabel(name: $this->command_name, str: $this->latex_command);
-
-    $this->command_label = $result['label'];
-    $this->command_content = $result['content'];
-    $this->command_options = $result['options'];
-  }
-
-  protected function init()
-  {
   }
 }
