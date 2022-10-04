@@ -12,6 +12,10 @@ use TexStacks\Parsers\EnvironmentNode;
 class LatexParser
 {
 
+  const AMS_MATH_ENVIRONMENTS = [
+    'align', 'align*', 'aligned', 'alignedat', 'alignedat*', 'alignat', 'alignat*', 'array', 'Bmatrix', 'bmatrix', 'cases', 'CD', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'gather', 'gather*', 'gathered', 'gathered*', 'matrix', 'multline', 'multline*', 'pmatrix', 'smallmatrix', 'split', 'subarray', 'Vmatrix', 'vmatrix', 'math', 'displaymath', 'flalign', 'flalign*'
+  ];
+
   protected SyntaxTree $tree;
   private $buffer = '';
   private $current_node;
@@ -58,14 +62,14 @@ class LatexParser
         $this->tree->addNode($new_node, $parent);
 
         $this->current_node = $new_node;
-      } else if ($parsedLine['type'] === 'environment' && $parsedLine['command_name'] === 'begin') {
+      } else if (preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'begin') {
 
         $new_node = $this->createCommandNode($parsedLine);
 
         $this->tree->addNode($new_node, $this->current_node);
 
         $this->current_node = $new_node;
-      } else if ($parsedLine['type'] === 'environment' && $parsedLine['command_name'] === 'end') {
+      } else if (preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'end') {
 
         $this->current_node = $this->current_node->parent();
       }
@@ -103,7 +107,7 @@ class LatexParser
     if ($parsedLine['type'] == 'section-cmd') {
 
       return new SectionNode($args);
-    } else if ($parsedLine['type'] == 'environment') {
+    } else if (preg_match('/environment/', $parsedLine['type'])) {
 
       return new EnvironmentNode($args);
     }
@@ -123,8 +127,11 @@ class LatexParser
       $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
       $without_label = preg_replace('/\\\\label\{[^}]*\}/', '', $str);
       $options = preg_match('/\[(?<options>[^\]]*)\]/', $without_label, $match) ? $match['options'] : null;
+
+      $type = in_array($content, self::AMS_MATH_ENVIRONMENTS) ? 'math-environment' : 'environment';
+
       return [
-        'type' => 'environment',
+        'type' => $type,
         'command_name' => 'begin',
         'command_content' => $content,
         'command_options' => $options,
@@ -133,8 +140,11 @@ class LatexParser
       ];
     } else if (preg_match('/^\\\\end\{(?<content>[^}]*)\}/m', $str, $match)) {
 
+      $content = trim($match['content']);
+      $type = in_array($content, self::AMS_MATH_ENVIRONMENTS) ? 'math-environment' : 'environment';
+
       return [
-        'type' => 'environment',
+        'type' => $type,
         'command_name' => 'end',
         'command_content' => $match['content'],
         'command_options' => null,

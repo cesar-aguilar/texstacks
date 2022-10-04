@@ -4,6 +4,7 @@ namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\EnvironmentRenderer;
 use TexStacks\Renderers\SectionCommandRenderer;
+use TexStacks\Renderers\AmsMathEnvironmentRenderer;
 
 // use TexStacks\Parsers\Node;
 
@@ -33,8 +34,10 @@ class Renderer
       return SectionCommandRenderer::renderNode($node, $body);
     } else if ($node->type() == 'environment') {
       return EnvironmentRenderer::renderNode($node, $body);
+    } else if ($node->type() == 'math-environment') {
+      return AmsMathEnvironmentRenderer::renderNode($node, $body);
     } else {
-      return "<div>$body</div>";
+      return "$body";
     }
   }
 }

@@ -7,7 +7,7 @@ use TexStacks\Parsers\EnvironmentNode;
 class EnvironmentRenderer
 {
 
-    const AMS_ENVIRONMENTS = [
+    const AMS_THEOREM_ENVIRONMENTS = [
         'theorem', 'proposition', 'lemma',
         'corollary', 'definition'
     ];
@@ -16,14 +16,14 @@ class EnvironmentRenderer
     {
         if (!trim($body)) return '';
 
-        if (in_array($node->commandContent(), self::AMS_ENVIRONMENTS)) {
+        if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS)) {
             return self::renderAmsEnvironment($node, $body);
         } else if ($node->commandContent() === 'proof') {
             return self::renderProofEnvironment($node, $body);
         } else if ($node->commandContent() === 'example') {
             return self::renderExampleEnvironment($node, $body);
         } else {
-            return "<div>$body</div>";
+            return "$body";
         }
     }
 
