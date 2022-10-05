@@ -9,22 +9,7 @@ class SectionCommandRenderer
 
   public static function renderNode(SectionNode $node, string $body = null): string
   {
-    if (!trim($body)) return '';
-
-    $html = '';
-
-    if ($node->type() === 'section-cmd') {
-      $html .= self::renderLayoutElement($node, $body);
-    } else if ($node->type === 'environment') {
-    } else {
-      $html .= "<div>$body</div>";
-    }
-
-    return $html;
-  }
-
-  private static function renderLayoutElement(SectionNode $node, string $body = null): string
-  {
+    $body = $body ?? '';
 
     if ($node->commandName() === 'document') {
 
@@ -45,5 +30,8 @@ class SectionCommandRenderer
 
       return "<div>$body</div>";
     }
+
+
   }
+
 }

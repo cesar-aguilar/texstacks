@@ -13,7 +13,36 @@ class LatexParser
 {
 
   const AMS_MATH_ENVIRONMENTS = [
-    'align', 'align*', 'aligned', 'alignedat', 'alignedat*', 'alignat', 'alignat*', 'array', 'Bmatrix', 'bmatrix', 'cases', 'CD', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'gather', 'gather*', 'gathered', 'gathered*', 'matrix', 'multline', 'multline*', 'pmatrix', 'smallmatrix', 'split', 'subarray', 'Vmatrix', 'vmatrix', 'math', 'displaymath', 'flalign', 'flalign*'
+    'align', 'align*',
+    'aligned',
+    'alignedat', 'alignedat*',
+    'alignat', 'alignat*',
+    'flalign', 'flalign*',
+    'array',
+    'subarray',
+    'cases',
+    'CD',
+    'gather', 'gather*',
+    'gathered', 'gathered*',
+    'equation', 'equation*',
+    'eqnarray', 'eqnarray*',
+    'multline', 'multline*',
+    'split',
+    'matrix',
+    'pmatrix',
+    'smallmatrix',
+    'Bmatrix', 'bmatrix',
+    'Vmatrix', 'vmatrix',
+  ];
+
+  const SECTION_COMMANDS = [
+    'part',
+    'chapter', 'chapter\*',
+    'section', 'section\*',
+    'subsection', 'subsection\*',
+    'subsubsection', 'subsubsection\*',
+    'paragraph', 'paragraph\*',
+    'subparagraph', 'subparagraph\*',
   ];
 
   protected SyntaxTree $tree;
@@ -36,10 +65,11 @@ class LatexParser
 
   public function parse($latex_src_raw)
   {
+    
     $lines = $this->getLines($latex_src_raw);
-
+    
     foreach ($lines as $raw_line) {
-
+      
       $parsedLine = $this->parseLine($raw_line);
 
       if ($parsedLine['type'] === 'text') {
@@ -62,16 +92,28 @@ class LatexParser
         $this->tree->addNode($new_node, $parent);
 
         $this->current_node = $new_node;
-      } else if (preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'begin') {
+      }
+      else if ($this->isBeginEnvironment($parsedLine)) {
 
         $new_node = $this->createCommandNode($parsedLine);
 
         $this->tree->addNode($new_node, $this->current_node);
 
         $this->current_node = $new_node;
-      } else if (preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'end') {
+      }
+      else if ($this->isEndEnvironment($parsedLine)) {
 
         $this->current_node = $this->current_node->parent();
+      }
+      else if ($parsedLine['type'] === 'label') {
+        
+        $this->current_node->setLabel($parsedLine['command_content']);
+
+        if ($this->current_node->type() != 'section-cmd') {          
+          $new_node = $this->createCommandNode($parsedLine);
+          $this->tree->addNode($new_node, $this->current_node);
+        }
+
       }
     }
 
@@ -110,12 +152,14 @@ class LatexParser
     } else if (preg_match('/environment/', $parsedLine['type'])) {
 
       return new EnvironmentNode($args);
+    } else {
+      return new CommandNode($args);
     }
   }
 
   private function getLines($latex_src_raw)
   {
-    return array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw)));
+    return array_filter(array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw))));
   }
 
   private function parseLine($str)
@@ -123,10 +167,8 @@ class LatexParser
 
     if (preg_match('/^\\\\begin\{(?<content>[^}]*)\}/m', $str, $match)) {
 
-      $content = trim($match['content']);
-      $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
-      $without_label = preg_replace('/\\\\label\{[^}]*\}/', '', $str);
-      $options = preg_match('/\[(?<options>[^\]]*)\]/', $without_label, $match) ? $match['options'] : null;
+      $content = trim($match['content']);      
+      $options = preg_match('/\[(?<options>[^\]]*)\]/', $str, $match) ? $match['options'] : null;
 
       $type = in_array($content, self::AMS_MATH_ENVIRONMENTS) ? 'math-environment' : 'environment';
 
@@ -135,7 +177,7 @@ class LatexParser
         'command_name' => 'begin',
         'command_content' => $content,
         'command_options' => $options,
-        'command_label' => $label,
+        'command_label' => null,
         'command_src' => $str
       ];
     } else if (preg_match('/^\\\\end\{(?<content>[^}]*)\}/m', $str, $match)) {
@@ -151,23 +193,32 @@ class LatexParser
         'command_label' => null,
         'command_src' => $str
       ];
-    } else if (preg_match('/^\\\\(?<name>chapter|section|subsection|subsubsection)\{(?<content>[^}]*)\}/m', $str, $match)) {
+    } else if (preg_match('/^\\\\(?<name>'. implode('|', self::SECTION_COMMANDS) .')/m', $str, $match)) {
 
       $name = trim($match['name']);
-      $content = trim($match['content']);
-      $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
-      $without_label = preg_replace('/\\\\label\{[^}]*\}/', '', $str);
-      $options = preg_match('/\[(?<options>[^\]]*)\]/', $without_label, $match) ? $match['options'] : null;
+      $content = preg_match('/\{(?<content>[^}]*)\}/', $str, $match) ? $match['content'] : null;      
+      $options = preg_match('/\[(?<options>[^\]]*)\]/', $str, $match) ? $match['options'] : null;
 
       return [
         'type' => 'section-cmd',
         'command_name' => $name,
         'command_content' => $content,
         'command_options' => $options,
-        'command_label' => $label,
+        'command_label' => null,
         'command_src' => $str
       ];
-    } else {
+    } 
+    else if (preg_match('/\\\\label\{(?<content>[^}]*)\}/', $str, $match)) {
+      return [
+        'type' => 'label',
+        'command_name' => 'label',
+        'command_content' => $match['content'],
+        'command_options' => null,
+        'command_label' => null,
+        'command_src' => $str
+      ];
+    }
+    else {
       return [
         'type' => 'text',
         'content' => $str
@@ -218,18 +269,60 @@ class LatexParser
     // Replace $$...$$ with \[...\] and then $...$ with \(...\)
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
     $html_src = preg_replace('/\$(.+?)\$/s', '\\($1\\)', $html_src);
-
+    
     return $this->putCommandsOnNewLine($html_src);
   }
 
   private function putCommandsOnNewLine(string $latex_src): string
   {
-    $commands = ['begin', 'end', 'chapter', 'section', 'subsection', 'subsubsection'];
-
-    foreach ($commands as $command) {
-      $latex_src = preg_replace('/(.+)\\\\' . $command . '\{([^}]*)\}/m', "$1\n\\$command{" . "$2" . "}", $latex_src);
+    
+    foreach (self::SECTION_COMMANDS as $command) {      
+      $latex_src = preg_replace($this->sectionRegex($command), "\n$1$2\n", $latex_src);
     }
 
+    $latex_src = preg_replace($this->envBeginRegex(), "\n$1$2\n", $latex_src);
+    $latex_src = preg_replace('/' . $this->cmdRegex('end') . '/m', "\n$1\n", $latex_src);
+    $latex_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $latex_src);
+    $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);
+        
     return $latex_src;
   }
+
+  private function isBeginEnvironment($parsedLine) {
+    return preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'begin';
+  }
+
+  private function isEndEnvironment($parsedLine) {
+    return preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'end';
+  }
+
+  private function sectionRegex($command) {
+    $sp = '[\s|\n]*';
+    $basic = $this->cmdRegex($command);
+    $with_options = $sp . '(\\\\' . $command . '\s*\[[^\]]*\]\s*\{[^}]*\})' . $sp;
+    $pattern = '/' . $with_options . '|' . $basic . '/m';
+    return $pattern;
+  }
+
+  private function envBeginRegex() {
+    $sp = '[\s|\n]*';
+    $basic = $this->cmdRegex('begin');
+    $with_options = $sp . '(\\\\begin\s*\{[^}]*\}\s*\[[^\]]*\])' . $sp;
+    $pattern = '/' . $with_options . '|' . $basic . '/m';
+    return $pattern;
+  }
+
+  private function cmdRegex($command) {
+    $sp = '[\s|\n]*';
+    $pattern = $sp . '(\\\\' . $command . '\s*\{[^}]*\})' . $sp;    
+    return $pattern;
+  }
+
+  private function itemRegex() {
+    $sp = '[\s|\n]*';
+    $command = 'item';
+    $pattern = $sp . '(\\\\' . $command . ')[^\s|\n]*' . $sp;    
+    return $pattern;
+  }
+
 }

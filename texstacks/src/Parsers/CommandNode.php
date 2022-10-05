@@ -63,4 +63,9 @@ class CommandNode extends Node
   {
     return $this->command_options;
   }
+
+  public function setLabel($label)
+  {
+    $this->command_label = $label;
+  }
 }

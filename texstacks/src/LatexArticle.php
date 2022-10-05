@@ -4,8 +4,6 @@ namespace TexStacks;
 
 use TexStacks\Parsers\LatexParser;
 use TexStacks\Parsers\AuxParser;
-use TexStacks\Parsers\LatexTree;
-use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Renderers\Renderer;
 
 class LatexArticle

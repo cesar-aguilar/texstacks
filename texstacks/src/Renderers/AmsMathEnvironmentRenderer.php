@@ -7,6 +7,13 @@ class AmsMathEnvironmentRenderer
 
   public static function renderNode($node, $body = null)
   {
-    return "\n{$node->commandSource()}\n$body\n\\end{" . $node->commandContent() . "}\n";
+    $div = $node->commandLabel() ? "<div id=\"{$node->commandLabel()}\">" : "<div>";
+
+    $html = <<<LATEX
+      \\begin{{$node->commandContent()}}
+      $body
+      \\end{{$node->commandContent()}}        
+      LATEX;
+    return $div . $html . '</div>';
   }
 }

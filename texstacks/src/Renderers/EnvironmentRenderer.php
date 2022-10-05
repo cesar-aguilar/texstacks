@@ -14,7 +14,7 @@ class EnvironmentRenderer
 
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
-        if (!trim($body)) return '';
+        $body = $body ?? '';
 
         if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS)) {
             return self::renderAmsEnvironment($node, $body);

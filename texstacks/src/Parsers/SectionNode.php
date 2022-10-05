@@ -39,15 +39,19 @@ class SectionNode extends CommandNode
     }
   }
 
-  private function setLabel()
+  public function setLabel($label=null)
   {
 
     // Section commands are special in that they should always have
     // a label to be used in the id attribute for navigation
-    if ($this->commandLabel()) return;
+    if ($label) {      
+      $this->command_label = $label;
+    } else {
 
-    $prefix = $this->command_name ? (self::PREFIXES[$this->command_name] ?? 'text') : 'text';
+      $prefix = $this->command_name ? (self::PREFIXES[$this->command_name] ?? 'text') : 'text';
 
-    $this->command_label =  $prefix . ":node-{$this->id()}";
+      $this->command_label =  $prefix . ":node-{$this->id()}";
+    }
+
   }
 }
