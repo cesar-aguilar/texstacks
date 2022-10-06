@@ -21,7 +21,7 @@ class EnvironmentRenderer
 
         if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS))
         {
-            return self::renderAmsEnvironment($node, $body);
+            return self::renderTheoremEnvironment($node, $body);
         } 
         else if ($node->commandContent() === 'proof') 
         {
@@ -37,11 +37,11 @@ class EnvironmentRenderer
         }
     }
 
-    private static function renderAmsEnvironment(EnvironmentNode $node, string $body = null): string
+    private static function renderTheoremEnvironment(EnvironmentNode $node, string $body = null): string
     {
         $heading = ucwords($node->commandContent());
 
-        return "<div class=\"ams-env\"><div class=\"ams-env-head {$node->commandContent()}\" id=\"{$node->commandLabel()}\">$heading</div><div class=\"ams-env-body\">$body</div></div>";
+        return "<div class=\"thm-env\"><div class=\"thm-env-head {$node->commandContent()}\" id=\"{$node->commandLabel()}\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
     }
 
     private static function renderProofEnvironment(EnvironmentNode $node, string $body = null): string

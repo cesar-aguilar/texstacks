@@ -48,7 +48,11 @@ class Renderer
 
       if ($node->ancestorOfType('math-environment')) return $body;
 
-      return $body != '' ? $body : "<br><br>";
+      if ($node->type() === 'label') return '';
+
+      if ($body == '' && $node->leftSibling()?->type() === 'text') return "<br><br>";
+
+      return $body;
 
     }
   }

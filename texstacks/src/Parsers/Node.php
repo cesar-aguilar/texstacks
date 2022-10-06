@@ -60,6 +60,19 @@ class Node
     return $this->parent;
   }
 
+  public function leftSibling()
+  {
+    if ($this->parent() == null) return null;
+
+    $siblings = $this->parent()->children();
+
+    $index = array_search($this, $siblings);
+
+    if ($index == 0) return null;
+
+    return $siblings[$index - 1];
+  }
+
   public function isLeaf()
   {
     return empty($this->children);
