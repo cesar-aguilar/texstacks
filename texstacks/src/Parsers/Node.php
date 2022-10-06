@@ -84,4 +84,21 @@ class Node
   {
     $this->body = $body;
   }
+
+  public function ancestorOfType($type)
+  {
+    if ($this->parent === null) return false;
+
+    $ancestor = $this->parent;
+
+    while ($ancestor)
+    {
+      if ($ancestor->type() === $type)
+      {
+        return true;
+      }
+      $ancestor = $ancestor->parent();
+    }
+    return false;
+  }
 }

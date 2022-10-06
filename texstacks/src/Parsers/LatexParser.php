@@ -53,9 +53,9 @@ class LatexParser
     'asparaenum',
   ];
 
-  protected SyntaxTree $tree;
-  private $buffer = '';
+  protected SyntaxTree $tree;  
   private $current_node;
+  private $parsed_line;
 
   public function __construct()
   {
@@ -80,45 +80,30 @@ class LatexParser
   {
     
     $lines = $this->getLines($latex_src_raw);
-    
+
     /* Parse line and add node to syntax tree using depth-first traversal */
-    foreach ($lines as $raw_line) {
+    foreach ($lines as $line) {
       
-      $parsedLine = $this->parseLine($raw_line);
+      $this->parsed_line = $this->parseLine($line);
 
-      switch ($parsedLine['type']) {
-        
-        case 'text':
-          $this->buffer .= $parsedLine['content'];
-          break;
+      $parse_result = match($this->parsed_line['type']) {
 
-        case 'section-cmd':
-          $this->addBufferToCurrentNode();
-          $this->handleSectionNode($parsedLine);
-          break;
+        'section-cmd' => $this->handleSectionNode(),
 
-        case 'environment':
-        case 'math-environment':
-        case 'list-environment':
-          $this->addBufferToCurrentNode();
-          $this->handleEnvironmentNode($parsedLine);          
-          break;
-        
-        case 'item':
-          $this->addBufferToCurrentNode();
-          $this->handleListItemNode($parsedLine);
-          break;
+        'environment',
+        'math-environment',
+        'list-environment' => $this->handleEnvironmentNode(),
 
-        case 'label':
-          $this->addBufferToCurrentNode();
-          $this->handleLabelNode($parsedLine);
-          break;
+        'item' => $this->handleListItemNode(),
 
-      }
+        'label' => $this->handleLabelNode(),
 
+        default => $this->addToCurrentNode(),
+
+      };
+      
     }
-
-    $this->addBufferToCurrentNode();
+    
   }
 
   private function parseLine($line)
@@ -196,25 +181,20 @@ class LatexParser
     }
   }
 
-  private function addBufferToCurrentNode()
+  private function addToCurrentNode()
   {
-
-    if ($this->buffer == '') return;
-
     $this->tree->addNode(new Node(
       [
         'id' => $this->tree->nodeCount(),
         'type' => 'text',
-        'body' => $this->buffer
+        'body' => $this->parsed_line['content']
       ]
-    ), parent: $this->current_node);
-
-    $this->buffer = '';
+    ), parent: $this->current_node); 
   }
 
-  private function handleSectionNode($parsedLine)
+  private function handleSectionNode()
   {
-    $new_node = $this->createCommandNode($parsedLine);
+    $new_node = $this->createCommandNode();
     $parent = $this->current_node;
 
     /* Move up the tree until we find the first sectioning command
@@ -224,24 +204,25 @@ class LatexParser
     }
     
     $this->tree->addNode($new_node, $parent);
-    $this->current_node = $new_node; 
+    $this->current_node = $new_node;
+    return true;
   }
 
-  private function handleEnvironmentNode($parsedLine)
+  private function handleEnvironmentNode()
   {
-    if ($parsedLine['command_name'] === 'begin') {
-      $new_node = $this->createCommandNode($parsedLine);
+    if ($this->parsed_line['command_name'] === 'begin') {
+      $new_node = $this->createCommandNode();
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;
-      return;
+      return true;
     }
     
-    if ($parsedLine['type'] !== 'list-environment') {
+    if ($this->parsed_line['type'] !== 'list-environment') {
       $this->current_node = $this->current_node->parent();
-      return;
+      return true;
     }
 
-    /* If parsedLine was the end of a list-environment 
+    /* If parsed_line was the end of a list-environment 
     then we need to move up the tree to find the first
     list-environment node
     */
@@ -252,12 +233,14 @@ class LatexParser
     }
     
     $this->current_node = $parent->parent();
+
+    return true;
     
   }
 
-  private function handleListItemNode($parsedLine) 
+  private function handleListItemNode()
   {
-    $new_node = $this->createCommandNode($parsedLine);
+    $new_node = $this->createCommandNode();
 
     $parent = $this->current_node;
     
@@ -269,27 +252,30 @@ class LatexParser
     $this->tree->addNode($new_node, $parent);
 
     $this->current_node = $new_node;
+
+    return true;
   }
 
-  private function handleLabelNode($parsedLine)
+  private function handleLabelNode()
   {
-    $this->current_node->setLabel($parsedLine['command_content']);
+    $this->current_node->setLabel($this->parsed_line['command_content']);
 
     if ($this->current_node->type() != 'section-cmd') {          
-      $new_node = $this->createCommandNode($parsedLine);
+      $new_node = $this->createCommandNode();
       $this->tree->addNode($new_node, $this->current_node);
     }
+    return true;
   }
 
-  private function createCommandNode($parsedLine)
+  private function createCommandNode()
   {
 
-    $args = ['id' => $this->tree->nodeCount(), ...$parsedLine];
+    $args = ['id' => $this->tree->nodeCount(), ...$this->parsed_line];
 
-    if ($parsedLine['type'] === 'section-cmd') {
+    if ($this->parsed_line['type'] === 'section-cmd') {
       return new SectionNode($args);
     } 
-    else if (preg_match('/environment/', $parsedLine['type'])) {
+    else if (preg_match('/environment/', $this->parsed_line['type'])) {
       return new EnvironmentNode($args);
     } 
     else 
@@ -300,7 +286,7 @@ class LatexParser
 
   private function getLines($latex_src_raw)
   {
-    return array_filter(array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw))));
+    return array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw)));
   }
 
   private static function parseCommandAndLabel(string $name, string $str): array
@@ -333,9 +319,8 @@ class LatexParser
 
   private function normalizeLatexSource(string $latex_src): string
   {
-    $html_src = StrHelper::PluckIncludeDelimiters('\begin{document}', '\end{document}', $latex_src);
-    $html_src = str_replace('\begin{document}', "\n", $html_src);
-    $html_src = str_replace('\end{document}', "\n", $html_src);
+    
+    $html_src = preg_replace('/.*\\\begin\s*{document}[\s\n]*(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
 
     $html_src = StrHelper::DeleteLatexComments($html_src);
 
@@ -346,6 +331,9 @@ class LatexParser
     // Replace $$...$$ with \[...\] and then $...$ with \(...\)
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
     $html_src = preg_replace('/\$(.+?)\$/s', '\\($1\\)', $html_src);
+
+    // Replace more than two newlines with two newlines
+    $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
     
     return $this->putCommandsOnNewLine($html_src);
   }
@@ -363,11 +351,11 @@ class LatexParser
     $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);    
     $latex_src = preg_replace($this->cmdWithOptionsRegex('includegraphics'), "\n$1$2\n", $latex_src);
 
-    return $latex_src;
+    return trim($latex_src);
   }
 
   private function cmdWithOptionsRegex($command) {
-    $sp = '[\s|\n]*';
+    $sp = '[\s\n]*';
     $basic = $this->cmdRegex($command);
     $with_options = $sp . '(\\\\' . $command . '\s*\[[^\]]*\]\s*\{[^}]*\})' . $sp;
     $pattern = '/' . $with_options . '|' . $basic . '/m';
@@ -375,7 +363,7 @@ class LatexParser
   }
 
   private function envBeginRegex() {
-    $sp = '[\s|\n]*';
+    $sp = '[\s\n]*';
     $basic = $this->cmdRegex('begin');
     $with_options = $sp . '(\\\\begin\s*\{[^}]*\}\s*\[[^\]]*\])' . $sp;
     $pattern = '/' . $with_options . '|' . $basic . '/m';
@@ -383,15 +371,15 @@ class LatexParser
   }
 
   private function cmdRegex($command) {
-    $sp = '[\s|\n]*';
+    $sp = '[\s\n]*';
     $pattern = $sp . '(\\\\' . $command . '\s*\{[^}]*\})' . $sp;    
     return $pattern;
   }
 
   private function itemRegex() {
-    $sp = '[\s|\n]*';
+    $sp = '[\s\n]*';
     $command = 'item';
-    $pattern = $sp . '(\\\\' . $command . '[^\s|\n]*)' . $sp;
+    $pattern = $sp . '(\\\\' . $command . '[^\s\n]*)' . $sp;
     return $pattern;
   }
 

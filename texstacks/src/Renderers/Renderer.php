@@ -45,7 +45,11 @@ class Renderer
       return "<li>$body</li>";
     }
     else {
-      return "$body";
+            
+      if ($node->ancestorOfType('math-environment')) return $body;
+
+      return $body != '' ? $body : "<br><br>";
+
     }
   }
 }
