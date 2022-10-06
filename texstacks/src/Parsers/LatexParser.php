@@ -233,17 +233,26 @@ class LatexParser
       $new_node = $this->createCommandNode($parsedLine);
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;
+      return;
     }
-    else {
+    
+    if ($parsedLine['type'] !== 'list-environment') {
       $this->current_node = $this->current_node->parent();
-      /* If parsedLine was the end of a a list environment 
-         then we need to move up the tree one more node since
-         the original current node was an item node
-      */
-      if ($parsedLine['type'] === 'list-environment') {
-        $this->current_node = $this->current_node->parent();              
-      }
+      return;
     }
+
+    /* If parsedLine was the end of a list-environment 
+    then we need to move up the tree to find the first
+    list-environment node
+    */
+    $parent = $this->current_node;
+
+    while ($parent && $parent->type() !== 'list-environment') {
+      $parent = $parent->parent();
+    }
+    
+    $this->current_node = $parent->parent();
+    
   }
 
   private function handleListItemNode($parsedLine) 
@@ -345,18 +354,19 @@ class LatexParser
   {
     
     foreach (self::SECTION_COMMANDS as $command) {      
-      $latex_src = preg_replace($this->sectionRegex($command), "\n$1$2\n", $latex_src);
+      $latex_src = preg_replace($this->cmdWithOptionsRegex($command), "\n$1$2\n", $latex_src);
     }
 
     $latex_src = preg_replace($this->envBeginRegex(), "\n$1$2\n", $latex_src);
     $latex_src = preg_replace('/' . $this->cmdRegex('end') . '/m', "\n$1\n", $latex_src);
     $latex_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $latex_src);
-    $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);
+    $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);    
+    $latex_src = preg_replace($this->cmdWithOptionsRegex('includegraphics'), "\n$1$2\n", $latex_src);
 
     return $latex_src;
   }
 
-  private function sectionRegex($command) {
+  private function cmdWithOptionsRegex($command) {
     $sp = '[\s|\n]*';
     $basic = $this->cmdRegex($command);
     $with_options = $sp . '(\\\\' . $command . '\s*\[[^\]]*\]\s*\{[^}]*\})' . $sp;

@@ -20,7 +20,7 @@ use TexStacks\Parsers\LatexParser;
 class Node
 {
 
-  protected Node $parent;
+  protected Node|null $parent = null;
   protected array $children = [];
   protected int $id;
   protected string $type;
