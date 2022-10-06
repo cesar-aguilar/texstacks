@@ -45,6 +45,14 @@ class LatexParser
     'subparagraph', 'subparagraph\*',
   ];
 
+  const LIST_ENVIRONMENTS = [
+    'itemize',
+    'enumerate',    
+    'compactenum',
+    'compactitem',
+    'asparaenum',
+  ];
+
   protected SyntaxTree $tree;
   private $buffer = '';
   private $current_node;
@@ -63,66 +71,129 @@ class LatexParser
     $this->current_node = $root;
   }
 
+  public function getRoot()
+  {
+    return $this->tree->root();
+  }
+
   public function parse($latex_src_raw)
   {
     
     $lines = $this->getLines($latex_src_raw);
     
+    /* Parse line and add node to syntax tree using depth-first traversal */
     foreach ($lines as $raw_line) {
       
       $parsedLine = $this->parseLine($raw_line);
 
-      if ($parsedLine['type'] === 'text') {
-        $this->buffer .= $parsedLine['content'];
-        continue;
-      }
-
-      $this->addBufferToCurrentNode();
-
-      if ($parsedLine['type'] === 'section-cmd') {
-
-        $new_node = $this->createCommandNode($parsedLine);
-
-        $parent = $this->current_node;
-
-        while ($parent->depthLevel() >= $new_node->depthLevel()) {
-          $parent = $parent->parent();
-        }
-
-        $this->tree->addNode($new_node, $parent);
-
-        $this->current_node = $new_node;
-      }
-      else if ($this->isBeginEnvironment($parsedLine)) {
-
-        $new_node = $this->createCommandNode($parsedLine);
-
-        $this->tree->addNode($new_node, $this->current_node);
-
-        $this->current_node = $new_node;
-      }
-      else if ($this->isEndEnvironment($parsedLine)) {
-
-        $this->current_node = $this->current_node->parent();
-      }
-      else if ($parsedLine['type'] === 'label') {
+      switch ($parsedLine['type']) {
         
-        $this->current_node->setLabel($parsedLine['command_content']);
+        case 'text':
+          $this->buffer .= $parsedLine['content'];
+          break;
 
-        if ($this->current_node->type() != 'section-cmd') {          
-          $new_node = $this->createCommandNode($parsedLine);
-          $this->tree->addNode($new_node, $this->current_node);
-        }
+        case 'section-cmd':
+          $this->addBufferToCurrentNode();
+          $this->handleSectionNode($parsedLine);
+          break;
+
+        case 'environment':
+        case 'math-environment':
+        case 'list-environment':
+          $this->addBufferToCurrentNode();
+          $this->handleEnvironmentNode($parsedLine);          
+          break;
+        
+        case 'item':
+          $this->addBufferToCurrentNode();
+          $this->handleListItemNode($parsedLine);
+          break;
+
+        case 'label':
+          $this->addBufferToCurrentNode();
+          $this->handleLabelNode($parsedLine);
+          break;
 
       }
+
     }
 
     $this->addBufferToCurrentNode();
   }
 
-  public function getRoot()
+  private function parseLine($line)
   {
-    return $this->tree->root();
+
+    if (($match = $this->isBeginCmd($line)) || ($match = $this->isEndCmd($line))) {
+
+      $content = $match['content'];
+      $command_name = $match['command_name'];
+
+      $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
+
+      if (in_array($content, self::AMS_MATH_ENVIRONMENTS)) {
+        $type = 'math-environment';
+      }
+      else if (in_array($content, self::LIST_ENVIRONMENTS)) {
+        $type = 'list-environment';
+      }
+      else {
+        $type = 'environment';
+      }
+      
+      return [
+        'type' => $type,
+        'command_name' => $command_name,
+        'command_content' => $content,
+        'command_options' => $options,
+        'command_label' => null,
+        'command_src' => $line
+      ];
+    }    
+    else if ($match = $this->isSectionCmd($line)) {
+
+      $name = trim($match['name']);
+      $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null;      
+      $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
+
+      return [
+        'type' => 'section-cmd',
+        'command_name' => $name,
+        'command_content' => $content,
+        'command_options' => $options,
+        'command_label' => null,
+        'command_src' => $line
+      ];
+    }
+    else if ($match = $this->isLabelCmd($line)) {
+
+      return [
+        'type' => 'label',
+        'command_name' => 'label',
+        'command_content' => $match['content'],
+        'command_options' => null,
+        'command_label' => null,
+        'command_src' => $line
+      ];
+    }
+    else if ($match = $this->isItemCmd($line)) {
+
+      return [
+        'type' => 'item',
+        'command_name' => 'item',
+        'command_content' => null,
+        'command_options' => null,
+        'command_label' => null,
+        'command_src' => $line
+      ];
+    }
+    else {
+      
+      return [
+        'type' => 'text',
+        'content' => $line
+      ];
+    }
   }
 
   private function addBufferToCurrentNode()
@@ -141,18 +212,79 @@ class LatexParser
     $this->buffer = '';
   }
 
+  private function handleSectionNode($parsedLine)
+  {
+    $new_node = $this->createCommandNode($parsedLine);
+    $parent = $this->current_node;
+
+    /* Move up the tree until we find the first sectioning command
+       with a lower numbered depth level */
+    while ($parent->depthLevel() >= $new_node->depthLevel()) {
+      $parent = $parent->parent();
+    }
+    
+    $this->tree->addNode($new_node, $parent);
+    $this->current_node = $new_node; 
+  }
+
+  private function handleEnvironmentNode($parsedLine)
+  {
+    if ($parsedLine['command_name'] === 'begin') {
+      $new_node = $this->createCommandNode($parsedLine);
+      $this->tree->addNode($new_node, $this->current_node);
+      $this->current_node = $new_node;
+    }
+    else {
+      $this->current_node = $this->current_node->parent();
+      /* If parsedLine was the end of a a list environment 
+         then we need to move up the tree one more node since
+         the original current node was an item node
+      */
+      if ($parsedLine['type'] === 'list-environment') {
+        $this->current_node = $this->current_node->parent();              
+      }
+    }
+  }
+
+  private function handleListItemNode($parsedLine) 
+  {
+    $new_node = $this->createCommandNode($parsedLine);
+
+    $parent = $this->current_node;
+    
+    /* Move up the tree until we find the parent list-environment */
+    while ($parent->type() !== 'list-environment') {
+      $parent = $parent->parent();
+    }
+
+    $this->tree->addNode($new_node, $parent);
+
+    $this->current_node = $new_node;
+  }
+
+  private function handleLabelNode($parsedLine)
+  {
+    $this->current_node->setLabel($parsedLine['command_content']);
+
+    if ($this->current_node->type() != 'section-cmd') {          
+      $new_node = $this->createCommandNode($parsedLine);
+      $this->tree->addNode($new_node, $this->current_node);
+    }
+  }
+
   private function createCommandNode($parsedLine)
   {
 
     $args = ['id' => $this->tree->nodeCount(), ...$parsedLine];
 
-    if ($parsedLine['type'] == 'section-cmd') {
-
+    if ($parsedLine['type'] === 'section-cmd') {
       return new SectionNode($args);
-    } else if (preg_match('/environment/', $parsedLine['type'])) {
-
+    } 
+    else if (preg_match('/environment/', $parsedLine['type'])) {
       return new EnvironmentNode($args);
-    } else {
+    } 
+    else 
+    {
       return new CommandNode($args);
     }
   }
@@ -160,70 +292,6 @@ class LatexParser
   private function getLines($latex_src_raw)
   {
     return array_filter(array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw))));
-  }
-
-  private function parseLine($str)
-  {
-
-    if (preg_match('/^\\\\begin\{(?<content>[^}]*)\}/m', $str, $match)) {
-
-      $content = trim($match['content']);      
-      $options = preg_match('/\[(?<options>[^\]]*)\]/', $str, $match) ? $match['options'] : null;
-
-      $type = in_array($content, self::AMS_MATH_ENVIRONMENTS) ? 'math-environment' : 'environment';
-
-      return [
-        'type' => $type,
-        'command_name' => 'begin',
-        'command_content' => $content,
-        'command_options' => $options,
-        'command_label' => null,
-        'command_src' => $str
-      ];
-    } else if (preg_match('/^\\\\end\{(?<content>[^}]*)\}/m', $str, $match)) {
-
-      $content = trim($match['content']);
-      $type = in_array($content, self::AMS_MATH_ENVIRONMENTS) ? 'math-environment' : 'environment';
-
-      return [
-        'type' => $type,
-        'command_name' => 'end',
-        'command_content' => $match['content'],
-        'command_options' => null,
-        'command_label' => null,
-        'command_src' => $str
-      ];
-    } else if (preg_match('/^\\\\(?<name>'. implode('|', self::SECTION_COMMANDS) .')/m', $str, $match)) {
-
-      $name = trim($match['name']);
-      $content = preg_match('/\{(?<content>[^}]*)\}/', $str, $match) ? $match['content'] : null;      
-      $options = preg_match('/\[(?<options>[^\]]*)\]/', $str, $match) ? $match['options'] : null;
-
-      return [
-        'type' => 'section-cmd',
-        'command_name' => $name,
-        'command_content' => $content,
-        'command_options' => $options,
-        'command_label' => null,
-        'command_src' => $str
-      ];
-    } 
-    else if (preg_match('/\\\\label\{(?<content>[^}]*)\}/', $str, $match)) {
-      return [
-        'type' => 'label',
-        'command_name' => 'label',
-        'command_content' => $match['content'],
-        'command_options' => null,
-        'command_label' => null,
-        'command_src' => $str
-      ];
-    }
-    else {
-      return [
-        'type' => 'text',
-        'content' => $str
-      ];
-    }
   }
 
   private static function parseCommandAndLabel(string $name, string $str): array
@@ -284,16 +352,8 @@ class LatexParser
     $latex_src = preg_replace('/' . $this->cmdRegex('end') . '/m', "\n$1\n", $latex_src);
     $latex_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $latex_src);
     $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);
-        
+
     return $latex_src;
-  }
-
-  private function isBeginEnvironment($parsedLine) {
-    return preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'begin';
-  }
-
-  private function isEndEnvironment($parsedLine) {
-    return preg_match('/environment/', $parsedLine['type']) && $parsedLine['command_name'] === 'end';
   }
 
   private function sectionRegex($command) {
@@ -321,8 +381,33 @@ class LatexParser
   private function itemRegex() {
     $sp = '[\s|\n]*';
     $command = 'item';
-    $pattern = $sp . '(\\\\' . $command . ')[^\s|\n]*' . $sp;    
+    $pattern = $sp . '(\\\\' . $command . '[^\s|\n]*)' . $sp;
     return $pattern;
+  }
+
+  private function isBeginCmd($line)
+  {
+    return preg_match('/\\\\begin\{(?<content>[^}]*)\}/', $line, $match) ? [...$match, 'command_name' => 'begin'] : false;
+  }
+
+  private function isEndCmd($line)
+  {
+    return preg_match('/\\\\end\{(?<content>[^}]*)\}/', $line, $match) ? [...$match, 'command_name' => 'end'] : false;
+  }
+
+  private function isSectionCmd($line)
+  {
+    return preg_match('/\\\\(?<name>' . implode('|', self::SECTION_COMMANDS) . ')/', $line, $match) ? $match : false;
+  }
+
+  private function isLabelCmd($line)
+  {
+    return preg_match('/\\\\label\{(?<content>[^}]*)\}/', $line, $match) ? $match : false;
+  }
+
+  private function isItemCmd($line)
+  {
+    return preg_match('/\\\\item/', $line, $match) ? $match : false;
   }
 
 }

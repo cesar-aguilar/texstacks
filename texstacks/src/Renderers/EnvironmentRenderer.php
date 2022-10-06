@@ -8,22 +8,32 @@ class EnvironmentRenderer
 {
 
     const AMS_THEOREM_ENVIRONMENTS = [
-        'theorem', 'proposition', 'lemma',
-        'corollary', 'definition'
+        'theorem',
+        'proposition',
+        'lemma',
+        'corollary',
+        'definition',
     ];
 
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
         $body = $body ?? '';
 
-        if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS)) {
+        if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS))
+        {
             return self::renderAmsEnvironment($node, $body);
-        } else if ($node->commandContent() === 'proof') {
+        } 
+        else if ($node->commandContent() === 'proof') 
+        {
             return self::renderProofEnvironment($node, $body);
-        } else if ($node->commandContent() === 'example') {
+        }
+        else if ($node->commandContent() === 'example')
+        {
             return self::renderExampleEnvironment($node, $body);
-        } else {
-            return "$body";
+        }
+        else
+        {
+            return self::renderUnknownEnvironment($node, $body);
         }
     }
 
@@ -42,5 +52,10 @@ class EnvironmentRenderer
     private static function renderExampleEnvironment(EnvironmentNode $node, string $body = null): string
     {
         return "<div class=\"example-env\"><div class=\"example-head\" id=\"{$node->commandLabel()}\">Example</div><div class=\"example-body\">$body</div></div>";
+    }
+
+    private static function renderUnknownEnvironment(EnvironmentNode $node, string $body = null): string
+    {
+        return "<div class=\"unknown-env\"><div class=\"unknown-env-head\" id=\"{$node->commandLabel()}\">Name: <strong>{$node->commandContent()}</strong></div><div class=\"unknown-env-body\">$body</div></div>";
     }
 }

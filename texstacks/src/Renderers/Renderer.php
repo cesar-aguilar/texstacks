@@ -4,9 +4,8 @@ namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\EnvironmentRenderer;
 use TexStacks\Renderers\SectionCommandRenderer;
+use TexStacks\Renderers\ListEnvironmentRenderer;
 use TexStacks\Renderers\AmsMathEnvironmentRenderer;
-
-// use TexStacks\Parsers\Node;
 
 class Renderer
 {
@@ -30,13 +29,22 @@ class Renderer
   private function renderNode($node, string $body = null): string
   {
 
-    if ($node->type() == 'section-cmd') {
+    if ($node->type() === 'section-cmd') {
       return SectionCommandRenderer::renderNode($node, $body);
-    } else if ($node->type() == 'environment') {
-      return EnvironmentRenderer::renderNode($node, $body);
-    } else if ($node->type() == 'math-environment') {
+    }
+    else if ($node->type() === 'math-environment') {
       return AmsMathEnvironmentRenderer::renderNode($node, $body);
-    } else {
+    }
+    else if ($node->type() === 'environment') {
+      return EnvironmentRenderer::renderNode($node, $body);
+    }
+    else if ($node->type() === 'list-environment') {
+      return ListEnvironmentRenderer::renderNode($node, $body);
+    }
+    else if ($node->type() === 'item') {
+      return "<li>$body</li>";
+    }
+    else {
       return "$body";
     }
   }
