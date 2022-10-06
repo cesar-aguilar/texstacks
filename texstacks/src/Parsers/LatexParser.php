@@ -106,78 +106,74 @@ class LatexParser
     
   }
 
-  private function parseLine($line)
-  {
+  private function parseLine($line) {
 
-    if (($match = $this->isBeginCmd($line)) || ($match = $this->isEndCmd($line))) {
+    $commands = ['begin', 'end', ...self::SECTION_COMMANDS, 'label', 'item'];
 
-      $content = $match['content'];
-      $command_name = $match['command_name'];
+    foreach ($commands as $command) {
 
-      $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
-
-      if (in_array($content, self::AMS_MATH_ENVIRONMENTS)) {
-        $type = 'math-environment';
+      if ($match = $this->matchCommand($command, $line)) {
+        return $match;
       }
-      else if (in_array($content, self::LIST_ENVIRONMENTS)) {
-        $type = 'list-environment';
-      }
-      else {
-        $type = 'environment';
-      }
-      
-      return [
-        'type' => $type,
-        'command_name' => $command_name,
-        'command_content' => $content,
-        'command_options' => $options,
-        'command_label' => null,
-        'command_src' => $line
-      ];
-    }    
-    else if ($match = $this->isSectionCmd($line)) {
 
-      $name = trim($match['name']);
-      $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null;      
-      $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
-
-      return [
-        'type' => 'section-cmd',
-        'command_name' => $name,
-        'command_content' => $content,
-        'command_options' => $options,
-        'command_label' => null,
-        'command_src' => $line
-      ];
     }
-    else if ($match = $this->isLabelCmd($line)) {
 
-      return [
-        'type' => 'label',
-        'command_name' => 'label',
-        'command_content' => $match['content'],
-        'command_options' => null,
-        'command_label' => null,
-        'command_src' => $line
-      ];
+    return [
+      'type' => 'text',
+      'content' => $line,
+    ];
+
+  }
+
+  private function matchCommand($name, $line) {
+    
+    if (!preg_match('/\\\\' . $name . '\s*/', $line)) return false;
+
+    $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
+
+    $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
+
+    $type = $this->getCommandType($name, $content);
+
+    return [
+      'type' => $type,
+      'command_name' => $name,
+      'command_content' => $content,
+      'command_options' => $options,        
+      'command_src' => $line
+    ];
+
+  }
+
+  private function getCommandType($name, $content) {
+    if ($name == 'begin' || $name == 'end') {
+      if (in_array($content, self::AMS_MATH_ENVIRONMENTS))
+      {
+        return 'math-environment';
+      }
+      else if (in_array($content, self::LIST_ENVIRONMENTS))
+      {
+        return 'list-environment';
+      }
+      else
+      {
+        return 'environment';
+      }
     }
-    else if ($match = $this->isItemCmd($line)) {
-
-      return [
-        'type' => 'item',
-        'command_name' => 'item',
-        'command_content' => null,
-        'command_options' => null,
-        'command_label' => null,
-        'command_src' => $line
-      ];
+    else if (in_array($name, self::SECTION_COMMANDS))
+    {
+      return 'section-cmd';
+    }
+    else if ($name == 'label')
+    {
+      return 'label';
+    }
+    else if ($name == 'item')
+    {
+      return 'item';
     }
     else {
-      
-      return [
-        'type' => 'text',
-        'content' => $line
-      ];
+      return 'text';
     }
   }
 
@@ -289,34 +285,6 @@ class LatexParser
     return array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw)));
   }
 
-  private static function parseCommandAndLabel(string $name, string $str): array
-  {
-
-    $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
-
-    $without_label = preg_replace('/\\\\label\{([^}]*)\}/', '', $str);
-
-    $content = preg_match('/\\\\' . $name . '\{(?<content>[^}]*)\}/', $without_label, $match) ? $match['content'] : null;
-
-    return ['content' => $content, 'label' => $label];
-  }
-
-  private static function parseCommandOptionsAndLabel(string $name, string $str): array
-  {
-
-    $label = preg_match('/\\\\label\{(?<label>[^}]*)\}/', $str, $match) ? $match['label'] : null;
-
-    $without_label = preg_replace('/\\\\label\{[^}]*\}/', '', $str);
-
-    $options = preg_match('/\[(?<options>[^}]*)\]/', $without_label, $match) ? $match['options'] : null;
-
-    $without_options = preg_replace('/\[[^}]*\]/', '', $without_label);
-
-    $content = preg_match('/\\\\' . $name . '\{(?<content>[^}]*)\}/', $without_options, $match) ? $match['content'] : null;
-
-    return ['content' => $content, 'label' => $label, 'options' => $options];
-  }
-
   private function normalizeLatexSource(string $latex_src): string
   {
     
@@ -381,31 +349,6 @@ class LatexParser
     $command = 'item';
     $pattern = $sp . '(\\\\' . $command . '[^\s\n]*)' . $sp;
     return $pattern;
-  }
-
-  private function isBeginCmd($line)
-  {
-    return preg_match('/\\\\begin\{(?<content>[^}]*)\}/', $line, $match) ? [...$match, 'command_name' => 'begin'] : false;
-  }
-
-  private function isEndCmd($line)
-  {
-    return preg_match('/\\\\end\{(?<content>[^}]*)\}/', $line, $match) ? [...$match, 'command_name' => 'end'] : false;
-  }
-
-  private function isSectionCmd($line)
-  {
-    return preg_match('/\\\\(?<name>' . implode('|', self::SECTION_COMMANDS) . ')/', $line, $match) ? $match : false;
-  }
-
-  private function isLabelCmd($line)
-  {
-    return preg_match('/\\\\label\{(?<content>[^}]*)\}/', $line, $match) ? $match : false;
-  }
-
-  private function isItemCmd($line)
-  {
-    return preg_match('/\\\\item/', $line, $match) ? $match : false;
   }
 
 }
