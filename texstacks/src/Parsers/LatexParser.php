@@ -138,7 +138,7 @@ class LatexParser
 
   private function matchCommand($name, $line) {
     
-    if (!preg_match('/\\\\' . $name . '\s*/', $line)) return false;
+    if (!preg_match('/^\\\\' . $name . '\s*/m', $line)) return false;
 
     if ($name !== 'caption') {
       $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
