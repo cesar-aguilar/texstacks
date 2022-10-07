@@ -13,6 +13,7 @@ class LatexParser
 {
 
   const AMS_MATH_ENVIRONMENTS = [
+    'math',
     'align', 'align*',
     'aligned',
     'alignedat', 'alignedat*',
@@ -56,6 +57,7 @@ class LatexParser
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
+  private $line_number;
 
   public function __construct()
   {
@@ -80,11 +82,11 @@ class LatexParser
   {
     
     $lines = $this->getLines($latex_src_raw);
-
+    // dd($lines);
     /* Parse line and add node to syntax tree using depth-first traversal */
-    foreach ($lines as $line) {
-      
-      $this->parsed_line = $this->parseLine($line);
+    foreach ($lines as $number => $line) {
+
+      $this->parsed_line = $this->parseLine($line, $number);
 
       $parse_result = match($this->parsed_line['type']) {
 
@@ -99,9 +101,7 @@ class LatexParser
         'label' => $this->handleLabelNode(),
 
         'includegraphics' => $this->handleIncludeGraphicsNode(),
-
-        'caption' => $this->handleCaptionNode(),
-
+ 
         default => $this->addToCurrentNode(),
 
       };
@@ -110,21 +110,20 @@ class LatexParser
     
   }
 
-  private function parseLine($line) {
+  private function parseLine($line, $number) {
 
     $commands = [
       'begin', 'end',
       ...self::SECTION_COMMANDS,
       'label',
-      'item',
-      'caption',
+      'item',      
       'includegraphics',
     ];
 
     foreach ($commands as $command) {
 
       if ($match = $this->matchCommand($command, $line)) {
-        return $match;
+        return [...$match, 'line_number' => $number];
       }
 
     }
@@ -132,6 +131,7 @@ class LatexParser
     return [
       'type' => 'text',
       'content' => $line,
+      'line_number' => $number,
     ];
 
   }
@@ -297,13 +297,6 @@ class LatexParser
     return true;
   }
 
-  private function handleCaptionNode()
-  {
-    $new_node = $this->createCommandNode();
-    $this->tree->addNode($new_node, $this->current_node);
-    return true;
-  }
-
   private function createCommandNode()
   {
 
@@ -328,7 +321,7 @@ class LatexParser
 
   private function normalizeLatexSource(string $latex_src): string
   {
-    
+
     $html_src = preg_replace('/.*\\\begin\s*{document}[\s\n]*(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
 
     $html_src = StrHelper::DeleteLatexComments($html_src);
@@ -337,9 +330,21 @@ class LatexParser
     $html_src = str_replace('<', ' \lt ', $html_src);
     $html_src = str_replace('>', ' \gt ', $html_src);
 
-    // Replace $$...$$ with \[...\] and then $...$ with \(...\)
-    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
-    $html_src = preg_replace('/\$(.+?)\$/s', '\\($1\\)', $html_src);
+    // Replace $$...$$ with \[...\]
+    // $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
+    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*}$1\\end{equation*}', $html_src);
+
+    // Then replace $...$ with \(...\)
+    // $html_src = preg_replace('/\$(.+?)\$/s', '\\($1\\)', $html_src);
+    $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math}$1\\end{math}", $html_src);
+
+    // Replace \[...\] with \begin{equation*}...\end{equation*}
+    $html_src = preg_replace('/[^\\\](?:\\\)(?:\[)/', '\\begin{equation*}', $html_src);
+    $html_src = str_replace('\]', '\end{equation*}', $html_src);
+
+    // Put labels on new line and make caption command an environment
+    $html_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $html_src);
+    $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption}$1\\end{caption}', $html_src);
 
     // Replace more than two newlines with two newlines
     $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
@@ -350,14 +355,18 @@ class LatexParser
   private function putCommandsOnNewLine(string $latex_src): string
   {
     
-    foreach (self::SECTION_COMMANDS as $command) {      
+    foreach (self::SECTION_COMMANDS as $command) {
       $latex_src = preg_replace($this->cmdWithOptionsRegex($command), "\n$1$2\n", $latex_src);
     }
 
-    $latex_src = preg_replace($this->envBeginRegex(), "\n$1$2\n", $latex_src);
+    $latex_src = preg_replace($this->envBeginWithOptionsRegex(), "\n$1$2\n", $latex_src);
+
+    $latex_src = preg_replace($this->envMathRegex(), "\n$1\n", $latex_src);
+
     $latex_src = preg_replace('/' . $this->cmdRegex('end') . '/m', "\n$1\n", $latex_src);
-    $latex_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $latex_src);
-    $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);    
+
+    $latex_src = preg_replace('/' . $this->itemRegex() . '/m', "\n$1\n", $latex_src);
+
     $latex_src = preg_replace($this->cmdWithOptionsRegex('includegraphics'), "\n$1$2\n", $latex_src);
 
     return trim($latex_src);
@@ -371,11 +380,17 @@ class LatexParser
     return $pattern;
   }
 
-  private function envBeginRegex() {
+  private function envBeginWithOptionsRegex() {
     $sp = '[\s\n]*';
     $basic = $this->cmdRegex('begin');
     $with_options = $sp . '(\\\\begin\s*\{[^}]*\}\s*\[[^\]]*\])' . $sp;
     $pattern = '/' . $with_options . '|' . $basic . '/m';
+    return $pattern;
+  }
+
+  private function envMathRegex() {
+    $sp = '[\s\n]*';
+    $pattern = '/' . $sp . '(\\\\begin{math})' . $sp . '/m';
     return $pattern;
   }
 

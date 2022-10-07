@@ -36,6 +36,17 @@ class EnvironmentRenderer
         {
             return self::renderFigureEnvironment($node, $body);
         }
+        else if ($node->commandContent() === 'caption')
+        {
+            if ($node->parent()->commandContent() === 'figure') {
+                return "<figcaption>$body</figcaption>";
+              }
+              else if ($node->parent()->commandContent() === 'table') {
+                return "<caption>$body</caption>";
+              } else {
+                return "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>";
+              }
+        }
         else
         {
             return self::renderUnknownEnvironment($node, $body);

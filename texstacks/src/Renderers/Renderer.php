@@ -17,7 +17,7 @@ class Renderer
   private function renderRecursively($node): string
   {
     if ($node->isLeaf()) {
-      return $this->renderNode($node, $node->body() ?? $node->commandContent());
+      return $this->renderNode($node, $node->body());
     }
 
     return $this->renderNode(
@@ -46,18 +46,6 @@ class Renderer
     }
     else if ($node->type() === 'includegraphics') {
       return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
-    }
-    else if ($node->type() === 'caption') {
-
-      if ($node->parent()->commandContent() === 'figure') {
-        return "<figcaption>$body</figcaption>";
-      }
-      else if ($node->parent()->commandContent() === 'table') {
-        return "<caption>$body</caption>";
-      } else {
-        return "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>";
-      }
-
     }
     else {
 

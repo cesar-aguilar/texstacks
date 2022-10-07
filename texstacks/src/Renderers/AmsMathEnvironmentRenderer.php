@@ -8,6 +8,10 @@ class AmsMathEnvironmentRenderer
   public static function renderNode($node, $body = null)
   {
 
+    if ($node->commandContent() === 'math') {
+      return " \($body\) ";
+    }
+
     $latex = "\\begin{{$node->commandContent()}}$body\\end{{$node->commandContent()}}";
 
     // If $node is a nested math-environment, then we need to render it as text
