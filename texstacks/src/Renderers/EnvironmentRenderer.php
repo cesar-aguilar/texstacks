@@ -13,6 +13,7 @@ class EnvironmentRenderer
         'lemma',
         'corollary',
         'definition',
+        'conjecture',
     ];
 
     public static function renderNode(EnvironmentNode $node, string $body = null): string
@@ -30,6 +31,10 @@ class EnvironmentRenderer
         else if ($node->commandContent() === 'example')
         {
             return self::renderExampleEnvironment($node, $body);
+        }
+        else if ($node->commandContent() === 'figure') 
+        {
+            return self::renderFigureEnvironment($node, $body);
         }
         else
         {
@@ -52,6 +57,11 @@ class EnvironmentRenderer
     private static function renderExampleEnvironment(EnvironmentNode $node, string $body = null): string
     {
         return "<div class=\"example-env\"><div class=\"example-head\" id=\"{$node->commandLabel()}\">Example</div><div class=\"example-body\">$body</div></div>";
+    }
+
+    private static function renderFigureEnvironment(EnvironmentNode $node, string $body = null): string
+    {
+        return "<figure id=\"{$node->commandLabel()}\">$body</figure>";
     }
 
     private static function renderUnknownEnvironment(EnvironmentNode $node, string $body = null): string

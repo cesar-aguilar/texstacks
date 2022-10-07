@@ -24,14 +24,14 @@ class Node
   protected array $children = [];
   protected int $id;
   protected string $type;
-  protected string $body;
+  protected string|null $body = null;
   protected bool $is_terminal;
 
   public function __construct($args)
   {
     $this->id = $args['id'];
     $this->type = $args['type'];
-    $this->body = $args['body'] ?? '';
+    $this->body = $args['body'] ?? null;
     $this->is_terminal = $args['is_terminal'] ?? false;
   }
 

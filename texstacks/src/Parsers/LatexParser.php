@@ -98,6 +98,10 @@ class LatexParser
 
         'label' => $this->handleLabelNode(),
 
+        'includegraphics' => $this->handleIncludeGraphicsNode(),
+
+        'caption' => $this->handleCaptionNode(),
+
         default => $this->addToCurrentNode(),
 
       };
@@ -108,7 +112,14 @@ class LatexParser
 
   private function parseLine($line) {
 
-    $commands = ['begin', 'end', ...self::SECTION_COMMANDS, 'label', 'item'];
+    $commands = [
+      'begin', 'end',
+      ...self::SECTION_COMMANDS,
+      'label',
+      'item',
+      'caption',
+      'includegraphics',
+    ];
 
     foreach ($commands as $command) {
 
@@ -129,7 +140,11 @@ class LatexParser
     
     if (!preg_match('/\\\\' . $name . '\s*/', $line)) return false;
 
-    $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
+    if ($name !== 'caption') {
+      $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
+    } else {
+      $content = preg_match('/\{(?<content>.*)\}/', $line, $match) ? $match['content'] : null; 
+    }
 
     $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
 
@@ -164,9 +179,21 @@ class LatexParser
     {
       return 'section-cmd';
     }
+    else if($name == 'figure')
+    {
+      return 'figure-environment';
+    }
+    else if ($name == 'includegraphics')
+    {
+      return 'includegraphics';
+    }
     else if ($name == 'label')
     {
       return 'label';
+    }
+    else if ($name == 'caption')
+    {
+      return 'caption';
     }
     else if ($name == 'item')
     {
@@ -256,10 +283,24 @@ class LatexParser
   {
     $this->current_node->setLabel($this->parsed_line['command_content']);
 
-    if ($this->current_node->type() != 'section-cmd') {          
+    if ($this->current_node->type() === 'math-environment') {
       $new_node = $this->createCommandNode();
       $this->tree->addNode($new_node, $this->current_node);
     }
+    return true;
+  }
+
+  private function handleIncludeGraphicsNode()
+  {
+    $new_node = $this->createCommandNode();
+    $this->tree->addNode($new_node, $this->current_node);
+    return true;
+  }
+
+  private function handleCaptionNode()
+  {
+    $new_node = $this->createCommandNode();
+    $this->tree->addNode($new_node, $this->current_node);
     return true;
   }
 
