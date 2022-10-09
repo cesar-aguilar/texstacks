@@ -140,12 +140,8 @@ class LatexParser
     
     if (!preg_match('/^\\\\' . $name . '\s*/m', $line)) return false;
 
-    if ($name !== 'caption') {
-      $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
-    } else {
-      $content = preg_match('/\{(?<content>.*)\}/', $line, $match) ? $match['content'] : null; 
-    }
-
+    $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
+    
     $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
 
     $type = $this->getCommandType($name, $content);
@@ -330,6 +326,9 @@ class LatexParser
     $html_src = str_replace('<', ' \lt ', $html_src);
     $html_src = str_replace('>', ' \gt ', $html_src);
 
+    // Replace dollar sign with html entity
+    $html_src = str_replace('\\$', ' &#36; ', $html_src);
+
     // Replace $$...$$ with \[...\]
     // $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*}$1\\end{equation*}', $html_src);
@@ -339,7 +338,7 @@ class LatexParser
     $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math}$1\\end{math}", $html_src);
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
-    $html_src = preg_replace('/[^\\\](?:\\\)(?:\[)/', '\\begin{equation*}', $html_src);
+    $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*}', $html_src);
     $html_src = str_replace('\]', '\end{equation*}', $html_src);
 
     // Put labels on new line and make caption command an environment
