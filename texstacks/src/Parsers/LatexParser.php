@@ -339,6 +339,7 @@ class LatexParser
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
     $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*}', $html_src);
+    $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*}', $html_src);
     $html_src = str_replace('\]', '\end{equation*}', $html_src);
 
     // Put labels on new line and make caption command an environment
