@@ -54,6 +54,22 @@ class LatexParser
     'asparaenum',
   ];
 
+  const FONT_COMMANDS = [
+    'textrm',
+    'textsf',
+    'texttt',
+    'textmd',
+    'textbf',
+    'textup',
+    'textit',
+    'textsl',
+    'textsc',
+    'emph',
+    'textnormal',
+    'textsuperscript',
+    'textsubscript',
+  ];
+
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
@@ -93,6 +109,7 @@ class LatexParser
         'section-cmd' => $this->handleSectionNode(),
 
         'environment',
+        'font-environment',
         'math-environment',
         'list-environment' => $this->handleEnvironmentNode(),
 
@@ -118,6 +135,7 @@ class LatexParser
       'label',
       'item',      
       'includegraphics',
+      ...self::FONT_COMMANDS,
     ];
 
     foreach ($commands as $command) {
@@ -165,6 +183,10 @@ class LatexParser
       else if (in_array($content, self::LIST_ENVIRONMENTS))
       {
         return 'list-environment';
+      }
+      else if (in_array($content, self::FONT_COMMANDS))
+      {
+        return 'font-environment';
       }
       else
       {
@@ -329,6 +351,10 @@ class LatexParser
     // Replace dollar sign with html entity
     $html_src = str_replace('\\$', ' &#36; ', $html_src);
 
+    foreach (self::FONT_COMMANDS as $command) {
+      $html_src = preg_replace($this->cmdContentRegex($command), $this->beginEndWrapper($command) , $html_src);
+    }
+    
     // Replace $$...$$ with \[...\]
     // $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*}$1\\end{equation*}', $html_src);
@@ -346,6 +372,7 @@ class LatexParser
     $html_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $html_src);
     $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption}$1\\end{caption}', $html_src);
 
+
     // Replace more than two newlines with two newlines
     $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
     
@@ -361,7 +388,11 @@ class LatexParser
 
     $latex_src = preg_replace($this->envBeginWithOptionsRegex(), "\n$1$2\n", $latex_src);
 
-    $latex_src = preg_replace($this->envMathRegex(), "\n$1\n", $latex_src);
+    $latex_src = preg_replace($this->envBeginRegex('math'), "\n$1\n", $latex_src);
+
+    foreach (self::FONT_COMMANDS as $command) {
+      $latex_src = preg_replace($this->envBeginRegex($command), "\n$1\n", $latex_src);
+    }
 
     $latex_src = preg_replace('/' . $this->cmdRegex('end') . '/m', "\n$1\n", $latex_src);
 
@@ -388,9 +419,9 @@ class LatexParser
     return $pattern;
   }
 
-  private function envMathRegex() {
+  private function envBeginRegex($env) {
     $sp = '[\s\n]*';
-    $pattern = '/' . $sp . '(\\\\begin{math})' . $sp . '/m';
+    $pattern = '/' . $sp . '(\\\\begin{' . $env . '})' . $sp . '/m';
     return $pattern;
   }
 
@@ -400,11 +431,21 @@ class LatexParser
     return $pattern;
   }
 
+  private function cmdContentRegex($command) {
+    $sp = '[\s\n]*';
+    $pattern = '/' . $sp . '\\\\' . $command . '\s*\{(.*?)\}' . $sp . '/m';
+    return $pattern;
+  }
+
   private function itemRegex() {
     $sp = '[\s\n]*';
     $command = 'item';
     $pattern = $sp . '(\\\\' . $command . '[^\s\n]*)' . $sp;
     return $pattern;
+  }
+
+  private function beginEndWrapper($command) {
+    return '\\begin{'. $command .'}$1\\end{' . $command . '}';
   }
 
 }

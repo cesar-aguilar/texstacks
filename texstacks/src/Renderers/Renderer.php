@@ -41,6 +41,9 @@ class Renderer
     else if ($node->type() === 'list-environment') {
       return ListEnvironmentRenderer::renderNode($node, $body);
     }
+    else if ($node->type() === 'font-environment') {
+      return FontEnvironmentRenderer::renderNode($node, $body);
+    }
     else if ($node->type() === 'item') {
       return "<li>$body</li>";
     }
@@ -55,7 +58,10 @@ class Renderer
 
       if ($body == '' && $node->leftSibling()?->type() === 'text') return "<br><br>";
 
-      return $body;
+      // return $body;
+      // Remove vertical spacing of the type \\[1em]
+      $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '', $body);
+      return str_replace('\\\\','', $output);
 
     }
   }
