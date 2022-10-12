@@ -41,7 +41,7 @@ class FontEnvironmentRenderer
         }
         else if ($node->commandContent() === 'textsl')
         {
-            return " <span style=\"font-style: italics\">$body</span> ";
+            return " <em>$body</em> ";
         }
         else if ($node->commandContent() === 'textmd')
         {

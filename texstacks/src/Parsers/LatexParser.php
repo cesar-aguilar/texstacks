@@ -19,7 +19,6 @@ class LatexParser
     'alignedat', 'alignedat*',
     'alignat', 'alignat*',
     'flalign', 'flalign*',
-    'array',
     'subarray',
     'cases',
     'CD',
@@ -70,6 +69,12 @@ class LatexParser
     'textsubscript',
   ];
 
+  const TABULAR_ENVIRONMENTS = [
+    'tabular',
+    'supertabular',
+    'array',
+  ];
+
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
@@ -96,7 +101,7 @@ class LatexParser
 
   public function parse($latex_src_raw)
   {
-    
+
     $lines = $this->getLines($latex_src_raw);
     // dd($lines);
     /* Parse line and add node to syntax tree using depth-first traversal */
@@ -111,6 +116,7 @@ class LatexParser
         'environment',
         'font-environment',
         'math-environment',
+        'tabular-environment',
         'list-environment' => $this->handleEnvironmentNode(),
 
         'item' => $this->handleListItemNode(),
@@ -183,6 +189,10 @@ class LatexParser
       else if (in_array($content, self::LIST_ENVIRONMENTS))
       {
         return 'list-environment';
+      }
+      else if (in_array($content, self::TABULAR_ENVIRONMENTS))
+      {
+        return 'tabular-environment';
       }
       else if (in_array($content, self::FONT_COMMANDS))
       {
@@ -345,6 +355,7 @@ class LatexParser
     $html_src = StrHelper::DeleteLatexComments($html_src);
 
     // Replace less than and greater than symbols with latex commands
+    // note space after/before \lt and \gt
     $html_src = str_replace('<', ' \lt ', $html_src);
     $html_src = str_replace('>', ' \gt ', $html_src);
 
@@ -355,23 +366,23 @@ class LatexParser
       $html_src = preg_replace($this->cmdContentRegex($command), $this->beginEndWrapper($command) , $html_src);
     }
     
-    // Replace $$...$$ with \[...\]
-    // $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\[$1\\]', $html_src);
-    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*}$1\\end{equation*}', $html_src);
+    // Replace $$...$$ with \begin{equation*}...\end{equation*}
+    // note space after \begin{equation*}
+    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1\\end{equation*}', $html_src);
 
-    // Then replace $...$ with \(...\)
-    // $html_src = preg_replace('/\$(.+?)\$/s', '\\($1\\)', $html_src);
-    $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math}$1\\end{math}", $html_src);
+    // Then replace $...$ with \begin{math}...\end{math}
+    // note space after \begin{math}
+    $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
-    $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*}', $html_src);
-    $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*}', $html_src);
+    // note space after \begin{equation*}
+    $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
+    $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
     $html_src = str_replace('\]', '\end{equation*}', $html_src);
 
     // Put labels on new line and make caption command an environment
     $html_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $html_src);
-    $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption}$1\\end{caption}', $html_src);
-
+    $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption} $1\\end{caption}', $html_src);
 
     // Replace more than two newlines with two newlines
     $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
@@ -386,7 +397,11 @@ class LatexParser
       $latex_src = preg_replace($this->cmdWithOptionsRegex($command), "\n$1$2\n", $latex_src);
     }
 
+    $latex_src = preg_replace($this->envBeginTabularRegex(), "\n$1$2\n", $latex_src);
+
     $latex_src = preg_replace($this->envBeginWithOptionsRegex(), "\n$1$2\n", $latex_src);
+
+    $latex_src = preg_replace($this->envBeginNoOptionsRegex(), "\n$1$2\n", $latex_src);
 
     $latex_src = preg_replace($this->envBeginRegex('math'), "\n$1\n", $latex_src);
 
@@ -411,10 +426,27 @@ class LatexParser
     return $pattern;
   }
 
-  private function envBeginWithOptionsRegex() {
+  private function envBeginWithOptionsRegex()
+  {
+
     $sp = '[\s\n]*';
-    $basic = $this->cmdRegex('begin');
-    $with_options = $sp . '(\\\\begin\s*\{[^}]*\}\s*\[[^\]]*\])' . $sp;
+    $basic = $sp . '(\\\\begin\s*\{[a-z]+\}\s*\[[^\]]*\])(?!\{.*\})' . $sp;
+    $with_options = $sp . '(\\\\begin\s*\{[a-z]+\}\s*\[[^\]]*\])(?!\{.*\})' . $sp;
+    $pattern = '/' . $with_options . '|' . $basic . '/m';
+    return $pattern;
+  }
+
+  private function envBeginNoOptionsRegex()
+  {
+    $sp = '[\s\n]*';
+    $pattern = $sp . '(\\\\begin\s*\{[a-z|*]+\})\s*(?!(\{.*\}|\[.*\]))' . $sp;
+    return '/' . $pattern . '/m';
+  }
+
+  private function envBeginTabularRegex() {
+    $sp = '[\s\n]*';
+    $basic = $sp . '(\\\\begin\s*\{(?:tabular|array)\}\s*\{(.*)\})' . $sp;
+    $with_options = $sp . '(\\\\begin\s*\{(?:tabular|array)\}\s*\[[a-z]*\]\s*\{(?:.*)\})' . $sp;
     $pattern = '/' . $with_options . '|' . $basic . '/m';
     return $pattern;
   }

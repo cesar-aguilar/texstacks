@@ -29,39 +29,52 @@ class Renderer
   private function renderNode($node, string $body = null): string
   {
 
-    if ($node->type() === 'section-cmd') {
+    if ($node->type() === 'section-cmd')
+    {
       return SectionCommandRenderer::renderNode($node, $body);
     }
-    else if ($node->type() === 'math-environment') {
+    else if ($node->type() === 'math-environment')
+    {
       return AmsMathEnvironmentRenderer::renderNode($node, $body);
     }
-    else if ($node->type() === 'environment') {
+    else if ($node->type() === 'environment')
+    {
       return EnvironmentRenderer::renderNode($node, $body);
     }
-    else if ($node->type() === 'list-environment') {
+    else if ($node->type() === 'tabular-environment')
+    {
+      return TabularEnvironmentRenderer::renderNode($node, $body);
+    }
+    else if ($node->type() === 'list-environment')
+    {
       return ListEnvironmentRenderer::renderNode($node, $body);
     }
-    else if ($node->type() === 'font-environment') {
+    else if ($node->type() === 'font-environment')
+    {
       return FontEnvironmentRenderer::renderNode($node, $body);
     }
-    else if ($node->type() === 'item') {
+    else if ($node->type() === 'item')
+    {
       return "<li>$body</li>";
     }
-    else if ($node->type() === 'includegraphics') {
+    else if ($node->type() === 'includegraphics')
+    {
       return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
     }
-    else {
-
+    else
+    {
       if ($node->type() === 'label') return $node->commandSource();
 
       if ($node->ancestorOfType('math-environment')) return $body;
 
       if ($body == '' && $node->leftSibling()?->type() === 'text') return "<br><br>";
 
-      // return $body;
-      // Remove vertical spacing of the type \\[1em]
+      if ($node->ancestorOfType('tabular-environment')) return $body;
+
+      // Remove vertical spacing of the type \\[1em] if not in tabular environment
       $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '', $body);
-      return str_replace('\\\\','', $output);
+      return $output;
+      // return str_replace('\\\\','', $output);
 
     }
   }

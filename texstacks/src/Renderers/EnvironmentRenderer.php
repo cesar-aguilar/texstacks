@@ -36,16 +36,24 @@ class EnvironmentRenderer
         {
             return self::renderFigureEnvironment($node, $body);
         }
+        else if ($node->commandContent() === 'table')
+        {
+            return self::renderTableEnvironment($node, $body);
+        }
         else if ($node->commandContent() === 'caption')
         {
-            if ($node->parent()->commandContent() === 'figure') {
+            if ($node->parent()->commandContent() === 'figure')
+            {
                 return "<figcaption>$body</figcaption>";
-              }
-              else if ($node->parent()->commandContent() === 'table') {
-                return "<caption>$body</caption>";
-              } else {
+            }
+            else if ($node->parent()->commandContent() === 'table')
+            {
+                return "<div class=\"table-caption\">$body</div>";
+            }
+            else
+            {
                 return "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>";
-              }
+            }
         }
         else
         {
@@ -78,5 +86,10 @@ class EnvironmentRenderer
     private static function renderUnknownEnvironment(EnvironmentNode $node, string $body = null): string
     {
         return "<div class=\"unknown-env\"><div class=\"unknown-env-head\" id=\"{$node->commandLabel()}\">Name: <strong>{$node->commandContent()}</strong></div><div class=\"unknown-env-body\">$body</div></div>";
+    }
+
+    private static function renderTableEnvironment(EnvironmentNode $node, string $body = null): string
+    {
+        return "<div class=\"table-container\" id=\"{$node->commandLabel()}\">$body</div>";
     }
 }
