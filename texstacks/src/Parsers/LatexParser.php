@@ -77,8 +77,7 @@ class LatexParser
 
   protected SyntaxTree $tree;  
   private $current_node;
-  private $parsed_line;
-  private $line_number;
+  private $parsed_line;  
 
   public function __construct()
   {
@@ -136,12 +135,12 @@ class LatexParser
   private function parseLine($line, $number) {
 
     $commands = [
-      'begin', 'end',
+      'begin',
+      'end',
       ...self::SECTION_COMMANDS,
       'label',
       'item',      
       'includegraphics',
-      ...self::FONT_COMMANDS,
     ];
 
     foreach ($commands as $command) {
@@ -181,55 +180,37 @@ class LatexParser
   }
 
   private function getCommandType($name, $content) {
+
     if ($name == 'begin' || $name == 'end') {
-      if (in_array($content, self::AMS_MATH_ENVIRONMENTS))
-      {
-        return 'math-environment';
-      }
-      else if (in_array($content, self::LIST_ENVIRONMENTS))
-      {
-        return 'list-environment';
-      }
-      else if (in_array($content, self::TABULAR_ENVIRONMENTS))
-      {
-        return 'tabular-environment';
-      }
-      else if (in_array($content, self::FONT_COMMANDS))
-      {
-        return 'font-environment';
-      }
-      else
-      {
-        return 'environment';
-      }
+
+      if (in_array($content, self::AMS_MATH_ENVIRONMENTS)) return 'math-environment';
+
+      if (in_array($content, self::LIST_ENVIRONMENTS))     return 'list-environment';
+
+      if (in_array($content, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
+
+      if (in_array($content, self::FONT_COMMANDS))         return 'font-environment';
+
+      return 'environment';
+
     }
-    else if (in_array($name, self::SECTION_COMMANDS))
-    {
-      return 'section-cmd';
-    }
-    else if($name == 'figure')
-    {
-      return 'figure-environment';
-    }
-    else if ($name == 'includegraphics')
-    {
-      return 'includegraphics';
-    }
-    else if ($name == 'label')
-    {
-      return 'label';
-    }
-    else if ($name == 'caption')
-    {
-      return 'caption';
-    }
-    else if ($name == 'item')
-    {
-      return 'item';
-    }
-    else {
-      return 'text';
-    }
+
+    if (in_array($name, self::SECTION_COMMANDS)) return 'section-cmd';
+
+    return match ($name) {
+
+      'includegraphics' => 'includegraphics',
+
+      'label' => 'label',
+
+      'caption' => 'caption',
+
+      'item' => 'item',
+
+      default => 'text',
+
+    };
+
   }
 
   private function addToCurrentNode()

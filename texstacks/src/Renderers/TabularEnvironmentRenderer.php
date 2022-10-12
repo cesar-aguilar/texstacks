@@ -15,10 +15,8 @@ class TabularEnvironmentRenderer
         {
             return self::renderTabularEnvironment($node, $body);
         } 
-        else
-        {
-            return self::renderArrayEnvironment($node, $body);
-        }
+
+        return self::renderArrayEnvironment($node, $body);
         
     }
 

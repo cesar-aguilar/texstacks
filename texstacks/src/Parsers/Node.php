@@ -104,9 +104,11 @@ class Node
 
     $ancestor = $this->parent;
 
+    $types = is_array($type) ? $type : [$type];
+
     while ($ancestor)
     {
-      if ($ancestor->type() === $type)
+      if (in_array($ancestor->type(), $types))
       {
         return true;
       }

@@ -41,7 +41,7 @@ class LatexArticle
     $aux_path = $this->dir . DIRECTORY_SEPARATOR . $this->basename . '.aux';
 
     $this->ref_labels = (new AuxParser($aux_path))->getLabelsAsArray();
-
+    
     $this->html_src = $this->latex_src;
 
     $this->parser->parse($this->html_src);

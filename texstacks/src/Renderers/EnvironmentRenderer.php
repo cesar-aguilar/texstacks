@@ -21,44 +21,23 @@ class EnvironmentRenderer
         $body = $body ?? '';
 
         if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS))
-        {
             return self::renderTheoremEnvironment($node, $body);
-        } 
-        else if ($node->commandContent() === 'proof') 
-        {
-            return self::renderProofEnvironment($node, $body);
-        }
-        else if ($node->commandContent() === 'example')
-        {
-            return self::renderExampleEnvironment($node, $body);
-        }
-        else if ($node->commandContent() === 'figure') 
-        {
-            return self::renderFigureEnvironment($node, $body);
-        }
-        else if ($node->commandContent() === 'table')
-        {
-            return self::renderTableEnvironment($node, $body);
-        }
-        else if ($node->commandContent() === 'caption')
-        {
-            if ($node->parent()->commandContent() === 'figure')
-            {
-                return "<figcaption>$body</figcaption>";
-            }
-            else if ($node->parent()->commandContent() === 'table')
-            {
-                return "<div class=\"table-caption\">$body</div>";
-            }
-            else
-            {
-                return "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>";
-            }
-        }
-        else
-        {
-            return self::renderUnknownEnvironment($node, $body);
-        }
+
+        return match ($node->commandContent()) {
+
+            'proof' => self::renderProofEnvironment($node, $body),
+
+            'example' => self::renderExampleEnvironment($node, $body),
+
+            'figure' => self::renderFigureEnvironment($node, $body),
+
+            'table' => self::renderTableEnvironment($node, $body),
+
+            'caption' => self::renderCaptionEnvironment($node, $body),
+
+            default => self::renderUnknownEnvironment($node, $body)
+        };
+
     }
 
     private static function renderTheoremEnvironment(EnvironmentNode $node, string $body = null): string
@@ -70,7 +49,7 @@ class EnvironmentRenderer
 
     private static function renderProofEnvironment(EnvironmentNode $node, string $body = null): string
     {
-        return "<div class=\"proof-env\"><div class=\"proof-head\" id=\"{$node->commandLabel()}\">Proof</div><div class=\"proof-body\">$body</div></div>";
+        return "<div class=\"proof-env\"><div class=\"proof-head\" id=\"{$node->commandLabel()}\">Proof</div><div class=\"proof-body\">$body <span style=\"font-variant: small-caps\">QED</span></div></div>";
     }
 
     private static function renderExampleEnvironment(EnvironmentNode $node, string $body = null): string
@@ -92,4 +71,18 @@ class EnvironmentRenderer
     {
         return "<div class=\"table-container\" id=\"{$node->commandLabel()}\">$body</div>";
     }
+
+    private static function renderCaptionEnvironment(EnvironmentNode $node, string $body = null): string
+    {
+        return match ($node->parent()->commandContent()) {
+
+            'figure' => "<figcaption>$body</figcaption>",
+
+            'table' => "<div class=\"table-caption\">$body</div>",
+
+            default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
+
+        };
+    }
+
 }

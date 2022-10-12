@@ -11,26 +11,21 @@ class SectionCommandRenderer
   {
     $body = $body ?? '';
 
-    if ($node->commandName() === 'document') {
+    return match ($node->commandName()) {
 
-      return "<main>$body</main>";
-    } else if ($node->commandName() === 'chapter') {
+      'document' => "<main>$body</main>",
 
-      return "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>{$node->commandContent()}</h1>$body</article>";
-    } else if ($node->commandName() === 'section') {
+      'chapter' => "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>{$node->commandContent()}</h1>$body</article>",
 
-      return "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>{$node->commandContent()}</h2>$body</section>";
-    } else if ($node->commandName() === 'subsection') {
+      'section' => "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>{$node->commandContent()}</h2>$body</section>",
 
-      return "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>{$node->commandContent()}</h3>$body</section>";
-    } else if ($node->commandName() === 'subsubsection') {
+      'subsection' => "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>{$node->commandContent()}</h3>$body</section>",
 
-      return "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>{$node->commandContent()}</h4>$body</section>";
-    } else {
+      'subsubsection' => "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>{$node->commandContent()}</h4>$body</section>",
 
-      return "<div>$body</div>";
-    }
+      default => "<div>$body</div>"
 
+    };
 
   }
 
