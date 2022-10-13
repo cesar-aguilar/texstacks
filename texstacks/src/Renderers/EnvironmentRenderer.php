@@ -25,6 +25,8 @@ class EnvironmentRenderer
 
         return match ($node->commandContent()) {
 
+            'center' => "<div style=\"text-align: center\">$body</div>",
+
             'proof' => self::renderProofEnvironment($node, $body),
 
             'example' => self::renderExampleEnvironment($node, $body),
@@ -36,6 +38,8 @@ class EnvironmentRenderer
             'caption' => self::renderCaptionEnvironment($node, $body),
 
             'verbatim' => "<pre>$body</pre>",
+
+            'abstract' => self::renderAbstract($node, $body),
 
             default => self::renderUnknownEnvironment($node, $body)
         };
@@ -87,6 +91,11 @@ class EnvironmentRenderer
             default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
 
         };
+    }
+
+    private static function renderAbstract(EnvironmentNode $node, string $body = null): string
+    {
+        return "<div class=\"abstract-container\"><div class=\"abstract-head\">Abstract</div><div class=\"abstract-body\">$body</div></div>";
     }
 
 }

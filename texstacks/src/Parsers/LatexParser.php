@@ -163,8 +163,8 @@ class LatexParser
     
     if (!preg_match('/^\\\\' . $name . '\s*/m', $line)) return false;
 
-    $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null; 
-    
+    $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null;
+
     $options = preg_match('/\[(?<options>[^\]]*)\]/', $line, $match) ? $match['options'] : null;
 
     $type = $this->getCommandType($name, $content);
@@ -334,6 +334,8 @@ class LatexParser
     $html_src = preg_replace('/.*\\\begin\s*{document}[\s\n]*(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
 
     $html_src = StrHelper::DeleteLatexComments($html_src);
+
+    $html_src = str_replace('``', '"', $html_src);
 
     // Replace less than and greater than symbols with latex commands
     // note space after/before \lt and \gt
