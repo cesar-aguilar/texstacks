@@ -345,9 +345,9 @@ class LatexParser
     // Replace dollar sign with html entity
     $html_src = str_replace('\\$', '&#36;', $html_src);
 
-    foreach (self::FONT_COMMANDS as $command) {
-      $html_src = preg_replace($this->cmdContentRegex($command), $this->beginEndWrapper($command) , $html_src);
-    }
+    // foreach (self::FONT_COMMANDS as $command) {
+    //   $html_src = preg_replace($this->cmdContentRegex($command), $this->beginEndWrapper($command) , $html_src);
+    // }
     
     // Replace $$...$$ with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
@@ -370,7 +370,210 @@ class LatexParser
     // Replace more than two newlines with two newlines
     $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
     
-    return $this->putCommandsOnNewLine($html_src);
+    return $this->tokenize($html_src);
+  }
+
+  private function tokenize(string $latex_src) {
+
+    $length = strlen($latex_src);
+
+    $tokens = [];
+
+    $i = 0;
+
+    $line_number = 1;
+
+    $buffer = '';
+    
+    while ($i < $length) {
+
+      $char = $latex_src[$i];
+
+      if ($char === '\\') {
+        
+        $i++;
+
+        $command_name = '';
+
+        // Check if control word
+        if ($i < $length && ctype_alpha($latex_src[$i])) {
+          
+          // Get command name          
+          while ($i < $length && ctype_alpha($char = $latex_src[$i])) {
+            $command_name .= $char;
+            $i++;
+          }
+          
+          // Decide how to tokenize command
+          if (in_array($command_name, self::SECTION_COMMANDS)) {
+
+            try {
+              list($j, $token) = $this->tokenizeSection($latex_src, $i, $command_name, $line_number);              
+            } catch (\Exception $e) {
+              die($e->getMessage());
+            }
+  
+            $i = $j;
+            $tokens[] = $token;
+          
+          }
+
+        }
+        else
+        {
+          // Control symbol
+          die('here inside control symbol');
+
+        }
+        
+      } 
+      else {
+
+        if ($char === "\n") $line_number++;
+        
+        $buffer .= $char;
+        $i++;
+        
+      }
+
+    }
+
+    dd($tokens);
+
+  }
+
+  private function tokenizeSection($latex_src, $i, $command_name, $line_number): array
+  {
+
+    $length = strlen($latex_src);
+
+    $content = '';
+    $options = '';
+    $src = '\\' . $command_name;
+    $STARRED = false;
+    $TOC_ENTRY = false;
+
+    while ($i < $length) {
+
+      $char = $latex_src[$i];
+
+      if (!in_array($char, [' ', '*', '{', '}', '[', ']'])) {
+        $src .= $char;
+        throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+      }
+
+      if ($char === ' ') {
+        $i++;
+        continue;
+      }
+
+      if ($char === '*') {
+
+        if ($STARRED || $TOC_ENTRY) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+        }
+
+        $i++;
+        $command_name .= '*';
+        $src .= '*';
+        $STARRED = true;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if ($TOC_ENTRY) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+        }
+
+        $i++;
+        $options = '';
+
+        $src .= '[';
+
+        while ($i < $length && $latex_src[$i] !== ']') {
+
+          if ($latex_src[$i] === "\n") {
+            throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+          }
+
+          $options .= $latex_src[$i];
+          $src .= $latex_src[$i];
+          $i++;
+
+        }
+
+        if ($i === $length) {
+          throw new \Exception("$src <--- Missing closing bracket ] for \\$command_name on line $line_number");
+        }
+
+        $src .= ']';
+
+        $i++;
+        $TOC_ENTRY = true;
+        continue;
+      }
+
+      if ($latex_src[$i] === '{' ) {
+          
+          $i++;
+          $content = '';
+          $src .= '{';
+
+          $brace_count = 1;
+  
+          while ($i < $length && $brace_count > 0) {
+
+            if ($latex_src[$i] === "\n") {
+              throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+            }
+
+            if ($latex_src[$i] !== '}') {
+
+              $content .= $latex_src[$i];
+              $src .= $latex_src[$i];
+
+              if ($latex_src[$i] === '{' && $latex_src[$i-1] !== '\\') $brace_count++;
+
+              $i++;
+
+            } else {
+
+              if ($latex_src[$i-1] !== '\\') $brace_count--;
+ 
+              if ($brace_count > 0) {
+                $content .= '}';
+                $src .= '}';
+                $i++;
+              }
+
+            }
+
+          }
+  
+          if ($i === $length) {            
+            throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line $line_number");
+          }
+
+          $src .= '}';
+            
+          $i++;
+  
+          return [$i, [
+            'type' => 'section-cmd',
+            'command_name' => $command_name,
+            'command_content' => $content,
+            'command_options' => $options,
+            'command_src' => $src,
+            'line_number' => $line_number]
+          ];
+  
+      }
+      
+    }
+    
   }
 
   private function putCommandsOnNewLine(string $latex_src): string
