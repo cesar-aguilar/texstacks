@@ -408,7 +408,7 @@ class LatexParser
           if (in_array($command_name, self::SECTION_COMMANDS)) {
 
             try {
-              list($j, $token) = $this->tokenizeSection($latex_src, $i, $command_name, $line_number);              
+              list($j, $token) = $this->tokenizeSection(substr($latex_src, $i), $i, $command_name, $line_number);              
             } catch (\Exception $e) {
               die($e->getMessage());
             }
@@ -444,7 +444,7 @@ class LatexParser
 
   private function tokenizeSection($latex_src, $i, $command_name, $line_number): array
   {
-
+    
     $length = strlen($latex_src);
 
     $content = '';
@@ -453,9 +453,11 @@ class LatexParser
     $STARRED = false;
     $TOC_ENTRY = false;
 
-    while ($i < $length) {
+    $j = 0;
 
-      $char = $latex_src[$i];
+    while ($j < $length) {
+
+      $char = $latex_src[$j];
 
       if (!in_array($char, [' ', '*', '{', '}', '[', ']'])) {
         $src .= $char;
@@ -463,7 +465,7 @@ class LatexParser
       }
 
       if ($char === ' ') {
-        $i++;
+        $j++;
         continue;
       }
 
@@ -474,7 +476,7 @@ class LatexParser
           throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
         }
 
-        $i++;
+        $j++;
         $command_name .= '*';
         $src .= '*';
         $STARRED = true;
@@ -488,80 +490,80 @@ class LatexParser
           throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
         }
 
-        $i++;
+        $j++;
         $options = '';
 
         $src .= '[';
 
-        while ($i < $length && $latex_src[$i] !== ']') {
+        while ($j < $length && $latex_src[$j] !== ']') {
 
-          if ($latex_src[$i] === "\n") {
+          if ($latex_src[$j] === "\n") {
             throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
           }
 
-          $options .= $latex_src[$i];
-          $src .= $latex_src[$i];
-          $i++;
+          $options .= $latex_src[$j];
+          $src .= $latex_src[$j];
+          $j++;
 
         }
 
-        if ($i === $length) {
+        if ($j === $length) {
           throw new \Exception("$src <--- Missing closing bracket ] for \\$command_name on line $line_number");
         }
 
         $src .= ']';
 
-        $i++;
+        $j++;
         $TOC_ENTRY = true;
         continue;
       }
 
-      if ($latex_src[$i] === '{' ) {
+      if ($latex_src[$j] === '{' ) {
           
-          $i++;
+          $j++;
           $content = '';
           $src .= '{';
 
           $brace_count = 1;
   
-          while ($i < $length && $brace_count > 0) {
+          while ($j < $length && $brace_count > 0) {
 
-            if ($latex_src[$i] === "\n") {
+            if ($latex_src[$j] === "\n") {
               throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
             }
 
-            if ($latex_src[$i] !== '}') {
+            if ($latex_src[$j] !== '}') {
 
-              $content .= $latex_src[$i];
-              $src .= $latex_src[$i];
+              $content .= $latex_src[$j];
+              $src .= $latex_src[$j];
 
-              if ($latex_src[$i] === '{' && $latex_src[$i-1] !== '\\') $brace_count++;
+              if ($latex_src[$j] === '{' && $latex_src[$j-1] !== '\\') $brace_count++;
 
-              $i++;
+              $j++;
 
             } else {
 
-              if ($latex_src[$i-1] !== '\\') $brace_count--;
+              if ($latex_src[$j-1] !== '\\') $brace_count--;
  
               if ($brace_count > 0) {
                 $content .= '}';
                 $src .= '}';
-                $i++;
+                $j++;
               }
 
             }
 
           }
   
-          if ($i === $length) {            
+          if ($j === $length) {            
             throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line $line_number");
           }
 
           $src .= '}';
             
-          $i++;
+          $j++;
   
-          return [$i, [
+          return [$i + $j, [
             'type' => 'section-cmd',
             'command_name' => $command_name,
             'command_content' => $content,
