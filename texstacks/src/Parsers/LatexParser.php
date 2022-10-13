@@ -325,7 +325,7 @@ class LatexParser
 
   private function getLines($latex_src_raw)
   {
-    return array_map('trim', explode("\n", $this->normalizeLatexSource($latex_src_raw)));
+    return explode("\n", $this->normalizeLatexSource($latex_src_raw));
   }
 
   private function normalizeLatexSource(string $latex_src): string
