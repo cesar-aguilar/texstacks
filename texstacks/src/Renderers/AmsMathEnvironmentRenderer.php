@@ -8,6 +8,8 @@ class AmsMathEnvironmentRenderer
   public static function renderNode($node, $body = null)
   {
 
+    $body = $body ?? '';
+
     if ($node->commandContent() === 'math') return " \( $body \) ";
 
     $latex =  $node->commandSource() . $body . "\\end{{$node->commandContent()}}";

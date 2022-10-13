@@ -35,6 +35,8 @@ class EnvironmentRenderer
 
             'caption' => self::renderCaptionEnvironment($node, $body),
 
+            'verbatim' => "<pre>$body</pre>",
+
             default => self::renderUnknownEnvironment($node, $body)
         };
 
@@ -64,6 +66,8 @@ class EnvironmentRenderer
 
     private static function renderUnknownEnvironment(EnvironmentNode $node, string $body = null): string
     {
+        if ($node->ancestorOfType(['math-environment', 'tabular-environment'])) return $body;
+
         return "<div class=\"unknown-env\"><div class=\"unknown-env-head\" id=\"{$node->commandLabel()}\">Name: <strong>{$node->commandContent()}</strong></div><div class=\"unknown-env-body\">$body</div></div>";
     }
 

@@ -10,7 +10,7 @@ class FontEnvironmentRenderer
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
         $body = $body ?? '';
-                
+
         if ($node->ancestorOfType('math-environment')) return "\\" . $node->commandContent(). "{" . $body . "}";
         
         return match ($node->commandContent()) {

@@ -54,6 +54,9 @@ class Renderer
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '', $body);
 
+    // If parent is verbatim then add new line
+    if ($node->parent()?->commandContent() === 'verbatim') $output = $output . "\n";
+
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '', $output);
 

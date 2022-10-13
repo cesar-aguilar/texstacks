@@ -337,11 +337,11 @@ class LatexParser
 
     // Replace less than and greater than symbols with latex commands
     // note space after/before \lt and \gt
-    $html_src = str_replace('<', ' \lt ', $html_src);
-    $html_src = str_replace('>', ' \gt ', $html_src);
+    $html_src = str_replace('<', '&lt;', $html_src);
+    $html_src = str_replace('>', '&gt;', $html_src);
 
     // Replace dollar sign with html entity
-    $html_src = str_replace('\\$', ' &#36; ', $html_src);
+    $html_src = str_replace('\\$', '&#36;', $html_src);
 
     foreach (self::FONT_COMMANDS as $command) {
       $html_src = preg_replace($this->cmdContentRegex($command), $this->beginEndWrapper($command) , $html_src);
