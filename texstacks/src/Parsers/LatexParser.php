@@ -8,9 +8,23 @@ use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\CommandNode;
 use TexStacks\Parsers\SectionNode;
 use TexStacks\Parsers\EnvironmentNode;
+use TexStacks\Parsers\Token;
 
 class LatexParser
 {
+
+  const DISPLAY_MATH_ENVIRONMENTS = [
+    'equation',
+    'equation*',
+    'align',
+    'align*',
+    'multline',
+    'multline*',
+    'gather',
+    'gather*',
+    'flalign',
+    'flalign*',
+  ];
 
   const AMS_MATH_ENVIRONMENTS = [
     'math',
@@ -77,7 +91,10 @@ class LatexParser
 
   protected SyntaxTree $tree;  
   private $current_node;
-  private $parsed_line;  
+  private $parsed_line;
+  private $tokens = [];
+  private $buffer = '';
+  private $line_number = 0;
 
   public function __construct()
   {
@@ -355,7 +372,13 @@ class LatexParser
 
     // Then replace $...$ with \begin{math}...\end{math}
     // note space after \begin{math}
-    $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
+    // $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
+    $html_src = preg_replace('/\$(.*?)\$/s', "\\($1\\)", $html_src);
+
+    // Then replace \(...\) with \begin{math}...\end{math}
+    // note space after \begin{math}
+    // $html_src = str_replace('\(', "\\begin{math} ", $html_src);
+    // $html_src = str_replace('\)', "\\end{math}", $html_src);
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
@@ -368,81 +391,143 @@ class LatexParser
     $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption} $1\\end{caption}', $html_src);
 
     // Replace more than two newlines with two newlines
-    $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
+    // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
     
     return $this->tokenize($html_src);
+    
+    // return $this->putCommandsOnNewLine($html_src);
   }
 
   private function tokenize(string $latex_src) {
-
+ 
     $length = strlen($latex_src);
-
-    $tokens = [];
-
+ 
     $i = 0;
 
-    $line_number = 1;
-
-    $buffer = '';
+    $this->line_number = $length > 0 ? 1 : 0;
     
-    while ($i < $length) {
+    while ($i < $length)
+    {
 
       $char = $latex_src[$i];
 
-      if ($char === '\\') {
-        
+      if ($char === '\\')
+      {
+
         $i++;
 
         $command_name = '';
 
-        // Check if control word
+        // Check if control word (starts with alpha character)
         if ($i < $length && ctype_alpha($latex_src[$i])) {
-          
-          // Get command name          
+
+          // Get command name
           while ($i < $length && ctype_alpha($char = $latex_src[$i])) {
             $command_name .= $char;
             $i++;
           }
-          
+
           // Decide how to tokenize command
-          if (in_array($command_name, self::SECTION_COMMANDS)) {
+          if (in_array($command_name, self::SECTION_COMMANDS))
+          {
 
             try {
-              list($j, $token) = $this->tokenizeSection(substr($latex_src, $i), $i, $command_name, $line_number);              
+              list($j, $token) = $this->tokenizeSection(substr($latex_src, $i), $i, $command_name);
             } catch (\Exception $e) {
               die($e->getMessage());
             }
-  
+            
             $i = $j;
-            $tokens[] = $token;
-          
+            $this->addToken($token);
+
+          }
+          else if ($command_name === 'begin' || $command_name === 'end')
+          {
+
+            try {
+              list($j, $env) = $this->getEnvName(substr($latex_src, $i));
+            } catch (\Exception $e) {
+              die($e->getMessage());
+            }
+
+            $i += $j;
+            
+            if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) {
+
+              $this->addToken(new Token([
+                'type' => 'math-environment',
+                'command_name' => $command_name,
+                'command_content' => $env,
+                'command_options' => '',
+                'command_src' => "\\" . $command_name . "{" . $env. "}",
+                'line_number' => $this->line_number,
+              ]));
+
+            }
+            else
+            {
+              $this->addBufferAsToken();
+            }
+
+          }
+          else
+          {
+            $this->buffer .= "\\" . $command_name;
           }
 
         }
         else
         {
           // Control symbol
-          die('here inside control symbol');
+          $this->buffer .= $char . $latex_src[$i];
+          $i++;
 
         }
         
       } 
-      else {
+      else
+      {
 
-        if ($char === "\n") $line_number++;
+        if ($char === "\n") $this->line_number++;
         
-        $buffer .= $char;
+        $this->buffer .= $char;
         $i++;
-        
+
       }
 
     }
 
-    dd($tokens);
+    $this->addBufferAsToken();
+
+    dd($this->tokens);
 
   }
 
-  private function tokenizeSection($latex_src, $i, $command_name, $line_number): array
+  private function addToken(Token $token) {
+
+    $this->addBufferAsToken();
+
+    $this->tokens[] = $token;
+
+  }
+
+  private function addBufferAsToken() {
+
+    if ($this->buffer !== '') {
+
+      $this->tokens[] = new Token([
+        'type' => 'text',        
+        'body' => $this->buffer,
+        'line_number' => $this->line_number,
+      ]);
+
+      $this->buffer = '';
+
+    }
+
+  }
+
+  private function tokenizeSection($latex_src, $i, $command_name): array
   {
     
     $length = strlen($latex_src);
@@ -453,15 +538,17 @@ class LatexParser
     $STARRED = false;
     $TOC_ENTRY = false;
 
+    $ALLOWED_CHARS = [' ', '*', '{', '['];
+
     $j = 0;
 
     while ($j < $length) {
 
       $char = $latex_src[$j];
 
-      if (!in_array($char, [' ', '*', '{', '}', '[', ']'])) {
+      if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
-        throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
       }
 
       if ($char === ' ') {
@@ -473,7 +560,7 @@ class LatexParser
 
         if ($STARRED || $TOC_ENTRY) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
         }
 
         $j++;
@@ -487,7 +574,7 @@ class LatexParser
 
         if ($TOC_ENTRY) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
         }
 
         $j++;
@@ -498,7 +585,7 @@ class LatexParser
         while ($j < $length && $latex_src[$j] !== ']') {
 
           if ($latex_src[$j] === "\n") {
-            throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+            throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
           }
 
           $options .= $latex_src[$j];
@@ -508,7 +595,7 @@ class LatexParser
         }
 
         if ($j === $length) {
-          throw new \Exception("$src <--- Missing closing bracket ] for \\$command_name on line $line_number");
+          throw new \Exception("$src <--- Missing closing bracket ] for \\$command_name on line {$this->line_number}");
         }
 
         $src .= ']';
@@ -518,7 +605,7 @@ class LatexParser
         continue;
       }
 
-      if ($latex_src[$j] === '{' ) {
+      if ($char === '{' ) {
           
           $j++;
           $content = '';
@@ -529,7 +616,7 @@ class LatexParser
           while ($j < $length && $brace_count > 0) {
 
             if ($latex_src[$j] === "\n") {
-              throw new \Exception("$src <--- Parse error on line $line_number: invalid sectioning command");
+              throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
             }
 
             if ($latex_src[$j] !== '}') {
@@ -556,26 +643,97 @@ class LatexParser
           }
   
           if ($j === $length) {            
-            throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line $line_number");
+            throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line {$this->line_number}");
           }
 
           $src .= '}';
             
           $j++;
   
-          return [$i + $j, [
+          return [$i + $j, new Token([
             'type' => 'section-cmd',
             'command_name' => $command_name,
             'command_content' => $content,
             'command_options' => $options,
             'command_src' => $src,
-            'line_number' => $line_number]
+            'line_number' => $this->line_number])
           ];
   
       }
       
     }
+
+    return [$i + $j, new Token([
+      'type' => 'section-cmd',
+      'command_name' => $command_name,
+      'command_content' => $content,
+      'command_options' => $options,
+      'command_src' => $src,
+      'line_number' => $this->line_number])
+    ];
     
+  }
+  
+  private function getEnvName($text) {
+    
+    $length = strlen($text);
+
+    $i = 0;
+    
+    try {
+      $j = $this->eatSpaceUntilTarget('{', $text);
+    } catch (\Exception $e) {
+      die($e->getMessage() . " in environment declaration on line {$this->line_number}");
+    }
+
+    $i += $j;
+    $env = '';
+
+    while ($i < $length && $text[$i] !== '}') {
+
+      $char = $text[$i];
+
+      if (!(ctype_alpha($char) || $char === '*')) {
+        throw new \Exception($env . $char . " <--- Invalid environment name at line {$this->line_number}");
+      }
+
+      $env .= $char;
+      $i++;
+
+    }
+
+    if ($i === $length) {
+      throw new \Exception("Expected } at line {$this->line_number}");
+    }
+
+    return [++$i, $env];
+  
+  }
+
+  private function eatSpaceUntilTarget($target, $text) {
+      
+      $length = strlen($text);
+
+      if ($length === 0) {
+        throw new \Exception("Parse error: missing $target");
+      }
+  
+      $i = 0;
+
+      $char = $text[$i];
+      $i++;
+  
+      while ($i < $length && $char === ' ') {
+        $char = $text[$i];
+        $i++;
+      }
+
+      if ($char === $target) {
+        return $i;
+      }
+      
+      throw new \Exception("Parse error: missing $target");
+  
   }
 
   private function putCommandsOnNewLine(string $latex_src): string
