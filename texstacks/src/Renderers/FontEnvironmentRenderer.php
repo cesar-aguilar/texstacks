@@ -11,9 +11,9 @@ class FontEnvironmentRenderer
     {
         $body = $body ?? '';
 
-        if ($node->ancestorOfType('math-environment')) return "\\" . $node->commandContent(). "{" . $body . "}";
+        if ($node->ancestorOfType('math-environment')) return "\\" . $node->commandName(). "{" . $body . "}";
         
-        return match ($node->commandContent()) {
+        return match ($node->commandName()) {
 
             'emph' => " <em>$body</em> ",
 
@@ -41,7 +41,7 @@ class FontEnvironmentRenderer
 
             'textsubscript' => "<sub>$body</sub> ",
 
-            default => "\\" . $node->commandContent(). "{" . $body . "}"
+            default => "\\" . $node->commandName(). "{" . $body . "}"
 
         };
     }

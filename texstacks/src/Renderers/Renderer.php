@@ -43,7 +43,9 @@ class Renderer
 
     if ($node->type() === 'item') return "<li>$body</li>";
 
-    if ($node->type() === 'includegraphics') return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
+    if ($node->type() === 'includegraphics') return self::renderIncludeGraphics($node, $body);
+
+    if ($node->type() === 'caption') return self::renderCaptionEnvironment($node, $body);
 
     if ($node->type() === 'label') return $node->commandSource();
 
@@ -62,5 +64,23 @@ class Renderer
 
     // return str_replace('\\\\','', $output);
 
+  }
+
+  private static function renderIncludeGraphics($node, string $body = null): string
+  {
+    return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
+  }
+
+  private static function renderCaptionEnvironment($node, string $body = null): string
+  {
+    return match ($node->parent()->commandContent()) {
+
+      'figure' => "<figcaption>$body</figcaption>",
+
+      'table' => "<div class=\"table-caption\">$body</div>",
+
+      default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
+
+    };
   }
 }

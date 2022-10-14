@@ -20,7 +20,8 @@ use TexStacks\Parsers\LatexParser;
  */
 class CommandNode extends Node
 {
-
+  
+  protected array|null $commmand_args = [];
   protected string|null $command_src = '';
   protected string|null $command_name = '';
   protected string|null $command_label = '';
@@ -32,6 +33,7 @@ class CommandNode extends Node
 
     parent::__construct($args);
 
+    $this->command_args = $args['command_args'] ?? [];
     $this->command_src = $args['command_src'] ?? '';
     $this->command_name = $args['command_name'] ?? '';
     $this->command_label = $args['command_label'] ?? '';

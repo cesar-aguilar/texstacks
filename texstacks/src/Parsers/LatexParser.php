@@ -115,6 +115,15 @@ class LatexParser
     'center',
     'verbatim',
   ];
+
+  const AMS_THEOREM_ENVIRONMENTS = [
+    'theorem',
+    'proposition',
+    'lemma',
+    'corollary',
+    'definition',
+    'conjecture',
+  ];
   
   protected SyntaxTree $tree;  
   private $current_node;
@@ -127,7 +136,7 @@ class LatexParser
   private string $prev_char;
   private int $num_chars = 0;
   private string $command_name;
-
+  
   public function __construct()
   {
     $this->tree = new SyntaxTree();
@@ -150,32 +159,36 @@ class LatexParser
   public function parse($latex_src_raw)
   {
 
-    $lines = $this->getLines($latex_src_raw);
-    // dd($lines);
-    /* Parse line and add node to syntax tree using depth-first traversal */
-    foreach ($lines as $number => $line) {
+    $this->normalizeLatexSource($latex_src_raw);
+    
+    $this->tokenize();
+    // dd($this->tokens);
+    /* From token add node to syntax tree using depth-first traversal */
+    foreach ($this->tokens as $token)
+    {
 
-      $this->parsed_line = $this->parseLine($line, $number);
+      $handler = match($token->type) {
 
-      $parse_result = match($this->parsed_line['type']) {
+        'section-cmd' => 'handleSectionNode',
 
-        'section-cmd' => $this->handleSectionNode(),
-
-        'environment',
-        'font-environment',
+        'environment',        
         'math-environment',
-        'tabular-environment',
-        'list-environment' => $this->handleEnvironmentNode(),
+        'tabular-environment',        
+        'list-environment' => 'handleEnvironmentNode',
 
-        'item' => $this->handleListItemNode(),
+        'item' => 'handleListItemNode',
 
-        'label' => $this->handleLabelNode(),
+        'label' => 'handleLabelNode',
 
-        'includegraphics' => $this->handleIncludeGraphicsNode(),
+        'includegraphics',
+        'caption',
+        'font-environment' => 'handleCommandNode',
  
-        default => $this->addToCurrentNode(),
+        default => 'addToCurrentNode',
 
       };
+
+      $this->$handler($token);
       
     }
     
@@ -233,7 +246,7 @@ class LatexParser
 
     if ($name == 'begin' || $name == 'end') {
 
-      if (in_array($content, self::AMS_MATH_ENVIRONMENTS)) return 'math-environment';
+      if (in_array($content, self::DISPLAY_MATH_ENVIRONMENTS)) return 'math-environment';
 
       if (in_array($content, self::LIST_ENVIRONMENTS))     return 'list-environment';
 
@@ -267,20 +280,20 @@ class LatexParser
 
   }
 
-  private function addToCurrentNode()
+  private function addToCurrentNode($token)
   {
     $this->tree->addNode(new Node(
       [
         'id' => $this->tree->nodeCount(),
         'type' => 'text',
-        'body' => $this->parsed_line['content']
+        'body' => $token->body,
       ]
     ), parent: $this->current_node); 
   }
 
-  private function handleSectionNode()
+  private function handleSectionNode($token)
   {
-    $new_node = $this->createCommandNode();
+    $new_node = $this->createCommandNode($token);
     $parent = $this->current_node;
 
     /* Move up the tree until we find the first sectioning command
@@ -294,21 +307,21 @@ class LatexParser
     return true;
   }
 
-  private function handleEnvironmentNode()
+  private function handleEnvironmentNode($token)
   {
-    if ($this->parsed_line['command_name'] === 'begin') {
-      $new_node = $this->createCommandNode();
+    if ($token->command_name === 'begin') {
+      $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;
       return true;
     }
-    
-    if ($this->parsed_line['type'] !== 'list-environment') {
+
+    if ($token->type !== 'list-environment') {      
       $this->current_node = $this->current_node->parent();
       return true;
     }
 
-    /* If parsed_line was the end of a list-environment 
+    /* If token was the end of a list-environment 
     then we need to move up the tree to find the first
     list-environment node
     */
@@ -324,9 +337,9 @@ class LatexParser
     
   }
 
-  private function handleListItemNode()
+  private function handleListItemNode($token)
   {
-    $new_node = $this->createCommandNode();
+    $new_node = $this->createCommandNode($token);
 
     $parent = $this->current_node;
     
@@ -342,33 +355,33 @@ class LatexParser
     return true;
   }
 
-  private function handleLabelNode()
+  private function handleLabelNode($token)
   {
-    $this->current_node->setLabel($this->parsed_line['command_content']);
+    $this->current_node->setLabel($token->command_content);
 
     if ($this->current_node->type() === 'math-environment') {
-      $new_node = $this->createCommandNode();
+      $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
     }
     return true;
   }
 
-  private function handleIncludeGraphicsNode()
+  private function handleCommandNode($token)
   {
-    $new_node = $this->createCommandNode();
+    $new_node = $this->createCommandNode($token);
     $this->tree->addNode($new_node, $this->current_node);
     return true;
   }
 
-  private function createCommandNode()
+  private function createCommandNode($token)
   {
+    
+    $args = ['id' => $this->tree->nodeCount(), ...(array) $token];
 
-    $args = ['id' => $this->tree->nodeCount(), ...$this->parsed_line];
-
-    if ($this->parsed_line['type'] === 'section-cmd') {
+    if ($token->type === 'section-cmd') {
       return new SectionNode($args);
     } 
-    else if (preg_match('/environment/', $this->parsed_line['type'])) {
+    else if (preg_match('/environment/', $token->type)) {
       return new EnvironmentNode($args);
     } 
     else 
@@ -377,12 +390,7 @@ class LatexParser
     }
   }
 
-  private function getLines($latex_src_raw)
-  {
-    return explode("\n", $this->normalizeLatexSource($latex_src_raw));
-  }
-
-  private function normalizeLatexSource(string $latex_src): string
+  private function normalizeLatexSource(string $latex_src)
   {
 
     $html_src = preg_replace('/.*\\\begin\s*{document}[\s\n]*(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
@@ -428,11 +436,11 @@ class LatexParser
     // $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption} $1\\end{caption}', $html_src);
 
     // Replace more than two newlines with two newlines
-    // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
+    $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
 
     $this->stream = $html_src;
 
-    return $this->tokenize();
+    // return $this->tokenize();
     
     // return $this->putCommandsOnNewLine($html_src);
   }
@@ -511,7 +519,7 @@ class LatexParser
         {
 
           $this->addToken(new Token([
-            'type' => 'math-environment',
+            'type' => $this->getCommandType($this->command_name, $env),
             'command_name' => $this->command_name,
             'command_content' => $env,
             'command_options' => '',
@@ -520,7 +528,7 @@ class LatexParser
           ]));
 
         }
-        else if (in_array($env, self::ENVS_POST_OPTIONS))
+        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...self::AMS_THEOREM_ENVIRONMENTS]))
         {
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
@@ -581,7 +589,13 @@ class LatexParser
         }
         else
         {
-          $this->buffer .= "\\" . $this->command_name . "{" . $env. "}";
+          $this->addToken(new Token([
+            'type' => $this->getCommandType($this->command_name, $env),
+            'command_name' => $this->command_name,
+            'command_content' => $env,
+            'command_src' => "\\begin{" . $env. "}",
+            'line_number' => $this->line_number,
+          ]));
         }
 
       }
@@ -600,6 +614,7 @@ class LatexParser
           'command_content' => $content,
           'command_options' => '',
           'command_src' => "\\" . $this->command_name . "{" . $content. "}",
+          'body' => $content,
           'line_number' => $this->line_number,
         ]));
 
@@ -618,6 +633,7 @@ class LatexParser
           'command_content' => $content,
           'command_options' => '',
           'command_src' => "\\" . $this->command_name . "{" . $content. "}",
+          'body' => $content,
           'line_number' => $this->line_number,
         ]));
       }
@@ -649,9 +665,7 @@ class LatexParser
     }
 
     $this->addBufferAsToken();
-
-    dd($this->tokens);
-
+    
   }
 
   private function addToken(Token $token) {
@@ -662,7 +676,8 @@ class LatexParser
 
   }
 
-  private function addBufferAsToken() {
+  private function addBufferAsToken()
+  {
 
     if ($this->buffer === '') return;
 
@@ -821,6 +836,7 @@ class LatexParser
       'command_content' => $content,
       'command_options' => $options,
       'command_src' => $src,
+      'body' => $content,
       'line_number' => $this->line_number,
     ]);
   
@@ -956,7 +972,7 @@ class LatexParser
 
     while (!is_null($char) && $brace_count > 0) {
 
-      if ($char === "\n") {
+      if ($char === "\n" && $this->prev_char === "\n") {
         $so_far = '\\' . $this->command_name . '{' . $content;
         throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
       }
@@ -965,7 +981,7 @@ class LatexParser
 
         $content .= $char;
         
-        if ($char === '{' && $this->prev_char !== '\\') $brace_count++;
+        if ($char === '{') $brace_count++;
 
         $char = $this->getNextChar();
 
@@ -973,7 +989,7 @@ class LatexParser
       else
       {
 
-        if ($this->prev_char !== '\\') $brace_count--;
+        $brace_count--;
 
         if ($brace_count > 0) {
           $content .= '}';              

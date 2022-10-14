@@ -23,6 +23,9 @@ class EnvironmentRenderer
         if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS))
             return self::renderTheoremEnvironment($node, $body);
 
+        if ($node->ancestorOfType('math-environment'))
+            return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
+
         return match ($node->commandContent()) {
 
             'center' => "<div style=\"text-align: center\">$body</div>",
@@ -34,9 +37,7 @@ class EnvironmentRenderer
             'figure' => self::renderFigureEnvironment($node, $body),
 
             'table' => self::renderTableEnvironment($node, $body),
-
-            'caption' => self::renderCaptionEnvironment($node, $body),
-
+            
             'verbatim' => "<pre>$body</pre>",
 
             'abstract' => self::renderAbstract($node, $body),
@@ -49,6 +50,7 @@ class EnvironmentRenderer
     private static function renderTheoremEnvironment(EnvironmentNode $node, string $body = null): string
     {
         $heading = ucwords($node->commandContent());
+        $heading .= $node->commandOptions() ? ': '. ucwords($node->commandOptions()) : '';
 
         return "<div class=\"thm-env\"><div class=\"thm-env-head {$node->commandContent()}\" id=\"{$node->commandLabel()}\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
     }
@@ -79,20 +81,7 @@ class EnvironmentRenderer
     {
         return "<div class=\"table-container\" id=\"{$node->commandLabel()}\">$body</div>";
     }
-
-    private static function renderCaptionEnvironment(EnvironmentNode $node, string $body = null): string
-    {
-        return match ($node->parent()->commandContent()) {
-
-            'figure' => "<figcaption>$body</figcaption>",
-
-            'table' => "<div class=\"table-caption\">$body</div>",
-
-            default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
-
-        };
-    }
-
+    
     private static function renderAbstract(EnvironmentNode $node, string $body = null): string
     {
         return "<div class=\"abstract-container\"><div class=\"abstract-head\">Abstract</div><div class=\"abstract-body\">$body</div></div>";
