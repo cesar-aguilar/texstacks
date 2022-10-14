@@ -89,6 +89,17 @@ class LatexParser
     'array',
   ];
 
+  const ONE_ARGS_COMMANDS = [
+    'label',
+    'ref',
+    'eqref',
+    'caption',
+  ];
+
+  const ONE_ARGS_COMMANDS_WITH_OPTIONS = [
+    'includegraphics',
+  ];
+
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
@@ -392,8 +403,8 @@ class LatexParser
     $html_src = str_replace('\]', '\end{equation*}', $html_src);
 
     // Put labels on new line and make caption command an environment
-    $html_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $html_src);
-    $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption} $1\\end{caption}', $html_src);
+    // $html_src = preg_replace('/' . $this->cmdRegex('label') . '/m', "\n$1\n", $html_src);
+    // $html_src = preg_replace('/\\\caption\s*\{(?<content>.*)\}/', '\\begin{caption} $1\\end{caption}', $html_src);
 
     // Replace more than two newlines with two newlines
     // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
@@ -443,7 +454,7 @@ class LatexParser
       }
       
       $this->command_name = $this->consumeUntilNonAlpha();
-        
+
       // Decide how to tokenize command
       if (in_array($this->command_name, self::SECTION_COMMANDS))
       {
@@ -502,11 +513,38 @@ class LatexParser
         ]));
 
       }
+      else if (in_array($this->command_name, self::ONE_ARGS_COMMANDS))
+      {        
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $this->addToken(new Token([
+          'type' => $this->command_name,
+          'command_name' => $this->command_name,
+          'command_content' => $content,
+          'command_options' => '',
+          'command_src' => "\\" . $this->command_name . "{" . $content. "}",
+          'line_number' => $this->line_number,
+        ]));
+      }
+      else if (in_array($this->command_name, self::ONE_ARGS_COMMANDS_WITH_OPTIONS))
+      {
+        try {
+          $token = $this->tokenizeCmdWithOptionsArg();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+        
+        $this->addToken($token);
+      }
       else
       {
         $this->buffer .= "\\" . $this->command_name . $this->getChar();
       }
-      
+
     }
 
     $this->addBufferAsToken();
@@ -548,7 +586,7 @@ class LatexParser
 
     $ALLOWED_CHARS = [' ', '*', '{', '['];
 
-    while ($char = $this->getChar()) {
+    while (!is_null($char = $this->getChar())) {
  
       if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
@@ -603,16 +641,7 @@ class LatexParser
         }
 
         $src .= '{' . $content . '}';
-        
-        return new Token([
-          'type' => 'section-cmd',
-          'command_name' => $this->command_name,
-          'command_content' => $content,
-          'command_options' => $options,
-          'command_src' => $src,
-          'line_number' => $this->line_number
-        ]);
-  
+        break;          
       }
 
     }
@@ -623,8 +652,77 @@ class LatexParser
       'command_content' => $content,
       'command_options' => $options,
       'command_src' => $src,
-      'line_number' => $this->line_number]);
+      'line_number' => $this->line_number,
+    ]);
     
+  }
+
+  private function tokenizeCmdWithOptionsArg(string|null $type=null) : Token
+  {
+    $content = '';
+    $options = '';
+    $src = '\\' . $this->command_name;    
+    $OPTIONS = false;
+
+    $ALLOWED_CHARS = [' ', '{', '['];
+
+    while (!is_null($char = $this->getChar())) {
+ 
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $src .= $char;
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if ($OPTIONS) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getOptionsContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        $this->cursor++;
+        $OPTIONS = true;
+        continue;
+      }
+
+      if ($char === '{' ) {
+ 
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+        
+        break;
+  
+      }
+
+    }
+
+    return new Token([
+      'type' => $type ?? $this->command_name,
+      'command_name' => $this->command_name,
+      'command_content' => $content,
+      'command_options' => $options,
+      'command_src' => $src,
+      'line_number' => $this->line_number,
+    ]);
+  
   }
 
   private function getCommandContent()
@@ -642,7 +740,7 @@ class LatexParser
 
     $char = $this->getNextChar();
 
-    while ($char && $brace_count > 0) {
+    while (!is_null($char) && $brace_count > 0) {
 
       if ($char === "\n") {
         $so_far = '\\' . $this->command_name . '{' . $content;
@@ -687,7 +785,7 @@ class LatexParser
 
     $char = $this->getNextChar();
 
-    while ($char && $char !== ']') {
+    while (!is_null($char) && $char !== ']') {
 
       if ($char === "\n") {
         $so_far = '\\' . $this->command_name . '[' . $options;
@@ -720,7 +818,7 @@ class LatexParser
     
     $char = $this->getNextChar();
 
-    while ($char && $char !== '}') {
+    while (!is_null($char) && $char !== '}') {
  
       if (!(ctype_alpha($char) || $char === '*')) {
         throw new \Exception($env . $char . " <--- Invalid environment name at line {$this->line_number}");
@@ -747,7 +845,7 @@ class LatexParser
 
     $char = $this->getChar();
       
-    while ($char && $char === ' ') {
+    while (!is_null($char) && $char === ' ') {
       $char = $this->getNextChar();      
     }
 
@@ -766,7 +864,7 @@ class LatexParser
 
     $alpha_text = '';
 
-    while ($char && ctype_alpha($char)) {
+    while (!is_null($char) && ctype_alpha($char)) {
       $alpha_text .= $char;
       $char = $this->getNextChar();
     }
