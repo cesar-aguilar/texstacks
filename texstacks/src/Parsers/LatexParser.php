@@ -95,8 +95,9 @@ class LatexParser
   private $tokens = [];
   private $buffer = '';
   private $line_number = 0;
-  private $latex_src;
-  private $pos;
+  private $stream;
+  private $cursor;
+  private $prev_char;
   private $num_chars = 0;
 
   public function __construct()
@@ -396,46 +397,53 @@ class LatexParser
     // Replace more than two newlines with two newlines
     // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
 
-    $this->latex_src = $html_src;
+    $this->stream = $html_src;
     
     return $this->tokenize();
     
     // return $this->putCommandsOnNewLine($html_src);
   }
 
+  private function getChar() {
+    return $this->cursor < $this->num_chars ? $this->stream[$this->cursor] : null;
+  }
+
+  private function getNextChar() {
+    $this->prev_char = $this->getChar();
+    $this->cursor++;
+    return $this->getChar();
+  }
+
   private function tokenize() {
  
-    $this->num_chars = strlen($this->latex_src);
+    $this->num_chars = strlen($this->stream);
  
-    $this->pos = 0;
+    $this->cursor = -1;
 
     $this->line_number = $this->num_chars > 0 ? 1 : 0;
     
-    while ($this->pos < $this->num_chars)
+    while ($char = $this->getNextChar())
     {
-
-      $char = $this->latex_src[$this->pos];
-
+ 
       if ($char === '\\')
       {
-
-        $this->pos++;
+        
+        $char = $this->getNextChar();
 
         $command_name = '';
 
         // Check if control word (starts with alpha character)
-        if ($this->pos < $this->num_chars && ctype_alpha($this->latex_src[$this->pos])) {
+        if (ctype_alpha($char ?? '')) {
 
           // Get command name
-          while ($this->pos < $this->num_chars && ctype_alpha($char = $this->latex_src[$this->pos])) {
+          while (ctype_alpha($char ?? '')) {
             $command_name .= $char;
-            $this->pos++;
+            $char = $this->getNextChar();
           }
           
           // Decide how to tokenize command
           if (in_array($command_name, self::SECTION_COMMANDS))
           {
-
             try {
               $token = $this->tokenizeSection($command_name);
             } catch (\Exception $e) {
@@ -443,17 +451,17 @@ class LatexParser
             }
             
             $this->addToken($token);
-
+            
           }
           else if ($command_name === 'begin' || $command_name === 'end')
           {
-            
+
             try {
               $env = $this->getEnvName();
             } catch (\Exception $e) {
               die($e->getMessage());
             }
-                                    
+                        
             if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) {
 
               $this->addToken(new Token([
@@ -474,19 +482,33 @@ class LatexParser
           }
           else if (in_array($command_name, self::FONT_COMMANDS))
           {
-            //
+
+            try {
+              $content = $this->getCommandContent($command_name);
+            } catch (\Exception $e) {
+              die($e->getMessage());
+            }
+
+            $this->addToken(new Token([
+              'type' => 'font-environment',
+              'command_name' => $command_name,
+              'command_content' => $content,
+              'command_options' => '',
+              'command_src' => "\\" . $command_name . "{" . $content. "}",
+              'line_number' => $this->line_number,
+            ]));
+
           }
           else
           {
-            $this->buffer .= "\\" . $command_name;
+            $this->buffer .= "\\" . $command_name . $char;
           }
 
         }
         else
         {
           // Control symbol
-          $this->buffer .= $char . $this->latex_src[$this->pos];
-          $this->pos++;
+          $this->buffer .= "\\" . $char;
 
         }
         
@@ -497,10 +519,9 @@ class LatexParser
         if ($char === "\n") $this->line_number++;
         
         $this->buffer .= $char;
-        $this->pos++;
-
+        
       }
-
+      
     }
 
     $this->addBufferAsToken();
@@ -542,17 +563,15 @@ class LatexParser
 
     $ALLOWED_CHARS = [' ', '*', '{', '['];
 
-    while ($this->pos < $this->num_chars) {
-
-      $char = $this->latex_src[$this->pos];
-
+    while ($char = $this->getChar()) {
+ 
       if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
         throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
       }
 
       if ($char === ' ') {
-        $this->pos++;
+        $this->cursor++;
         continue;
       }
 
@@ -563,7 +582,7 @@ class LatexParser
           throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
         }
 
-        $this->pos++;
+        $this->cursor++;
         $command_name .= '*';
         $src .= '*';
         $STARRED = true;
@@ -577,89 +596,40 @@ class LatexParser
           throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
         }
 
-        $this->pos++;
-        $options = '';
-
-        $src .= '[';
-
-        while ($this->pos < $this->num_chars && $this->latex_src[$this->pos] !== ']') {
-
-          if ($this->latex_src[$this->pos] === "\n") {
-            throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-          }
-
-          $options .= $this->latex_src[$this->pos];
-          $src .= $this->latex_src[$this->pos];
-          $this->pos++;
-
+        try {
+          $options = $this->getOptionsContent($command_name);
+        } catch (\Exception $e) {
+          die($e->getMessage());
         }
 
-        if ($this->pos === $this->num_chars) {
-          throw new \Exception("$src <--- Missing closing bracket ] for \\$command_name on line {$this->line_number}");
-        }
+        $src .= '[' . $options . ']';
 
-        $src .= ']';
-
-        $this->pos++;
+        $this->cursor++;
         $TOC_ENTRY = true;
         continue;
       }
 
       if ($char === '{' ) {
-          
-          $this->pos++;
-          $content = '';
-          $src .= '{';
-
-          $brace_count = 1;
-  
-          while ($this->pos < $this->num_chars && $brace_count > 0) {
-
-            if ($this->latex_src[$this->pos] === "\n") {
-              throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-            }
-
-            if ($this->latex_src[$this->pos] !== '}') {
-
-              $content .= $this->latex_src[$this->pos];
-              $src .= $this->latex_src[$this->pos];
-
-              if ($this->latex_src[$this->pos] === '{' && $this->latex_src[$this->pos-1] !== '\\') $brace_count++;
-
-              $this->pos++;
-
-            } else {
-
-              if ($this->latex_src[$this->pos-1] !== '\\') $brace_count--;
  
-              if ($brace_count > 0) {
-                $content .= '}';
-                $src .= '}';
-                $this->pos++;
-              }
+        try {
+          $content = $this->getCommandContent($command_name);
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
 
-            }
-
-          }
-  
-          if ($this->pos === $this->num_chars) {
-            throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line {$this->line_number}");
-          }
-
-          $src .= '}';
-            
-          $this->pos++;
-  
-          return new Token([
-            'type' => 'section-cmd',
-            'command_name' => $command_name,
-            'command_content' => $content,
-            'command_options' => $options,
-            'command_src' => $src,
-            'line_number' => $this->line_number]);
+        $src .= '{' . $content . '}';
+        
+        return new Token([
+          'type' => 'section-cmd',
+          'command_name' => $command_name,
+          'command_content' => $content,
+          'command_options' => $options,
+          'command_src' => $src,
+          'line_number' => $this->line_number
+        ]);
   
       }
-      
+
     }
 
     return new Token([
@@ -672,198 +642,135 @@ class LatexParser
     
   }
 
-  // private getCommandContent($text, $src, )
-  // {
-  //   $j++;
-  //   $content = '';
-  //   $src .= '{';
-
-  //   $brace_count = 1;
-
-  //   while ($j < $length && $brace_count > 0) {
-
-  //     if ($latex_src[$j] === "\n") {
-  //       throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-  //     }
-
-  //     if ($latex_src[$j] !== '}') {
-
-  //       $content .= $latex_src[$j];
-  //       $src .= $latex_src[$j];
-
-  //       if ($latex_src[$j] === '{' && $latex_src[$j-1] !== '\\') $brace_count++;
-
-  //       $j++;
-
-  //     } else {
-
-  //       if ($latex_src[$j-1] !== '\\') $brace_count--;
-
-  //       if ($brace_count > 0) {
-  //         $content .= '}';
-  //         $src .= '}';
-  //         $j++;
-  //       }
-
-  //     }
-
-  //   }
-
-  //   if ($j === $length) {            
-  //     throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line {$this->line_number}");
-  //   }
-
-  //   $src .= '}';
-      
-  //   $j++;
-  // }
-
-  private function tokenizeNoOptionsCmd($latex_src, $i, $command_name, $type) : array 
+  private function getCommandContent($command_name)
   {
 
-    $length = strlen($latex_src);
-
-    $content = '';    
-    $src = '\\' . $command_name;
-        
-    $ALLOWED_CHARS = [' ', '{'];
-
-    $j = 0;
-
-    while ($j < $length) {
-
-      $char = $latex_src[$j];
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-      }
-
-      if ($char === ' ') {
-        $j++;
-        continue;
-      }
-
-      if ($char === '{' ) {
-          
-          $j++;
-          $content = '';
-          $src .= '{';
-
-          $brace_count = 1;
-  
-          while ($j < $length && $brace_count > 0) {
-
-            if ($latex_src[$j] === "\n") {
-              throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-            }
-
-            if ($latex_src[$j] !== '}') {
-
-              $content .= $latex_src[$j];
-              $src .= $latex_src[$j];
-
-              if ($latex_src[$j] === '{' && $latex_src[$j-1] !== '\\') $brace_count++;
-
-              $j++;
-
-            } else {
-
-              if ($latex_src[$j-1] !== '\\') $brace_count--;
- 
-              if ($brace_count > 0) {
-                $content .= '}';
-                $src .= '}';
-                $j++;
-              }
-
-            }
-
-          }
-  
-          if ($j === $length) {            
-            throw new \Exception("$src <--- Missing closing brace } for \\$command_name on line {$this->line_number}");
-          }
-
-          $src .= '}';
-            
-          $j++;
-  
-          return [$i + $j, new Token([
-            'type' => $type,
-            'command_name' => $command_name,
-            'command_content' => $content,
-            'command_src' => $src,
-            'line_number' => $this->line_number])
-          ];
-  
-      }
-      
+    try {
+      $this->consumeSpaceUntilTarget('{');
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
     }
 
-    return [$i + $j, new Token([
-      'type' => 'section-cmd',
-      'command_name' => $command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number])
-    ];
+    $content = '';
+    
+    $brace_count = 1;
+
+    $char = $this->getNextChar();
+
+    while ($char && $brace_count > 0) {
+
+      if ($char === "\n") {
+        $so_far = '\\' . $command_name . '{' . $content;
+        throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      if ($char !== '}') {
+
+        $content .= $char;
+        
+        if ($char === '{' && $this->prev_char !== '\\') $brace_count++;
+
+        $char = $this->getNextChar();
+
+      }
+      else
+      {
+
+        if ($this->prev_char !== '\\') $brace_count--;
+
+        if ($brace_count > 0) {
+          $content .= '}';              
+          $char = $this->getNextChar();
+        }
+
+      }
+
+    }
+
+    if ($this->cursor === $this->num_chars) {
+      $so_far = '\\' . $command_name . '{' . $content;
+      throw new \Exception("$so_far __ <--- Missing closing brace } for \\$command_name on line {$this->line_number}");
+    }
+    
+    return $content;
+    
+  }
+
+  private function getOptionsContent($command_name) {
+
+    $options = '';
+
+    $char = $this->getNextChar();
+
+    while ($char && $char !== ']') {
+
+      if ($char === "\n") {
+        $so_far = '\\' . $command_name . '[' . $options;
+        throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      $options .= $char;      
+      $char = $this->getNextChar();
+
+    }
+
+    if ($this->cursor === $this->num_chars) {
+      $so_far = '\\' . $command_name . '[' . $options;
+      throw new \Exception("$so_far __ <--- Missing closing bracket ] for \\$command_name on line {$this->line_number}");
+    }
+
+    return $options;
 
   }
   
   private function getEnvName() {
         
     try {
-      $this->eatSpaceUntilTarget('{');
+      $this->consumeSpaceUntilTarget('{');
     } catch (\Exception $e) {
-      die($e->getMessage() . " in environment declaration on line {$this->line_number}");
+      die($e->getMessage() . " in environment declaration");
     }
     
     $env = '';
+    
+    $char = $this->getNextChar();
 
-    while ($this->pos < $this->num_chars && $this->latex_src[$this->pos] !== '}') {
-
-      $char = $this->latex_src[$this->pos];
-
+    while ($char && $char !== '}') {
+ 
       if (!(ctype_alpha($char) || $char === '*')) {
         throw new \Exception($env . $char . " <--- Invalid environment name at line {$this->line_number}");
       }
 
       $env .= $char;
-      $this->pos++;
+      $char = $this->getNextChar();
 
     }
 
-    if ($this->pos === $this->num_chars) {
+    if ($this->cursor === $this->num_chars) {
       throw new \Exception("Expected } at line {$this->line_number}");
     }
-
-    $this->pos++;
-
+    
     return $env;
   
   }
 
-  private function eatSpaceUntilTarget($target) {
-              
-      if ($this->pos === $this->num_chars) {
-        throw new \Exception("Unexpected end of file on line {$this->line_number}");
-      }
+  private function consumeSpaceUntilTarget($target) {
+          
+    if ($this->cursor === $this->num_chars) {
+      throw new \Exception("Unexpected end of file on line {$this->line_number}");
+    }
 
-      $char = $this->latex_src[$this->pos];
-      $this->pos++;
-  
-      while ($this->pos < $this->num_chars && $char === ' ') {
-        $char = $this->latex_src[$this->pos];
-        $this->pos++;
-      }
-
-      if ($char === $target) {
-        return;
-      }
+    $char = $this->getChar();
       
-      throw new \Exception("Parse error: missing $target on line {$this->line_number}");
+    while ($char && $char === ' ') {
+      $char = $this->getNextChar();      
+    }
+
+    if ($char === $target) {
+      return;
+    }
+    
+    throw new \Exception("Parse error: missing $target on line {$this->line_number}");
   
   }
 
