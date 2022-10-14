@@ -92,13 +92,14 @@ class LatexParser
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
-  private $tokens = [];
-  private $buffer = '';
-  private $line_number = 0;
-  private $stream;
-  private $cursor;
-  private $prev_char;
-  private $num_chars = 0;
+  private array $tokens = [];
+  private string $buffer = '';
+  private int $line_number = 0;
+  private string $stream;
+  private int $cursor;
+  private string $prev_char;
+  private int $num_chars = 0;
+  private string $command_name;
 
   public function __construct()
   {
@@ -417,109 +418,93 @@ class LatexParser
   private function tokenize() {
  
     $this->num_chars = strlen($this->stream);
+
+    if ($this->num_chars === 0) return [];
  
     $this->cursor = -1;
 
-    $this->line_number = $this->num_chars > 0 ? 1 : 0;
+    $this->line_number = 1;
     
-    while ($char = $this->getNextChar())
+    while (!is_null($char = $this->getNextChar()))
     {
- 
-      if ($char === '\\')
-      {
+
+      if ($char !== '\\') {
+        if ($char === "\n") $this->line_number++;
+        $this->buffer .= $char;
+        continue;
+      }
+
+      $char = $this->getNextChar();
+
+      // If char is non-alphabetic then we have a control symbol
+      if (!ctype_alpha($char ?? '')) {
+        $this->buffer .= "\\" . $char;
+        continue;
+      }
+      
+      $this->command_name = $this->consumeUntilNonAlpha();
         
-        $char = $this->getNextChar();
+      // Decide how to tokenize command
+      if (in_array($this->command_name, self::SECTION_COMMANDS))
+      {
+        try {
+          $token = $this->tokenizeSection();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+        
+        $this->addToken($token);
+        
+      }
+      else if ($this->command_name === 'begin' || $this->command_name === 'end')
+      {
 
-        $command_name = '';
+        try {
+          $env = $this->getEnvName();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+                    
+        if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) {
 
-        // Check if control word (starts with alpha character)
-        if (ctype_alpha($char ?? '')) {
-
-          // Get command name
-          while (ctype_alpha($char ?? '')) {
-            $command_name .= $char;
-            $char = $this->getNextChar();
-          }
-          
-          // Decide how to tokenize command
-          if (in_array($command_name, self::SECTION_COMMANDS))
-          {
-            try {
-              $token = $this->tokenizeSection($command_name);
-            } catch (\Exception $e) {
-              die($e->getMessage());
-            }
-            
-            $this->addToken($token);
-            
-          }
-          else if ($command_name === 'begin' || $command_name === 'end')
-          {
-
-            try {
-              $env = $this->getEnvName();
-            } catch (\Exception $e) {
-              die($e->getMessage());
-            }
-                        
-            if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) {
-
-              $this->addToken(new Token([
-                'type' => 'math-environment',
-                'command_name' => $command_name,
-                'command_content' => $env,
-                'command_options' => '',
-                'command_src' => "\\" . $command_name . "{" . $env. "}",
-                'line_number' => $this->line_number,
-              ]));
-
-            }
-            else
-            {
-              $this->buffer .= "\\" . $command_name . "{" . $env. "}";
-            }
-
-          }
-          else if (in_array($command_name, self::FONT_COMMANDS))
-          {
-
-            try {
-              $content = $this->getCommandContent($command_name);
-            } catch (\Exception $e) {
-              die($e->getMessage());
-            }
-
-            $this->addToken(new Token([
-              'type' => 'font-environment',
-              'command_name' => $command_name,
-              'command_content' => $content,
-              'command_options' => '',
-              'command_src' => "\\" . $command_name . "{" . $content. "}",
-              'line_number' => $this->line_number,
-            ]));
-
-          }
-          else
-          {
-            $this->buffer .= "\\" . $command_name . $char;
-          }
+          $this->addToken(new Token([
+            'type' => 'math-environment',
+            'command_name' => $this->command_name,
+            'command_content' => $env,
+            'command_options' => '',
+            'command_src' => "\\" . $this->command_name . "{" . $env. "}",
+            'line_number' => $this->line_number,
+          ]));
 
         }
         else
         {
-          // Control symbol
-          $this->buffer .= "\\" . $char;
-
+          $this->buffer .= "\\" . $this->command_name . "{" . $env. "}";
         }
-        
-      } 
-      else
+
+      }
+      else if (in_array($this->command_name, self::FONT_COMMANDS))
       {
 
-        if ($char === "\n") $this->line_number++;
-        
-        $this->buffer .= $char;
-        
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $this->addToken(new Token([
+          'type' => 'font-environment',
+          'command_name' => $this->command_name,
+          'command_content' => $content,
+          'command_options' => '',
+          'command_src' => "\\" . $this->command_name . "{" . $content. "}",
+          'line_number' => $this->line_number,
+        ]));
+
+      }
+      else
+      {
+        $this->buffer .= "\\" . $this->command_name . $this->getChar();
       }
       
     }
@@ -552,12 +537,12 @@ class LatexParser
  
   }
 
-  private function tokenizeSection($command_name): Token
+  private function tokenizeSection(): Token
   {
 
     $content = '';
     $options = '';
-    $src = '\\' . $command_name;
+    $src = '\\' . $this->command_name;
     $STARRED = false;
     $TOC_ENTRY = false;
 
@@ -583,7 +568,7 @@ class LatexParser
         }
 
         $this->cursor++;
-        $command_name .= '*';
+        $this->command_name .= '*';
         $src .= '*';
         $STARRED = true;
         continue;
@@ -597,7 +582,7 @@ class LatexParser
         }
 
         try {
-          $options = $this->getOptionsContent($command_name);
+          $options = $this->getOptionsContent();
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -612,7 +597,7 @@ class LatexParser
       if ($char === '{' ) {
  
         try {
-          $content = $this->getCommandContent($command_name);
+          $content = $this->getCommandContent();
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -621,7 +606,7 @@ class LatexParser
         
         return new Token([
           'type' => 'section-cmd',
-          'command_name' => $command_name,
+          'command_name' => $this->command_name,
           'command_content' => $content,
           'command_options' => $options,
           'command_src' => $src,
@@ -634,7 +619,7 @@ class LatexParser
 
     return new Token([
       'type' => 'section-cmd',
-      'command_name' => $command_name,
+      'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => $options,
       'command_src' => $src,
@@ -642,7 +627,7 @@ class LatexParser
     
   }
 
-  private function getCommandContent($command_name)
+  private function getCommandContent()
   {
 
     try {
@@ -660,7 +645,7 @@ class LatexParser
     while ($char && $brace_count > 0) {
 
       if ($char === "\n") {
-        $so_far = '\\' . $command_name . '{' . $content;
+        $so_far = '\\' . $this->command_name . '{' . $content;
         throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
       }
 
@@ -688,15 +673,15 @@ class LatexParser
     }
 
     if ($this->cursor === $this->num_chars) {
-      $so_far = '\\' . $command_name . '{' . $content;
-      throw new \Exception("$so_far __ <--- Missing closing brace } for \\$command_name on line {$this->line_number}");
+      $so_far = '\\' . $this->command_name . '{' . $content;
+      throw new \Exception("$so_far __ <--- Missing closing brace } on line {$this->line_number}");
     }
     
     return $content;
     
   }
 
-  private function getOptionsContent($command_name) {
+  private function getOptionsContent() {
 
     $options = '';
 
@@ -705,7 +690,7 @@ class LatexParser
     while ($char && $char !== ']') {
 
       if ($char === "\n") {
-        $so_far = '\\' . $command_name . '[' . $options;
+        $so_far = '\\' . $this->command_name . '[' . $options;
         throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
       }
 
@@ -715,8 +700,8 @@ class LatexParser
     }
 
     if ($this->cursor === $this->num_chars) {
-      $so_far = '\\' . $command_name . '[' . $options;
-      throw new \Exception("$so_far __ <--- Missing closing bracket ] for \\$command_name on line {$this->line_number}");
+      $so_far = '\\' . $this->command_name . '[' . $options;
+      throw new \Exception("$so_far __ <--- Missing closing bracket ] for \\$this->command_name on line {$this->line_number}");
     }
 
     return $options;
@@ -772,6 +757,22 @@ class LatexParser
     
     throw new \Exception("Parse error: missing $target on line {$this->line_number}");
   
+  }
+
+  private function consumeUntilNonAlpha($from_cursor=true)
+  {
+    
+    $char = $from_cursor ? $this->getChar() : $this->getNextChar();
+
+    $alpha_text = '';
+
+    while ($char && ctype_alpha($char)) {
+      $alpha_text .= $char;
+      $char = $this->getNextChar();
+    }
+    
+    return $alpha_text;
+      
   }
 
   private function putCommandsOnNewLine(string $latex_src): string
