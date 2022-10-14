@@ -89,21 +89,33 @@ class LatexParser
     'array',
   ];
 
-  const ONE_ARGS_COMMANDS = [
+  const ONE_ARGS_CMDS = [
     'label',
     'ref',
     'eqref',
     'caption',
   ];
 
-  const ONE_ARGS_COMMANDS_WITH_OPTIONS = [
+  const ONE_ARGS_CMDS_PRE_OPTIONS = [
     'includegraphics',
   ];
 
-  const COMMANDS_WITH_OPTIONS = [
+  const CMDS_POST_OPTIONS = [
     'item',
   ];
 
+  const ENVS_POST_OPTIONS = [
+    'itemize',
+    'enumerate',
+    'compactenum',
+    'compactitem',
+    'asparaenum',
+    'figure',
+    'table',
+    'center',
+    'verbatim',
+  ];
+  
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
@@ -216,7 +228,8 @@ class LatexParser
 
   }
 
-  private function getCommandType($name, $content) {
+  private function getCommandType($name, $content=null)
+  {
 
     if ($name == 'begin' || $name == 'end') {
 
@@ -243,6 +256,10 @@ class LatexParser
       'caption' => 'caption',
 
       'item' => 'item',
+
+      'ref' => 'ref',
+
+      'eqref' => 'eqref',
 
       default => 'text',
 
@@ -414,7 +431,7 @@ class LatexParser
     // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
 
     $this->stream = $html_src;
-    
+
     return $this->tokenize();
     
     // return $this->putCommandsOnNewLine($html_src);
@@ -459,7 +476,7 @@ class LatexParser
       
       $this->command_name = $this->consumeUntilNonAlpha();
 
-      // Decide how to tokenize command
+      // Make token
       if (in_array($this->command_name, self::SECTION_COMMANDS))
       {
         try {
@@ -479,8 +496,9 @@ class LatexParser
         } catch (\Exception $e) {
           die($e->getMessage());
         }
-                    
-        if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) {
+
+        if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS))
+        {
 
           $this->addToken(new Token([
             'type' => 'math-environment',
@@ -488,6 +506,30 @@ class LatexParser
             'command_content' => $env,
             'command_options' => '',
             'command_src' => "\\" . $this->command_name . "{" . $env. "}",
+            'line_number' => $this->line_number,
+          ]));
+
+        }
+        else if (in_array($env, self::ENVS_POST_OPTIONS))
+        {
+          try {
+            $options = $this->getOptionsAfterArgs();
+          } catch (\Exception $e) {
+            die($e->getMessage());
+          }
+
+          $command_src = "\\" . $this->command_name . "{" . $env . "}";
+
+          if ($options !== '') $command_src .= "[" . $options . "]";
+
+          $type = $this->getCommandType($this->command_name, $env);
+
+          $this->addToken(new Token([
+            'type' => $type,
+            'command_name' => $this->command_name,
+            'command_content' => $env,
+            'command_options' => $options,
+            'command_src' => $command_src,
             'line_number' => $this->line_number,
           ]));
 
@@ -517,8 +559,8 @@ class LatexParser
         ]));
 
       }
-      else if (in_array($this->command_name, self::ONE_ARGS_COMMANDS))
-      {        
+      else if (in_array($this->command_name, self::ONE_ARGS_CMDS))
+      {
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
@@ -526,7 +568,7 @@ class LatexParser
         }
 
         $this->addToken(new Token([
-          'type' => $this->command_name,
+          'type' => $this->getCommandType($this->command_name),
           'command_name' => $this->command_name,
           'command_content' => $content,
           'command_options' => '',
@@ -534,7 +576,7 @@ class LatexParser
           'line_number' => $this->line_number,
         ]));
       }
-      else if (in_array($this->command_name, self::ONE_ARGS_COMMANDS_WITH_OPTIONS))
+      else if (in_array($this->command_name, self::ONE_ARGS_CMDS_PRE_OPTIONS))
       {
         try {
           $token = $this->tokenizeCmdWithOptionsArg();
@@ -544,7 +586,7 @@ class LatexParser
  
         $this->addToken($token);
       }
-      else if (in_array($this->command_name, self::COMMANDS_WITH_OPTIONS))
+      else if (in_array($this->command_name, self::CMDS_POST_OPTIONS))
       {
         try {
           $token = $this->tokenizeCmdWithOptions();
@@ -729,7 +771,7 @@ class LatexParser
     }
 
     return new Token([
-      'type' => $type ?? $this->command_name,
+      'type' => $this->getCommandType($this->command_name),
       'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => $options,
@@ -737,6 +779,75 @@ class LatexParser
       'line_number' => $this->line_number,
     ]);
   
+  }
+
+  private function tokenizeCmdWithArgOptions(string|null $type=null) : Token
+  {
+    $content = '';
+    $options = '';
+    $src = '\\' . $this->command_name;    
+    $ARGS_DONE = false;
+
+    $ALLOWED_CHARS = [' ', '{', '['];
+
+    while (!is_null($char = $this->getChar())) {
+ 
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        if (!$ARGS_DONE) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+        $this->cursor--;
+        break;
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if (!$ARGS_DONE) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getOptionsContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        break;
+      }
+
+      if ($char === '{' ) {
+ 
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+
+        $ARGS_DONE = true;
+                  
+      }
+
+    }
+
+    return new Token([
+      'type' => $type ?? $this->command_name,
+      'command_name' => $this->command_name,
+      'command_content' => $content,
+      'command_options' => $options,
+      'command_src' => $src,
+      'line_number' => $this->line_number,
+    ]);
   }
 
   private function tokenizeCmdwithOptions(string|null $type=null) : Token
@@ -774,7 +885,7 @@ class LatexParser
     }
 
     return new Token([
-      'type' => $type ?? $this->command_name,
+      'type' => $this->getCommandType($this->command_name),
       'command_name' => $this->command_name,
       'command_content' => '',
       'command_options' => $options,
@@ -835,6 +946,42 @@ class LatexParser
     
     return $content;
     
+  }
+
+  /**
+   * The cursor should be at the closing brace
+   */
+  private function getOptionsAfterArgs() 
+  {
+    $options = '';
+    $ALLOWED_CHARS = [' ', '['];
+
+    while (!is_null($char = $this->getNextChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $this->cursor--;
+        break;
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        try {
+          $options = $this->getOptionsContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+        
+        break;
+      }
+
+    }
+
+    return $options;
   }
 
   private function getOptionsContent() {
