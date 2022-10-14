@@ -2,8 +2,6 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Parsers\LatexParser;
-
 /**
  * A node in the graph of the LaTeX document
  * Could represent a LaTeX command with possibly a label: 
