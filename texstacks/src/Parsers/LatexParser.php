@@ -92,12 +92,12 @@ class LatexParser
   const ONE_ARGS_CMDS = [
     'label',
     'ref',
-    'eqref',
-    'caption',
+    'eqref',    
   ];
 
   const ONE_ARGS_CMDS_PRE_OPTIONS = [
     'includegraphics',
+    'caption',
   ];
 
   const CMDS_POST_OPTIONS = [
@@ -497,7 +497,17 @@ class LatexParser
           die($e->getMessage());
         }
 
-        if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS))
+        if ($this->command_name === 'end')
+        {
+          $this->addToken(new Token([
+            'type' => $this->getCommandType($this->command_name, $env),
+            'command_name' => $this->command_name,
+            'command_content' => $env,
+            'command_src' => "\\end{" . $env. "}",
+            'line_number' => $this->line_number,
+          ]));
+        }
+        else if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS))
         {
 
           $this->addToken(new Token([
@@ -513,7 +523,7 @@ class LatexParser
         else if (in_array($env, self::ENVS_POST_OPTIONS))
         {
           try {
-            $options = $this->getOptionsAfterArgs();
+            $options = $this->getContentBetweenDelimiters('[', ']');
           } catch (\Exception $e) {
             die($e->getMessage());
           }
@@ -528,6 +538,41 @@ class LatexParser
             'type' => $type,
             'command_name' => $this->command_name,
             'command_content' => $env,
+            'command_options' => $options,
+            'command_src' => $command_src,
+            'line_number' => $this->line_number,
+          ]));
+
+        }
+        else if (in_array($env, self::TABULAR_ENVIRONMENTS))
+        {
+          try {
+            $options = $this->getContentBetweenDelimiters('[', ']');
+          } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+          }
+
+          $command_src = "\\" . $this->command_name . "{" . $env . "}";
+
+          if ($options !== '') $command_src .= "[" . $options . "]";
+
+          try {
+            $args = $this->getContentBetweenDelimiters('{', '}');
+          } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+          }
+
+          if ($args === '') {
+            throw new \Exception("Missing arguments for tabular environment on line " . $this->line_number);
+          }
+
+          $command_src .= "{" . $args . "}";
+
+          $this->addToken(new Token([
+            'type' => $this->getCommandType($this->command_name, $env),
+            'command_name' => $this->command_name,
+            'command_content' => $env,
+            'command_args' => [$args],
             'command_options' => $options,
             'command_src' => $command_src,
             'line_number' => $this->line_number,
@@ -676,7 +721,7 @@ class LatexParser
         }
 
         try {
-          $options = $this->getOptionsContent();
+          $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -742,7 +787,7 @@ class LatexParser
         }
 
         try {
-          $options = $this->getOptionsContent();
+          $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -814,7 +859,7 @@ class LatexParser
         }
 
         try {
-          $options = $this->getOptionsContent();
+          $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -872,7 +917,7 @@ class LatexParser
       if ($char === '[') {
 
         try {
-          $options = $this->getOptionsContent();
+          $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -893,7 +938,7 @@ class LatexParser
       'line_number' => $this->line_number,
     ]);
   }
-
+  
   private function getCommandContent()
   {
 
@@ -949,13 +994,18 @@ class LatexParser
   }
 
   /**
-   * The cursor should be at the closing brace
+   * Get the content between two delimiters
+   * Nesting not allowed.
+   * 
+   * The cursor should be just before $left delimiter
+   * White space is ignored and is the only character allowed
+   * before the $left delimiter, otherwise we break out of the loop
    */
-  private function getOptionsAfterArgs() 
+  private function getContentBetweenDelimiters($left_delim, $right_delim)
   {
-    $options = '';
-    $ALLOWED_CHARS = [' ', '['];
-
+    $content = '';
+    $ALLOWED_CHARS = [' ', $left_delim];
+    
     while (!is_null($char = $this->getNextChar())) {
 
       if (!in_array($char, $ALLOWED_CHARS)) {
@@ -968,10 +1018,10 @@ class LatexParser
         continue;
       }
 
-      if ($char === '[') {
+      if ($char === $left_delim) {
 
         try {
-          $options = $this->getOptionsContent();
+          $content = $this->getContentUpToDelimiter($right_delim);
         } catch (\Exception $e) {
           die($e->getMessage());
         }
@@ -981,33 +1031,39 @@ class LatexParser
 
     }
 
-    return $options;
+    return $content;
   }
 
-  private function getOptionsContent() {
-
-    $options = '';
+  /**
+   * Get the content up to the next delimiter
+   * 
+   * 
+   * The cursor should be just before the delimiter
+   * The only character not allowed before the 
+   * delimiter is \n
+   */
+  private function getContentUpToDelimiter($delimiter)
+  {    
+    $content = '';
 
     $char = $this->getNextChar();
 
-    while (!is_null($char) && $char !== ']') {
+    while (!is_null($char) && $char !== $delimiter) {
 
       if ($char === "\n") {
-        $so_far = '\\' . $this->command_name . '[' . $options;
-        throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
+        throw new \Exception("$content <--- Parse error on line {$this->line_number}: newline invalid syntax");
       }
 
-      $options .= $char;      
+      $content .= $char;      
       $char = $this->getNextChar();
 
     }
 
-    if ($this->cursor === $this->num_chars) {
-      $so_far = '\\' . $this->command_name . '[' . $options;
-      throw new \Exception("$so_far __ <--- Missing closing bracket ] for \\$this->command_name on line {$this->line_number}");
+    if ($this->cursor === $this->num_chars) {      
+      throw new \Exception("$content <--- Parse error on line {$this->line_number}: missing $delimiter");
     }
 
-    return $options;
+    return $content;
 
   }
   
