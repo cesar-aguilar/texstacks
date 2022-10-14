@@ -100,6 +100,10 @@ class LatexParser
     'includegraphics',
   ];
 
+  const COMMANDS_WITH_OPTIONS = [
+    'item',
+  ];
+
   protected SyntaxTree $tree;  
   private $current_node;
   private $parsed_line;
@@ -537,6 +541,16 @@ class LatexParser
         } catch (\Exception $e) {
           die($e->getMessage());
         }
+ 
+        $this->addToken($token);
+      }
+      else if (in_array($this->command_name, self::COMMANDS_WITH_OPTIONS))
+      {
+        try {
+          $token = $this->tokenizeCmdWithOptions();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
         
         $this->addToken($token);
       }
@@ -723,6 +737,50 @@ class LatexParser
       'line_number' => $this->line_number,
     ]);
   
+  }
+
+  private function tokenizeCmdwithOptions(string|null $type=null) : Token
+  {
+    $options = '';
+    $src = '\\' . $this->command_name;
+
+    $ALLOWED_CHARS = [' ', '['];
+
+    while (!is_null($char = $this->getChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $this->cursor--;
+        break;
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        try {
+          $options = $this->getOptionsContent();
+        } catch (\Exception $e) {
+          die($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        break;
+      }
+
+    }
+
+    return new Token([
+      'type' => $type ?? $this->command_name,
+      'command_name' => $this->command_name,
+      'command_content' => '',
+      'command_options' => $options,
+      'command_src' => $src,
+      'line_number' => $this->line_number,
+    ]);
   }
 
   private function getCommandContent()
