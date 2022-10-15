@@ -23,7 +23,7 @@ class EnvironmentRenderer
         if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS))
             return self::renderTheoremEnvironment($node, $body);
 
-        if ($node->ancestorOfType('math-environment'))
+        if ($node->ancestorOfType('displaymath-environment'))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         return match ($node->commandContent()) {
@@ -72,7 +72,7 @@ class EnvironmentRenderer
 
     private static function renderUnknownEnvironment(EnvironmentNode $node, string $body = null): string
     {
-        if ($node->ancestorOfType(['math-environment', 'tabular-environment'])) return $body;
+        if ($node->ancestorOfType(['displaymath-environment', 'tabular-environment'])) return $body;
 
         return "<div class=\"unknown-env\"><div class=\"unknown-env-head\" id=\"{$node->commandLabel()}\">Name: <strong>{$node->commandContent()}</strong></div><div class=\"unknown-env-body\">$body</div></div>";
     }

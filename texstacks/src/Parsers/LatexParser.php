@@ -56,7 +56,7 @@ class LatexParser
         'section-cmd' => 'handleSectionNode',
 
         'environment',        
-        'math-environment',
+        'displaymath-environment',
         'tabular-environment',        
         'list-environment' => 'handleEnvironmentNode',
 
@@ -66,7 +66,7 @@ class LatexParser
 
         'includegraphics',
         'caption',
-        'font-environment' => 'handleCommandNode',
+        'font-cmd' => 'handleCommandNode',
  
         default => 'addToCurrentNode',
 
@@ -123,9 +123,9 @@ class LatexParser
       return true;
     }
 
-    /* If token was the end of a list-environment 
+    /* If token was the end of a list-env 
     then we need to move up the tree to find the first
-    list-environment node
+    list-env node
     */
     $parent = $this->current_node;
 
@@ -145,7 +145,7 @@ class LatexParser
 
     $parent = $this->current_node;
     
-    /* Move up the tree until we find the parent list-environment */
+    /* Move up the tree until we find the parent list-env */
     while ($parent->type() !== 'list-environment') {
       $parent = $parent->parent();
     }
@@ -161,7 +161,7 @@ class LatexParser
   {
     $this->current_node->setLabel($token->command_content);
 
-    if ($this->current_node->type() === 'math-environment') {
+    if ($this->current_node->type() === 'displaymath-environment') {
       $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
     }

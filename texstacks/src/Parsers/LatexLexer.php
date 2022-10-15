@@ -75,7 +75,7 @@ class LatexLexer
     'subparagraph', 'subparagraph\*',
   ];
 
-  const CMDS_POST_OPTIONS = [
+  const CMD_WITH_OPTIONS = [
     'item',
   ];
 
@@ -132,7 +132,7 @@ class LatexLexer
   public function tokenize(string $latex_src)
   {
 
-    $this->stream = $this->normalizeLatexSource($latex_src);
+    $this->stream = $this->preprocessLatexSource($latex_src);
 
     $this->num_chars = strlen($this->stream);
 
@@ -159,7 +159,7 @@ class LatexLexer
       $this->command_name = $this->consumeUntilNonAlpha();
 
       // Make token
-      if (in_array($this->command_name, self::SECTION_COMMANDS))
+      if ($this->getCommandType($this->command_name) === 'section-cmd')
       {
         try {
           $token = $this->tokenizeSection();
@@ -170,7 +170,7 @@ class LatexLexer
         $this->addToken($token);
         
       }
-      else if ($this->command_name === 'begin' || $this->command_name === 'end')
+      else if ($this->getCommandType($this->command_name) === 'environment')
       {
 
         try {
@@ -189,7 +189,7 @@ class LatexLexer
             'line_number' => $this->line_number,
           ]));
         }
-        else if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS))
+        else if ($this->getCommandType($this->command_name, $env) === 'displaymath-environment')
         {
 
           $this->addToken(new Token([
@@ -226,7 +226,7 @@ class LatexLexer
           ]));
 
         }
-        else if (in_array($env, self::TABULAR_ENVIRONMENTS))
+        else if ($this->getCommandType($this->command_name, $env) === 'tabular-environment')
         {
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
@@ -273,7 +273,7 @@ class LatexLexer
         }
 
       }
-      else if (in_array($this->command_name, self::FONT_COMMANDS))
+      else if ($this->getCommandType($this->command_name) === 'font-cmd')
       {
 
         try {
@@ -283,7 +283,7 @@ class LatexLexer
         }
 
         $this->addToken(new Token([
-          'type' => 'font-environment',
+          'type' => 'font-cmd',
           'command_name' => $this->command_name,
           'command_content' => $content,
           'command_options' => '',
@@ -293,7 +293,7 @@ class LatexLexer
         ]));
 
       }
-      else if (in_array($this->command_name, self::ONE_ARGS_CMDS))
+      else if ($this->getCommandType($this->command_name) === 'one-arg-cmd')
       {
         try {
           $content = $this->getCommandContent();
@@ -302,7 +302,7 @@ class LatexLexer
         }
 
         $this->addToken(new Token([
-          'type' => $this->getCommandType($this->command_name),
+          'type' => $this->command_name,
           'command_name' => $this->command_name,
           'command_content' => $content,
           'command_options' => '',
@@ -311,7 +311,7 @@ class LatexLexer
           'line_number' => $this->line_number,
         ]));
       }
-      else if (in_array($this->command_name, self::ONE_ARGS_CMDS_PRE_OPTIONS))
+      else if ($this->getCommandType($this->command_name) === 'one-arg-cmd-pre-options')
       {
         try {
           $token = $this->tokenizeCmdWithOptionsArg();
@@ -321,7 +321,7 @@ class LatexLexer
   
         $this->addToken($token);
       }
-      else if (in_array($this->command_name, self::CMDS_POST_OPTIONS))
+      else if ($this->getCommandType($this->command_name) === 'cmd-with-options')
       {
         try {
           $token = $this->tokenizeCmdWithOptions();
@@ -344,7 +344,7 @@ class LatexLexer
       
   }
 
-  private function normalizeLatexSource(string $latex_src)
+  private function preprocessLatexSource(string $latex_src)
   {
 
     $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
@@ -432,43 +432,33 @@ class LatexLexer
     return $char;
   }
 
-  private function getCommandType($name, $content=null)
+  private function getCommandType($name, $env=null)
   {
 
     if ($name == 'begin' || $name == 'end') {
 
-      if (in_array($content, self::DISPLAY_MATH_ENVIRONMENTS)) return 'math-environment';
+      if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) return 'displaymath-environment';
 
-      if (in_array($content, self::LIST_ENVIRONMENTS))     return 'list-environment';
+      if (in_array($env, self::LIST_ENVIRONMENTS))     return 'list-environment';
 
-      if (in_array($content, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
-
-      if (in_array($content, self::FONT_COMMANDS))         return 'font-environment';
-
+      if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
+      
       return 'environment';
 
     }
 
     if (in_array($name, self::SECTION_COMMANDS)) return 'section-cmd';
 
-    return match ($name) {
+    if (in_array($name, self::FONT_COMMANDS))    return 'font-cmd';
 
-      'includegraphics' => 'includegraphics',
+    if (in_array($name, self::ONE_ARGS_CMDS)) return 'one-arg-cmd';
 
-      'label' => 'label',
+    if (in_array($name, self::ONE_ARGS_CMDS_PRE_OPTIONS)) return 'one-arg-cmd-pre-options';
 
-      'caption' => 'caption',
+    if (in_array($name, self::CMD_WITH_OPTIONS)) return 'cmd-with-options';
 
-      'item' => 'item',
-
-      'ref' => 'ref',
-
-      'eqref' => 'eqref',
-
-      default => 'text',
-
-    };
-
+    return 'text';
+    
   }
        
   private function tokenizeSection(): Token
@@ -611,7 +601,7 @@ class LatexLexer
     }
 
     return new Token([
-      'type' => $this->getCommandType($this->command_name),
+      'type' => $this->command_name,
       'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => $options,
@@ -726,7 +716,7 @@ class LatexLexer
     }
 
     return new Token([
-      'type' => $this->getCommandType($this->command_name),
+      'type' => $this->command_name,
       'command_name' => $this->command_name,
       'command_content' => '',
       'command_options' => $options,

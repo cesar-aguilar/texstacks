@@ -2,16 +2,16 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\EnvironmentNode;
+use TexStacks\Parsers\CommandNode;
 
-class FontEnvironmentRenderer
+class FontCommandRenderer
 {
 
-    public static function renderNode(EnvironmentNode $node, string $body = null): string
+    public static function renderNode(CommandNode $node, string $body = null): string
     {
         $body = $body ?? '';
 
-        if ($node->ancestorOfType('math-environment')) return "\\" . $node->commandName(). "{" . $body . "}";
+        if ($node->ancestorOfType('displaymath-environment')) return "\\" . $node->commandName(). "{" . $body . "}";
         
         return match ($node->commandName()) {
 

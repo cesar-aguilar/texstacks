@@ -4,8 +4,10 @@ namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\EnvironmentRenderer;
 use TexStacks\Renderers\SectionCommandRenderer;
+use TexStacks\Renderers\FontCommandRenderer;
 use TexStacks\Renderers\ListEnvironmentRenderer;
-use TexStacks\Renderers\AmsMathEnvironmentRenderer;
+use TexStacks\Renderers\DisplayMathEnvironmentRenderer;
+use TexStacks\Renderers\TabularEnvironmentRenderer;
 
 class Renderer
 {
@@ -31,7 +33,7 @@ class Renderer
 
     if ($node->type() === 'section-cmd') return SectionCommandRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'math-environment') return AmsMathEnvironmentRenderer::renderNode($node, $body);
+    if ($node->type() === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->type() === 'environment') return EnvironmentRenderer::renderNode($node, $body);
 
@@ -39,7 +41,7 @@ class Renderer
 
     if ($node->type() === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'font-environment') return FontEnvironmentRenderer::renderNode($node, $body);
+    if ($node->type() === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
     if ($node->type() === 'item') return "<li>$body</li>";
 
@@ -49,7 +51,7 @@ class Renderer
 
     if ($node->type() === 'label') return $node->commandSource();
 
-    if ($node->ancestorOfType(['math-environment', 'tabular-environment'])) return $body;
+    if ($node->ancestorOfType(['displaymath-environment', 'tabular-environment'])) return $body;
 
     if ($body == '' && $node->leftSibling()?->type() === 'text') return "<br><br>";
 
