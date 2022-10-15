@@ -164,7 +164,7 @@ class LatexLexer
         try {
           $token = $this->tokenizeSection();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage() . " at line {$this->line_number}");
         }
         
         $this->addToken($token);
@@ -176,7 +176,7 @@ class LatexLexer
         try {
           $env = $this->getEnvName();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         if ($this->command_name === 'end')
@@ -207,7 +207,7 @@ class LatexLexer
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
           } catch (\Exception $e) {
-            die($e->getMessage());
+            throw new \Exception($e->getMessage());
           }
 
           $command_src = "\\" . $this->command_name . "{" . $env . "}";
@@ -245,7 +245,7 @@ class LatexLexer
           }
 
           if ($args === '') {
-            throw new \Exception("Missing arguments for tabular environment on line " . $this->line_number);
+            throw new \Exception("Parse error: Missing arguments for tabular environment on line " . $this->line_number);
           }
 
           $command_src .= "{" . $args . "}";
@@ -279,7 +279,7 @@ class LatexLexer
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $this->addToken(new Token([
@@ -298,7 +298,7 @@ class LatexLexer
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $this->addToken(new Token([
@@ -316,7 +316,7 @@ class LatexLexer
         try {
           $token = $this->tokenizeCmdWithOptionsArg();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
   
         $this->addToken($token);
@@ -326,7 +326,7 @@ class LatexLexer
         try {
           $token = $this->tokenizeCmdWithOptions();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
         
         $this->addToken($token);
@@ -518,7 +518,7 @@ class LatexLexer
         try {
           $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '[' . $options . ']';
@@ -533,7 +533,7 @@ class LatexLexer
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '{' . $content . '}';
@@ -584,7 +584,7 @@ class LatexLexer
         try {
           $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '[' . $options . ']';
@@ -599,7 +599,7 @@ class LatexLexer
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '{' . $content . '}';
@@ -657,7 +657,7 @@ class LatexLexer
         try {
           $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '[' . $options . ']';
@@ -670,7 +670,7 @@ class LatexLexer
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '{' . $content . '}';
@@ -819,7 +819,7 @@ class LatexLexer
         try {
           $content = $this->getContentUpToDelimiter($right_delim);
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
         
         break;
@@ -868,7 +868,7 @@ class LatexLexer
     try {
       $this->consumeSpaceUntilTarget('{');
     } catch (\Exception $e) {
-      die($e->getMessage() . " in environment declaration");
+      throw new \Exception($e->getMessage());
     }
     
     $env = '';

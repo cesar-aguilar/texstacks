@@ -72,7 +72,11 @@ class LatexParser
 
       };
 
-      $this->$handler($token);
+      try {
+        $this->$handler($token);
+      } catch (\Exception $e) {
+        throw new \Exception($e->getMessage());
+      }
       
     }
     

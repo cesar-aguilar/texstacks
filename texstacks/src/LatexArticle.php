@@ -44,7 +44,11 @@ class LatexArticle
     
     $this->html_src = $this->latex_src;
 
-    $this->parser->parse($this->html_src);
+    try {
+      $this->parser->parse($this->html_src);
+    } catch (\Exception $e) {
+      die($e->getMessage());
+    }
   }
 
   public function getLatex()
