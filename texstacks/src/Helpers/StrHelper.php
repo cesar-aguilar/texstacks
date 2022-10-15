@@ -67,7 +67,7 @@ class StrHelper
 
   public static function DeleteLatexComments(string $haystack): string
   {
-    $output = preg_replace('/(?<!\\\)%.*\n/', '', $haystack);
+    $output = preg_replace('/(?<!\\\)%.*\n/', "\n", $haystack);
 
     return str_replace('\%', '%', $output);
   }
@@ -103,4 +103,30 @@ class StrHelper
 
     return trim($title, $separator);
   }
+
+  public static function findStringLineNumber(string $needle, string $haystack): int
+  {
+    $lines = explode("\n", $haystack);
+    $line_number = 0;
+    foreach ($lines as $line) {
+      $line_number++;
+      if (strpos($line, $needle) !== false) {
+        return $line_number;
+      }
+    }
+    return -1;
+  }
+
+  public static function addLineNumbers(string $haystack, int $offset=0): string
+  {
+    $lines = explode("\n", $haystack);
+    $line_number = $offset;
+    $output = '';
+    foreach ($lines as $line) {
+      $output .= $line_number . ' - ' . $line . "\n";
+      $line_number++;
+    }
+    return $output;
+  }
+
 }

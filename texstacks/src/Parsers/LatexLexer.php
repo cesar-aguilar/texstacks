@@ -139,14 +139,11 @@ class LatexLexer
     if ($this->num_chars === 0) return [];
   
     $this->cursor = -1;
-
-    $this->line_number = 1;
     
     while (!is_null($char = $this->getNextChar()))
     {
 
       if ($char !== '\\') {
-        if ($char === "\n") $this->line_number++;
         $this->buffer .= $char;
         continue;
       }
@@ -347,6 +344,49 @@ class LatexLexer
       
   }
 
+  private function normalizeLatexSource(string $latex_src)
+  {
+
+    $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
+
+    $this->line_number = $n > -1 ? $n : 1;
+
+    $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
+
+    $html_src = StrHelper::DeleteLatexComments($html_src);
+
+    $html_src = str_replace('``', '"', $html_src);
+
+    // Replace less than and greater than symbols with latex commands
+    // note space after/before \lt and \gt
+    $html_src = str_replace('<', '&lt;', $html_src);
+    $html_src = str_replace('>', '&gt;', $html_src);
+
+    // Replace dollar sign with html entity
+    $html_src = str_replace('\\$', '&#36;', $html_src);
+
+    // Replace $$...$$ with \begin{equation*}...\end{equation*}
+    // note space after \begin{equation*}
+    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1\\end{equation*}', $html_src);
+
+    // Then replace $...$ with \begin{math}...\end{math}
+    // note space after \begin{math}
+    // $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
+    $html_src = preg_replace('/\$(.*?)\$/s', "\\($1\\)", $html_src);
+
+    // Replace \[...\] with \begin{equation*}...\end{equation*}
+    // note space after \begin{equation*}
+    $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
+    $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
+    $html_src = str_replace('\]', '\end{equation*}', $html_src);
+
+    // Replace more than two newlines with two newlines
+    // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
+    // dd(StrHelper::addLineNumbers($html_src, $n));
+    return $html_src;
+
+  }
+
   private function addToken(Token $token) {
 
       $this->addBufferAsToken();
@@ -370,6 +410,12 @@ class LatexLexer
   
   }
 
+  private function backup()
+  {
+    if ($this->getChar() === "\n") $this->line_number--;
+    $this->cursor--;
+  }
+
   private function getChar()
   {
     return $this->cursor < $this->num_chars ? $this->stream[$this->cursor] : null;
@@ -379,7 +425,11 @@ class LatexLexer
   {
     $this->prev_char = $this->getChar();
     $this->cursor++;
-    return $this->getChar();
+    $char = $this->getChar();
+
+    if ($char === "\n") $this->line_number++;
+
+    return $char;
   }
 
   private function getCommandType($name, $content=null)
@@ -420,46 +470,7 @@ class LatexLexer
     };
 
   }
-
-  private function normalizeLatexSource(string $latex_src)
-  {
-
-    $html_src = preg_replace('/.*\\\begin\s*{document}[\s\n]*(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
-
-    $html_src = StrHelper::DeleteLatexComments($html_src);
-
-    $html_src = str_replace('``', '"', $html_src);
-
-    // Replace less than and greater than symbols with latex commands
-    // note space after/before \lt and \gt
-    $html_src = str_replace('<', '&lt;', $html_src);
-    $html_src = str_replace('>', '&gt;', $html_src);
-
-    // Replace dollar sign with html entity
-    $html_src = str_replace('\\$', '&#36;', $html_src);
-    
-    // Replace $$...$$ with \begin{equation*}...\end{equation*}
-    // note space after \begin{equation*}
-    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1\\end{equation*}', $html_src);
-
-    // Then replace $...$ with \begin{math}...\end{math}
-    // note space after \begin{math}
-    // $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
-    $html_src = preg_replace('/\$(.*?)\$/s', "\\($1\\)", $html_src);
-    
-    // Replace \[...\] with \begin{equation*}...\end{equation*}
-    // note space after \begin{equation*}
-    $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
-    $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
-    $html_src = str_replace('\]', '\end{equation*}', $html_src);
-    
-    // Replace more than two newlines with two newlines
-    $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
-
-    return $html_src;
-
-  }
-      
+       
   private function tokenizeSection(): Token
   {
 
@@ -627,7 +638,7 @@ class LatexLexer
           $src .= $char;
           throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
         }
-        $this->cursor--;
+        $this->backup();
         break;
       }
 
@@ -690,7 +701,7 @@ class LatexLexer
     while (!is_null($char = $this->getChar())) {
 
       if (!in_array($char, $ALLOWED_CHARS)) {
-        $this->cursor--;
+        $this->backup();
         break;
       }
 
@@ -794,7 +805,7 @@ class LatexLexer
     while (!is_null($char = $this->getNextChar())) {
 
       if (!in_array($char, $ALLOWED_CHARS)) {
-        $this->cursor--;
+        $this->backup();
         break;
       }
 
@@ -828,7 +839,7 @@ class LatexLexer
    * delimiter is \n
    */
   private function getContentUpToDelimiter($delimiter)
-  {    
+  {
     $content = '';
 
     $char = $this->getNextChar();
@@ -839,7 +850,7 @@ class LatexLexer
         throw new \Exception("$content <--- Parse error on line {$this->line_number}: newline invalid syntax");
       }
 
-      $content .= $char;      
+      $content .= $char;
       $char = $this->getNextChar();
 
     }
