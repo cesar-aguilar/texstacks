@@ -16,10 +16,16 @@ class LatexParser
   private $current_node;
   private $lexer;
 
-  public function __construct()
+  public function __construct($data=[])
   {
     $this->tree = new SyntaxTree();
-    $this->lexer = new LatexLexer();
+
+    $lexer_data = [
+      'thm_env' => $data['thm_env'] ?? [],
+      'macros' => $data['macros'] ?? [],
+    ];
+
+    $this->lexer = new LatexLexer($lexer_data);
 
     $root = new SectionNode([
       'id' => 0,
@@ -55,9 +61,10 @@ class LatexParser
 
         'section-cmd' => 'handleSectionNode',
 
-        'environment',        
+        'environment',
+        'thm-environment',
         'displaymath-environment',
-        'tabular-environment',        
+        'tabular-environment',
         'list-environment' => 'handleEnvironmentNode',
 
         'item' => 'handleListItemNode',

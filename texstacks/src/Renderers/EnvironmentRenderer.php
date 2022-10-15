@@ -7,21 +7,9 @@ use TexStacks\Parsers\EnvironmentNode;
 class EnvironmentRenderer
 {
 
-    const AMS_THEOREM_ENVIRONMENTS = [
-        'theorem',
-        'proposition',
-        'lemma',
-        'corollary',
-        'definition',
-        'conjecture',
-    ];
-
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
         $body = $body ?? '';
-
-        if (in_array($node->commandContent(), self::AMS_THEOREM_ENVIRONMENTS))
-            return self::renderTheoremEnvironment($node, $body);
 
         if ($node->ancestorOfType('displaymath-environment'))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
@@ -46,15 +34,7 @@ class EnvironmentRenderer
         };
 
     }
-
-    private static function renderTheoremEnvironment(EnvironmentNode $node, string $body = null): string
-    {
-        $heading = ucwords($node->commandContent());
-        $heading .= $node->commandOptions() ? ': '. ucwords($node->commandOptions()) : '';
-
-        return "<div class=\"thm-env\"><div class=\"thm-env-head {$node->commandContent()}\" id=\"{$node->commandLabel()}\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
-    }
-
+    
     private static function renderProofEnvironment(EnvironmentNode $node, string $body = null): string
     {
         return "<div class=\"proof-env\"><div class=\"proof-head\" id=\"{$node->commandLabel()}\">Proof</div><div class=\"proof-body\">$body <span style=\"font-variant: small-caps\">QED</span></div></div>";

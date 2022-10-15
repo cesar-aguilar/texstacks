@@ -7,16 +7,7 @@ use TexStacks\Parsers\Token;
 
 class LatexLexer
 {
-
-  const AMS_THEOREM_ENVIRONMENTS = [
-    'theorem',
-    'proposition',
-    'lemma',
-    'corollary',
-    'definition',
-    'conjecture',
-  ];
-
+  
   const AMS_MATH_ENVIRONMENTS = [
     'math',
     'align', 'align*',
@@ -128,6 +119,13 @@ class LatexLexer
   private string $prev_char;
   private int $num_chars = 0;
   private string $command_name;
+  private array $thm_env;
+  private array $macros;
+
+  public function __construct($data=[]) {
+    $this->thm_env = $data['thm_env'] ?? [];
+    $this->macros = $data['macros'] ?? [];
+  }
 
   public function tokenize(string $latex_src)
   {
@@ -202,7 +200,7 @@ class LatexLexer
           ]));
 
         }
-        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...self::AMS_THEOREM_ENVIRONMENTS]))
+        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...$this->thm_env]))
         {
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
@@ -442,6 +440,8 @@ class LatexLexer
       if (in_array($env, self::LIST_ENVIRONMENTS))     return 'list-environment';
 
       if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
+
+      if (in_array($env, $this->thm_env)) return 'thm-environment';
       
       return 'environment';
 

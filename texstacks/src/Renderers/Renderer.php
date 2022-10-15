@@ -3,11 +3,12 @@
 namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\EnvironmentRenderer;
-use TexStacks\Renderers\SectionCommandRenderer;
 use TexStacks\Renderers\FontCommandRenderer;
+use TexStacks\Renderers\SectionCommandRenderer;
+use TexStacks\Renderers\ThmEnvironmentRenderer;
 use TexStacks\Renderers\ListEnvironmentRenderer;
-use TexStacks\Renderers\DisplayMathEnvironmentRenderer;
 use TexStacks\Renderers\TabularEnvironmentRenderer;
+use TexStacks\Renderers\DisplayMathEnvironmentRenderer;
 
 class Renderer
 {
@@ -34,6 +35,8 @@ class Renderer
     if ($node->type() === 'section-cmd') return SectionCommandRenderer::renderNode($node, $body);
 
     if ($node->type() === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
+
+    if ($node->type() === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->type() === 'environment') return EnvironmentRenderer::renderNode($node, $body);
 
@@ -67,7 +70,7 @@ class Renderer
     // return str_replace('\\\\','', $output);
 
   }
-
+  
   private static function renderIncludeGraphics($node, string $body = null): string
   {
     return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
