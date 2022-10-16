@@ -13,7 +13,6 @@ class LatexArticle
   private $html_src;
   private $basename;
   private $dir;
-  private $ref_labels;
 
   public $section_names = [];
   public $section_ids = [];
@@ -40,7 +39,9 @@ class LatexArticle
 
     $aux_path = $this->dir . DIRECTORY_SEPARATOR . $this->basename . '.aux';
 
-    $this->ref_labels = (new AuxParser($aux_path))->getLabelsAsArray();
+    $ref_labels = (new AuxParser($aux_path))->getLabelsAsArray();
+
+    $this->parser->setRefLabels($ref_labels);
     
     $this->html_src = $this->latex_src;
     

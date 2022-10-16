@@ -43,6 +43,11 @@ class LatexParser
     return $this->tree->root();
   }
 
+  public function setRefLabels($labels)
+  {
+    $this->lexer->setRefLabels($labels);
+  }
+
   public function parse($latex_src_raw)
   {
    
@@ -51,7 +56,6 @@ class LatexParser
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-
     // dd($tokens);
     /* From token add node to syntax tree using depth-first traversal */
     foreach ($tokens as $token)
@@ -73,6 +77,9 @@ class LatexParser
 
         'includegraphics',
         'caption',
+        'ref',
+        'eqref',
+        'cite',
         'font-cmd' => 'handleCommandNode',
  
         default => 'addToCurrentNode',
@@ -86,6 +93,8 @@ class LatexParser
       }
       
     }
+
+    // dd($this->tree->root()->children());
     
   }
 
@@ -192,8 +201,8 @@ class LatexParser
     } 
     else if (preg_match('/environment/', $token->type)) {
       return new EnvironmentNode($args);
-    } 
-    else 
+    }
+    else
     {
       return new CommandNode($args);
     }

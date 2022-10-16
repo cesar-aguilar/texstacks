@@ -78,7 +78,8 @@ class LatexLexer
   const ONE_ARGS_CMDS = [
     'label',
     'ref',
-    'eqref',    
+    'eqref',
+    'cite',
   ];
 
   const TABULAR_ENVIRONMENTS = [
@@ -121,10 +122,16 @@ class LatexLexer
   private string $command_name;
   private array $thm_env;
   private array $macros;
+  private array $ref_labels;
 
   public function __construct($data=[]) {
     $this->thm_env = $data['thm_env'] ?? [];
     $this->macros = $data['macros'] ?? [];
+  }
+
+  public function setRefLabels($labels)
+  {
+    $this->ref_labels = $labels;
   }
 
   public function tokenize(string $latex_src)
@@ -141,6 +148,11 @@ class LatexLexer
     while (!is_null($char = $this->getNextChar()))
     {
 
+      if ($char === '~') {
+        $this->buffer .= ' ';
+        continue;
+      }
+
       if ($char !== '\\') {
         $this->buffer .= $char;
         continue;
@@ -151,6 +163,7 @@ class LatexLexer
       // If char is non-alphabetic then we have a control symbol
       if (!ctype_alpha($char ?? '')) {
         $this->buffer .= "\\" . $char;
+        // $this->addSymbolToken($char);
         continue;
       }
       
@@ -299,11 +312,18 @@ class LatexLexer
           throw new \Exception($e->getMessage());
         }
 
+        $label = '';
+
+        if ($this->command_name === 'ref' || $this->command_name === 'eqref')
+        {
+          $label = $this->ref_labels[$content] ?? '?';
+        }
+
         $this->addToken(new Token([
           'type' => $this->command_name,
           'command_name' => $this->command_name,
           'command_content' => $content,
-          'command_options' => '',
+          'command_options' => $label,
           'command_src' => "\\" . $this->command_name . "{" . $content. "}",
           'body' => $content,
           'line_number' => $this->line_number,
@@ -369,8 +389,8 @@ class LatexLexer
 
     // Then replace $...$ with \begin{math}...\end{math}
     // note space after \begin{math}
-    // $html_src = preg_replace('/\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
-    $html_src = preg_replace('/\$(.*?)\$/s', "\\($1\\)", $html_src);
+    // $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
+    $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\($1\\)", $html_src);
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
@@ -390,6 +410,19 @@ class LatexLexer
       $this->addBufferAsToken();
 
       $this->tokens[] = $token;
+
+  }
+
+  private function addSymbolToken(string $char)
+  {
+
+    $this->addBufferAsToken();
+
+    $this->tokens[] = new Token([
+      'type' => 'symbol',
+      'body' => $char,
+      'line_number' => $this->line_number,
+    ]);
 
   }
 

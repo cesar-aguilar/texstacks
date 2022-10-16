@@ -33,7 +33,7 @@ class Renderer
   {
 
     if ($node->type() === 'section-cmd') return SectionCommandRenderer::renderNode($node, $body);
-
+    
     if ($node->type() === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->type() === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
@@ -46,6 +46,8 @@ class Renderer
 
     if ($node->type() === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
+    if ($node->type() === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
+
     if ($node->type() === 'item') return "<li>$body</li>";
 
     if ($node->type() === 'includegraphics') return self::renderIncludeGraphics($node, $body);
@@ -53,6 +55,10 @@ class Renderer
     if ($node->type() === 'caption') return self::renderCaptionEnvironment($node, $body);
 
     if ($node->type() === 'label') return $node->commandSource();
+
+    if ($node->type() === 'ref') return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
+
+    if ($node->type() === 'eqref') return "( <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> )";
 
     if ($node->ancestorOfType(['displaymath-environment', 'tabular-environment'])) return $body;
 
