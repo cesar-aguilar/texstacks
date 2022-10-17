@@ -11,6 +11,8 @@ class SectionCommandRenderer
   {
     $body = $body ?? '';
 
+    if ($node->ancestorOfType('verbatim')) return $node->commandSource();
+
     return match ($node->commandName()) {
 
       'document' => "<main>$body</main>",

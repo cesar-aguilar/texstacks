@@ -12,6 +12,8 @@ class DisplayMathEnvironmentRenderer
     
     $latex =  $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
+    if (($node->ancestorOfType('verbatim'))) return $latex;
+
     // If $node is a nested displaymath-env, then we need to render it as text
     // if ($node->ancestorOfType('displaymath-environment')) return $latex;
 

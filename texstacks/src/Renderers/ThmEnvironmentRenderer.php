@@ -8,6 +8,10 @@ class ThmEnvironmentRenderer
 {
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
+        if ($node->ancestorOfType('verbatim')) {
+            return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
+        }
+
         $heading = ucwords($node->commandContent());
         $heading .= $node->commandOptions() ? ': '. ucwords($node->commandOptions()) : '';
 

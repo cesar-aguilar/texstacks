@@ -451,6 +451,31 @@ class LatexLexer
   
   }
 
+  private function addInlineMathToken($char)
+  {
+    // Treat inline math like a begin/end environment
+    $this->addToken(new Token([
+      'type' => 'inlinemath',
+      'command_name' => $char === '(' ? 'begin' : 'end',
+      'command_content' => 'inlinemath',
+      'command_options' => '',
+      'command_src' => "\\" . $char,
+      'line_number' => $this->line_number,
+    ]));
+  }
+
+  private function addUnknownToken($command_name)
+  {
+    // These tokens will be ignored unless inside
+    // a verbatim environment or math environment
+    $this->addToken(new Token([
+      'type' => 'unknown',
+      'command_name' => $command_name,
+      'command_src' => "\\" . $command_name,
+      'line_number' => $this->line_number,
+    ]));
+  }
+
   private function backup()
   {
     if ($this->getChar() === "\n") $this->line_number--;
@@ -485,6 +510,8 @@ class LatexLexer
       if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
 
       if (in_array($env, $this->thm_env)) return 'thm-environment';
+
+      if ($env === 'verbatim') return 'verbatim';
       
       return 'environment';
 
@@ -767,20 +794,7 @@ class LatexLexer
       'line_number' => $this->line_number,
     ]);
   }
-
-  private function addInlineMathToken($char)
-  {
-    // Treat inline math like a begin/end environment
-    $this->addToken(new Token([
-      'type' => 'inlinemath',
-      'command_name' => $char === '(' ? 'begin' : 'end',
-      'command_content' => 'inlinemath',
-      'command_options' => '',
-      'command_src' => "\\" . $char,
-      'line_number' => $this->line_number,
-    ]));
-  }
-  
+    
   private function getCommandContent()
   {
 

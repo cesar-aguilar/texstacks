@@ -69,6 +69,7 @@ class LatexParser
         'thm-environment',
         'displaymath-environment',
         'inlinemath',
+        'verbatim',
         'tabular-environment',
         'list-environment' => 'handleEnvironmentNode',
 
@@ -115,20 +116,19 @@ class LatexParser
     $new_node = $this->createCommandNode($token);
     $parent = $this->current_node;
 
-    /* Move up the tree until we find the first sectioning command
-       with a lower numbered depth level */
-    
-    if (!method_exists($parent, 'depthLevel')) {
-      throw new \Exception("Parse error on line number {$token->line_number} of original source file");
+    if ($parent->type() == 'verbatim' || $parent->ancestorOfType('verbatim'))
+    {
+      $this->tree->addNode($new_node, $parent);      
+      return true;
     }
 
-    while ($parent->depthLevel() >= $new_node->depthLevel()) {
+    /* Move up the tree until we find the first sectioning command
+      with a lower numbered depth level */
+
+    while (!method_exists($parent, 'depthLevel') || $parent->depthLevel() >= $new_node->depthLevel()) {
       $parent = $parent->parent();
-      if (!method_exists($parent, 'depthLevel')) {
-        throw new \Exception("Parse error on line number {$token->line_number} of original source file");
-      }
     }
-        
+
     $this->tree->addNode($new_node, $parent);
     $this->current_node = $new_node;
     return true;

@@ -11,6 +11,9 @@ class TabularEnvironmentRenderer
     {        
         $body = $body ?? '';
 
+        if ($node->ancestorOfType('verbatim'))
+            return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
+
         if ($node->commandContent() !== 'array')
         {
             return self::renderTabularEnvironment($node, $body);

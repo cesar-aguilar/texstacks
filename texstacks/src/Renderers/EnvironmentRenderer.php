@@ -11,7 +11,7 @@ class EnvironmentRenderer
     {
         $body = $body ?? '';
 
-        if ($node->ancestorOfType('displaymath-environment'))
+        if ($node->ancestorOfType(['displaymath-environment', 'verbatim']))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         return match ($node->commandContent()) {
@@ -25,8 +25,6 @@ class EnvironmentRenderer
             'figure' => self::renderFigureEnvironment($node, $body),
 
             'table' => self::renderTableEnvironment($node, $body),
-            
-            'verbatim' => "<pre>$body</pre>",
 
             'abstract' => self::renderAbstract($node, $body),
 

@@ -46,11 +46,13 @@ class Renderer
 
     if ($node->type() === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
 
+    if ($node->type() === 'verbatim') return "<pre>$body</pre>";
+
     if ($node->type() === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
     if ($node->type() === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'item') return "<li>$body</li>";
+    if ($node->type() === 'item') return self::renderItemNode($node, $body);
 
     if ($node->type() === 'includegraphics') return self::renderIncludeGraphics($node, $body);
 
@@ -70,7 +72,7 @@ class Renderer
     $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '', $body);
 
     // If parent is verbatim then add new line
-    if ($node->parent()?->commandContent() === 'verbatim') $output = $output . "\n";
+    // if ($node->parent()?->commandContent() === 'verbatim') $output = $output . "\n";
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '', $output);
@@ -78,14 +80,27 @@ class Renderer
     // return str_replace('\\\\','', $output);
 
   }
+
+  private function renderItemNode($node, $body)
+  {
+    if ($node->ancestorOfType('verbatim')) return $node->commandSource() . ' ' . $body;
+
+    return "<li>$body</li>";
+  }
   
   private static function renderIncludeGraphics($node, string $body = null): string
   {
+
+    if ($node->ancestorOfType('verbatim')) return $node->commandSource();
+
     return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
   }
 
   private static function renderCaptionEnvironment($node, string $body = null): string
   {
+
+    if ($node->ancestorOfType('verbatim')) return $node->commandSource();
+
     return match ($node->parent()->commandContent()) {
 
       'figure' => "<figcaption>$body</figcaption>",

@@ -16,6 +16,9 @@ class ListEnvironmentRenderer
     {
         $body = $body ?? '';
 
+        if ($node->ancestorOfType('verbatim'))
+            return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
+
         if (in_array($node->commandContent(), self::ORDERED_LISTS))
         {
             return "<ol>$body</ol>";
