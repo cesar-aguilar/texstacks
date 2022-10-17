@@ -364,6 +364,9 @@ class LatexLexer
 
   private function preprocessLatexSource(string $latex_src)
   {
+ 
+    // Remove any spaces at the right end of lines and reconstruct the source
+    $latex_src = implode("\n", array_map(trim(...), explode("\n", $latex_src)));
 
     $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
 
