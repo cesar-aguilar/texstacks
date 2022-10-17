@@ -56,7 +56,7 @@ class LatexParser
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-    // dd($tokens);
+    // die($this->lexer->prettyPrintTokens());
     /* From token add node to syntax tree using depth-first traversal */
     foreach ($tokens as $token)
     {
@@ -68,6 +68,7 @@ class LatexParser
         'environment',
         'thm-environment',
         'displaymath-environment',
+        'inlinemath',
         'tabular-environment',
         'list-environment' => 'handleEnvironmentNode',
 
@@ -116,10 +117,18 @@ class LatexParser
 
     /* Move up the tree until we find the first sectioning command
        with a lower numbered depth level */
+    
+    if (!method_exists($parent, 'depthLevel')) {
+      throw new \Exception("Parse error on line number {$token->line_number} of original source file");
+    }
+
     while ($parent->depthLevel() >= $new_node->depthLevel()) {
       $parent = $parent->parent();
+      if (!method_exists($parent, 'depthLevel')) {
+        throw new \Exception("Parse error on line number {$token->line_number} of original source file");
+      }
     }
-    
+        
     $this->tree->addNode($new_node, $parent);
     $this->current_node = $new_node;
     return true;
@@ -206,6 +215,22 @@ class LatexParser
     {
       return new CommandNode($args);
     }
+  }
+
+  public function terminateWithError($message)
+  {
+
+    $node = new Node(
+      [
+        'id' => $this->tree->nodeCount(),
+        'type' => 'text',
+        'body' => "<span class=\"parse-error\">" . $message . "</span>",
+      ]
+      );
+
+    $this->tree->addNode($node, parent: $this->current_node);
+    $this->tree->prependNode($node);
+
   }
 
   // private function parseLine($line, $number) {

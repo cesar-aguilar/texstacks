@@ -23,4 +23,21 @@ class Token {
         $this->body = $args['body'] ?? '';
         $this->line_number = $args['line_number'];
     }
+
+    public function __toString(): string {
+
+        $as_array = (array) $this;
+
+        $as_array = array_filter($as_array);
+
+        $array = [];
+
+        foreach ($as_array as $key => $value) {
+            $array[] = $key . ': ' . $value;
+        }
+
+        $str = implode(' | ', $array);
+
+        return "<span style=\"font-size:0.8rem\">$str</span>";
+    }
 }

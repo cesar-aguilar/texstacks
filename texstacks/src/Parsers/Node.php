@@ -86,6 +86,11 @@ class Node
     $this->children[] = $child;
   }
 
+  public function prependChild(Node $child)
+  {
+    array_unshift($this->children, $child);
+  }
+
   public function setParent(Node $parent)
   {
     $this->parent = $parent;

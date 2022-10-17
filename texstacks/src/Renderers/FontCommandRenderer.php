@@ -11,7 +11,7 @@ class FontCommandRenderer
     {
         $body = $body ?? '';
 
-        if ($node->ancestorOfType('displaymath-environment')) return "\\" . $node->commandName(). "{" . $body . "}";
+        if ($node->ancestorOfType(['displaymath-environment', 'inlinemath'])) return "\\" . $node->commandName(). "{" . $body . "}";
         
         return match ($node->commandName()) {
 

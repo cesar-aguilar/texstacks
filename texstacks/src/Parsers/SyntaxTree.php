@@ -22,9 +22,20 @@ class SyntaxTree
     }
   }
 
+  public function prependNode($node)
+  {
+    
+    $this->root->prependChild($node);
+
+  }
+
   public function getNodes()
   {
     return $this->nodes;
+  }
+
+  public function getLastNode() {
+    return $this->node_count ? $this->nodes[$this->node_count - 1] : null;
   }
 
   public function nodeCount()

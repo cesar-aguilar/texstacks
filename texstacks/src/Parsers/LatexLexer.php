@@ -162,6 +162,12 @@ class LatexLexer
 
       // If char is non-alphabetic then we have a control symbol
       if (!ctype_alpha($char ?? '')) {
+
+        if ($char === '(' || $char === ')') {
+          $this->addInlineMathToken($char);
+          continue;
+        }
+
         $this->buffer .= "\\" . $char;
         // $this->addSymbolToken($char);
         continue;
@@ -351,7 +357,8 @@ class LatexLexer
       }
       else
       {
-        $this->buffer .= "\\" . $this->command_name . $this->getChar();
+        $this->buffer .= "\\" . $this->command_name;
+        $this->backup();
       }
 
     }
@@ -388,12 +395,12 @@ class LatexLexer
 
     // Replace $$...$$ with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
-    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1\\end{equation*}', $html_src);
+    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1 \\end{equation*}', $html_src);
 
     // Then replace $...$ with \begin{math}...\end{math}
     // note space after \begin{math}
     // $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
-    $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\($1\\)", $html_src);
+    $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\( $1 \\)", $html_src);
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
@@ -760,6 +767,19 @@ class LatexLexer
       'line_number' => $this->line_number,
     ]);
   }
+
+  private function addInlineMathToken($char)
+  {
+    // Treat inline math like a begin/end environment
+    $this->addToken(new Token([
+      'type' => 'inlinemath',
+      'command_name' => $char === '(' ? 'begin' : 'end',
+      'command_content' => 'inlinemath',
+      'command_options' => '',
+      'command_src' => "\\" . $char,
+      'line_number' => $this->line_number,
+    ]));
+  }
   
   private function getCommandContent()
   {
@@ -814,6 +834,19 @@ class LatexLexer
     return $content;
     
   }
+
+  public function prettyPrintTokens()
+  {
+    $output = '';
+
+    foreach ($this->tokens as $token) {
+      $output .= (string) $token . "<br>";
+    }
+
+    return $output;
+  }
+  
+  
 
   /**
    * Get the content between two delimiters

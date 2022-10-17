@@ -36,6 +36,8 @@ class Renderer
     
     if ($node->type() === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
+    if ($node->type() === 'inlinemath') return "\\(" . $body . "\\)";
+
     if ($node->type() === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->type() === 'environment') return EnvironmentRenderer::renderNode($node, $body);
@@ -60,7 +62,7 @@ class Renderer
 
     if ($node->type() === 'eqref') return "( <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> )";
 
-    if ($node->ancestorOfType(['displaymath-environment', 'tabular-environment'])) return $body;
+    if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment'])) return $body;
 
     if ($body == '' && $node->leftSibling()?->type() === 'text') return "<br><br>";
 

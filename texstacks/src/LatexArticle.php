@@ -48,7 +48,7 @@ class LatexArticle
     try {
       $this->parser->parse($this->html_src);
     } catch (\Exception $e) {
-      die($e->getMessage());
+      $this->parser->terminateWithError($e->getMessage());
     }
   }
 
