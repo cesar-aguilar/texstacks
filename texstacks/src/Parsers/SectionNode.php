@@ -27,12 +27,16 @@ class SectionNode extends CommandNode
       case 'document':
         return -1;
       case 'chapter':
+      case 'chapter*':
         return 0;
       case 'section':
+      case 'section*':
         return 1;
       case 'subsection':
+      case 'subsection*':
         return 2;
       case 'subsubsection':
+      case 'subsubsection*':
         return 3;
       default:
         return 4;

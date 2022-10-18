@@ -105,7 +105,7 @@ class LatexParser
       }
       
     }
-
+    
     // dd($this->tree->root()->children());
     // dd($this->section_counters);
     
@@ -253,6 +253,8 @@ class LatexParser
 
   private function getSectionNumber($node)
   {
+
+    if (str_contains($node->commandName(), '*')) return '';
 
     $this->section_counters[$node->commandName()] += 1;
 
