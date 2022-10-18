@@ -129,4 +129,76 @@ class StrHelper
     return $output;
   }
 
+  public static function getAllCmdArgs($command, $line, $left_delim='{', $right_delim='}')
+  {
+    
+    $cursor = 0;
+    $length = strlen($line);
+
+    $cursor = strpos($line, "\\" . $command);
+
+    if ($cursor === false) return [];
+
+    // Move cursor one position after the command
+    $cursor += strlen($command) + 1;
+
+    $args = [];
+
+    while ($cursor < $length) {
+      
+      $char = $line[$cursor];
+          
+      if (in_array($char, [" ", "\n"] )) {
+        $cursor++;
+        continue;
+      }
+ 
+      if ($char !== $left_delim) return $args;
+
+      $cursor++;
+
+      $char = $cursor < $length ? $line[$cursor] : null;
+
+      $delim_count = 1;
+
+      $current_arg = '';
+
+      while ($char)
+      {
+  
+        if ($char !== $right_delim)
+        {
+
+          $current_arg .= $char;
+          
+          if ($char === $left_delim) $delim_count++;
+
+        }
+        else
+        {
+
+          $delim_count--;
+
+          if ($delim_count === 0) {
+            $args[] = $current_arg;
+            $cursor++;
+            break;
+          }
+          
+          $current_arg .= $right_delim;
+
+        }
+
+        $cursor++;
+
+        $char = $cursor < $length ? $line[$cursor] : null;
+  
+      }
+             
+    }
+
+    return $args;
+
+  }
+
 }

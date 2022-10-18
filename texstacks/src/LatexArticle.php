@@ -42,7 +42,7 @@ class LatexArticle
     $ref_labels = (new AuxParser($aux_path))->getLabelsAsArray();
 
     $this->parser->setRefLabels($ref_labels);
-    
+
     $this->html_src = $this->latex_src;
     
     try {

@@ -15,6 +15,7 @@ class LatexParser
   protected SyntaxTree $tree;
   private $current_node;
   private $lexer;
+  private $section_counters;
 
   public function __construct($data=[])
   {
@@ -36,6 +37,14 @@ class LatexParser
     $this->tree->setRoot($root);
 
     $this->current_node = $root;
+
+    $this->section_counters = [
+      'chapter' => 0,
+      'section' => 0,
+      'subsection' => 0,
+      'subsubsection' => 0,
+    ];
+
   }
 
   public function getRoot()
@@ -50,12 +59,13 @@ class LatexParser
 
   public function parse($latex_src_raw)
   {
-   
+
     try {
       $tokens = $this->lexer->tokenize($latex_src_raw);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
+    // dd($tokens);
     // die($this->lexer->prettyPrintTokens());
     /* From token add node to syntax tree using depth-first traversal */
     foreach ($tokens as $token)
@@ -97,6 +107,7 @@ class LatexParser
     }
 
     // dd($this->tree->root()->children());
+    // dd($this->section_counters);
     
   }
 
@@ -115,12 +126,14 @@ class LatexParser
   {
     $new_node = $this->createCommandNode($token);
     $parent = $this->current_node;
-
-    if ($parent->type() == 'verbatim' || $parent->ancestorOfType('verbatim'))
+    
+    if ($parent->type() === 'verbatim' || $parent->ancestorOfType('verbatim'))
     {
-      $this->tree->addNode($new_node, $parent);      
+      $this->tree->addNode($new_node, $parent);
       return true;
     }
+
+    $new_node->setRefNum($this->getSectionNumber($new_node));
 
     /* Move up the tree until we find the first sectioning command
       with a lower numbered depth level */
@@ -186,6 +199,11 @@ class LatexParser
   {
     $this->current_node->setLabel($token->command_content);
 
+    if ($this->current_node->type() !== 'section-cmd') {
+      $this->current_node->setRefNum($token->command_options);
+    }
+
+
     if ($this->current_node->type() === 'displaymath-environment') {
       $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
@@ -230,6 +248,24 @@ class LatexParser
 
     $this->tree->addNode($node, parent: $this->current_node);
     $this->tree->prependNode($node);
+
+  }
+
+  private function getSectionNumber($node)
+  {
+
+    $this->section_counters[$node->commandName()] += 1;
+
+    $section_numbers = [];
+
+    foreach ($this->section_counters as $key => $value) {
+
+      if ($value) $section_numbers[] = $value;
+
+      if ($key == $node->commandName()) break;
+    }
+
+    return implode('.', $section_numbers);
 
   }
 

@@ -25,17 +25,17 @@ class SectionNode extends CommandNode
   {
     switch ($this->commandName()) {
       case 'document':
-        return 0;
+        return -1;
       case 'chapter':
-        return 1;
+        return 0;
       case 'section':
-        return 2;
+        return 1;
       case 'subsection':
-        return 3;
+        return 2;
       case 'subsubsection':
-        return 4;
+        return 3;
       default:
-        return 5;
+        return 4;
     }
   }
 

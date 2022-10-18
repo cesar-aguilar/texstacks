@@ -25,6 +25,7 @@ class CommandNode extends Node
   protected string|null $command_src = '';
   protected string|null $command_name = '';
   protected string|null $command_label = '';
+  protected string|null $command_refnum = '';
   protected string|null $command_content = '';
   protected string|null $command_options = '';
 
@@ -37,6 +38,7 @@ class CommandNode extends Node
     $this->command_src = $args['command_src'] ?? '';
     $this->command_name = $args['command_name'] ?? '';
     $this->command_label = $args['command_label'] ?? '';
+    $this->command_refnum = $args['command_refnum'] ?? '';
     $this->command_content = $args['command_content'] ?? '';
     $this->command_options = $args['command_options'] ?? '';
   }
@@ -66,8 +68,18 @@ class CommandNode extends Node
     return $this->command_options;
   }
 
+  public function commandRefNum()
+  {
+    return $this->command_refnum;
+  }
+
   public function setLabel($label)
   {
     $this->command_label = $label;
+  }
+
+  public function setRefNum($ref_num)
+  {
+    $this->command_refnum = $ref_num;
   }
 }

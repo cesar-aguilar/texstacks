@@ -13,17 +13,22 @@ class SectionCommandRenderer
 
     if ($node->ancestorOfType('verbatim')) return $node->commandSource();
 
-    return match ($node->commandName()) {
+    $title = $node->commandRefNum() ? $node->commandRefNum() . '&nbsp;&nbsp;&nbsp;' : '';
+
+    $title .= $node->commandContent();
+
+    return match ($node->commandName())
+    {
 
       'document' => "<main>$body</main>",
 
-      'chapter' => "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>{$node->commandContent()}</h1>$body</article>",
+      'chapter' => "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>$title</h1>$body</article>",
 
-      'section' => "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>{$node->commandContent()}</h2>$body</section>",
+      'section' => "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>$title</h2>$body</section>",
 
-      'subsection' => "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>{$node->commandContent()}</h3>$body</section>",
+      'subsection' => "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>$title</h3>$body</section>",
 
-      'subsubsection' => "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>{$node->commandContent()}</h4>$body</section>",
+      'subsubsection' => "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>$title</h4>$body</section>",
 
       default => "<div>$body</div>"
 
