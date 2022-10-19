@@ -2,6 +2,7 @@
 
 namespace TexStacks\Parsers;
 
+use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\Node;
 use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\CommandNode;
@@ -59,6 +60,10 @@ class LatexParser
 
   public function parse($latex_src_raw)
   {
+
+    $thm_envs = $this->getTheoremEnvs($latex_src_raw);
+
+    dd($thm_envs);
 
     try {
       $tokens = $this->lexer->tokenize($latex_src_raw);
@@ -268,6 +273,81 @@ class LatexParser
     }
 
     return implode('.', $section_numbers);
+
+  }
+
+  private function getTheoremEnvs($latex_src)
+  {
+
+    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem|\\\theoremstyle).*/', $latex_src, $matches, PREG_OFFSET_CAPTURE);
+
+    if (!isset($matches[1])) return [];
+
+    $thm_envs = [];
+    
+    $default_styles = ['plain', 'definition', 'remark'];
+    $current_style = 'plain';
+
+    foreach ($matches[1] as $match) {
+
+      $command = str_replace("\\", '', $match[0]);
+      $offset = $match[1];
+
+      $args = StrHelper::getAllCmdArgsOptions($command, substr($latex_src, $offset));
+
+      if ($command === 'theoremstyle' && isset($args[0])) {
+        $current_style = in_array($args[0]->value, $default_styles) ? $args[0]->value : 'plain';
+        continue;
+      }
+
+      if ($command === 'newtheorem')
+      {
+
+        $num_args = count($args);
+
+        if ($num_args !== 2 && $num_args !== 3) continue;
+
+        // Declaration of the form \newtheorem{env}{text}
+        if ($num_args === 2) {
+
+          $env = $args[0]->type === 'arg' ? $args[0]->value : '';
+          $text = $args[1]->type === 'arg' ? $args[1]->value : '';
+          $parent = null;
+          $shared = null;
+
+        }
+
+        // Declaration of the form \newtheorem{env}[shared]{text} or
+        // \newtheorem{env}{text}[parent-counter]
+        else if ($num_args === 3) {
+
+          $env = $args[0]->type === 'arg' ? $args[0]->value : '';
+
+          if ($args[1]->type === 'arg') {
+            $text = $args[1]->value;
+            $parent = $args[2]->value;
+            $shared = null;
+          } else {
+            $shared = $args[1]->value;
+            $text = $args[2]->value;
+            $parent = null;
+          }
+
+        }
+
+        $thm_envs[] = [
+          'env' => $env,
+          'text' => $text,
+          'parent' => $parent,
+          'shared' => $shared,
+          'style' => $current_style,
+        ];
+
+      }
+
+    }
+
+    return $thm_envs;
 
   }
 

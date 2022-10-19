@@ -20,17 +20,29 @@ class SectionCommandRenderer
     return match ($node->commandName())
     {
 
-      'document' => "<main>$body</main>",
+      'document' =>
 
-      'chapter', 'chapter*' => "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>$title</h1>$body</article>",
+        "<main>$body</main>",
 
-      'section', 'section*' => "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>$title</h2>$body</section>",
+      'chapter', 'chapter*' =>
 
-      'subsection', 'subsection*' => "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>$title</h3>$body</section>",
+        "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>$title</h1>$body</article>",
 
-      'subsubsection', 'subsubsection*' => "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>$title</h4>$body</section>",
+      'section', 'section*' =>
 
-      default => "<div>$body</div>"
+        "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>$title</h2>$body</section>",
+
+      'subsection', 'subsection*' =>
+
+        "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>$title</h3>$body</section>",
+
+      'subsubsection', 'subsubsection*' =>
+
+        "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>$title</h4>$body</section>",
+
+      default =>
+
+        "<div>$body</div>"
 
     };
 

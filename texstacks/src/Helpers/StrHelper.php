@@ -129,9 +129,21 @@ class StrHelper
     return $output;
   }
 
-  public static function getAllCmdArgs($command, $line, $left_delim='{', $right_delim='}')
+  /**
+   * Example of $delimiters:
+   *
+   * $delimiters = ['{' => '}'];
+   * $delimiters = ['{' => '}', '[' => ']'];
+   * $delimiters = ['<' => '>', '[' => ']'];
+   *
+   */
+  public static function getAllCmdArgsOptions($command, $line, $delimiters=null)
   {
-    
+
+    $delimiters = $delimiters ?? ['{' => '}', '[' => ']'];
+
+    $left_delimiters = array_keys($delimiters);
+
     $cursor = 0;
     $length = strlen($line);
 
@@ -152,8 +164,18 @@ class StrHelper
         $cursor++;
         continue;
       }
+
+      if ($char === '%') {
+        while ($cursor < $length && $line[$cursor] !== "\n") {
+          $cursor++;
+        }
+        continue;
+      }
  
-      if ($char !== $left_delim) return $args;
+      if (!in_array($char, $left_delimiters)) return $args;
+
+      $left_delim = $char;
+      $right_delim = $delimiters[$char];
 
       $cursor++;
 
@@ -180,7 +202,8 @@ class StrHelper
           $delim_count--;
 
           if ($delim_count === 0) {
-            $args[] = $current_arg;
+            // $args[] = [$left_delim . $right_delim, $current_arg];
+            $args[] = (object) ['type' => $left_delim.$right_delim === '{}' ? 'arg' : 'option', 'value' => $current_arg];
             $cursor++;
             break;
           }

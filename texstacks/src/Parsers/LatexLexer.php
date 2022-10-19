@@ -320,10 +320,8 @@ class LatexLexer
 
         $label = '';
 
-        if ($this->command_name === 'ref' || $this->command_name === 'eqref')
-        {
+        if (in_array($this->command_name, ['ref', 'eqref', 'label']))
           $label = $this->ref_labels[$content] ?? '?';
-        }
 
         $this->addToken(new Token([
           'type' => $this->command_name,

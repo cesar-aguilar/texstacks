@@ -2,6 +2,7 @@
 
 namespace TexStacks;
 
+use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\LatexParser;
 use TexStacks\Parsers\AuxParser;
 use TexStacks\Renderers\Renderer;
