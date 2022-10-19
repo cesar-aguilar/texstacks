@@ -101,6 +101,13 @@ class Node
     $this->body = $body;
   }
 
+  public function hasType($type)
+  {
+    $types = is_array($type) ? $type : [$type];
+
+    return in_array($this->type, $types);
+  }
+
   public function ancestorOfType($type)
   {
     if ($this->parent === null) return false;
@@ -119,4 +126,38 @@ class Node
     }
     return false;
   }
+
+  public function pathToRootHasType($type)
+  {
+
+    $types = is_array($type) ? $type : [$type];
+
+    return in_array($this->type, $types) || $this->ancestorOfType($types);
+  }
+
+  /**
+   * Traverse element towards the root and 
+   * return the first node of type 
+   * $type, if no such node then return null. 
+   */   
+  public function closest($type)
+  {
+
+    if ($this->type === $type) return $this;
+
+    $ancestor = $this->parent;
+
+    while ($ancestor)
+    {
+      if ($ancestor->type === $type)
+      {
+        return $ancestor;
+      }
+      $ancestor = $ancestor->parent;
+    }
+
+    return null;
+
+  }
+  
 }

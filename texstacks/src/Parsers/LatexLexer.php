@@ -134,6 +134,11 @@ class LatexLexer
     $this->ref_labels = $labels;
   }
 
+  public function setTheoremEnvs($thm_envs)
+  {
+    $this->thm_env = array_unique([...$this->thm_env, ...$thm_envs]); 
+  }
+
   public function tokenize(string $latex_src)
   {
 
@@ -858,8 +863,6 @@ class LatexLexer
     return $output;
   }
   
-  
-
   /**
    * Get the content between two delimiters
    * Nesting not allowed.

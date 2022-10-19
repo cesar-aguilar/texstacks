@@ -73,6 +73,11 @@ class CommandNode extends Node
     return $this->command_refnum;
   }
 
+  public function getArg($name)
+  {
+    return $this->command_args[$name] ?? null;
+  }
+
   public function setLabel($label)
   {
     $this->command_label = $label;

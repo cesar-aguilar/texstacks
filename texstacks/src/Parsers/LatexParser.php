@@ -17,13 +17,16 @@ class LatexParser
   private $current_node;
   private $lexer;
   private $section_counters;
+  private $thm_envs = [];
 
   public function __construct($data=[])
   {
     $this->tree = new SyntaxTree();
 
+    $this->thm_envs = $data['thm_env'] ?? [];
+
     $lexer_data = [
-      'thm_env' => $data['thm_env'] ?? [],
+      'thm_env' => array_keys($this->thm_envs),
       'macros' => $data['macros'] ?? [],
     ];
 
@@ -63,7 +66,11 @@ class LatexParser
 
     $thm_envs = $this->getTheoremEnvs($latex_src_raw);
 
-    dd($thm_envs);
+    $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
+
+    $this->resetTheoremCounters();
+ 
+    $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
 
     try {
       $tokens = $this->lexer->tokenize($latex_src_raw);
@@ -81,12 +88,13 @@ class LatexParser
         'section-cmd' => 'handleSectionNode',
 
         'environment',
-        'thm-environment',
         'displaymath-environment',
         'inlinemath',
         'verbatim',
         'tabular-environment',
         'list-environment' => 'handleEnvironmentNode',
+
+        'thm-environment' => 'handleTheoremEnvironment',
 
         'item' => 'handleListItemNode',
 
@@ -132,13 +140,15 @@ class LatexParser
     $new_node = $this->createCommandNode($token);
     $parent = $this->current_node;
     
-    if ($parent->type() === 'verbatim' || $parent->ancestorOfType('verbatim'))
+    if ($parent->pathToRootHasType('verbatim'))
     {
       $this->tree->addNode($new_node, $parent);
       return true;
     }
 
-    $new_node->setRefNum($this->getSectionNumber($new_node));
+    $new_node->setRefNum($this->getSectionNumber($new_node->commandName()));
+
+    $this->resetTheoremCounters($new_node->commandName());
 
     /* Move up the tree until we find the first sectioning command
       with a lower numbered depth level */
@@ -155,15 +165,17 @@ class LatexParser
   private function handleEnvironmentNode($token)
   {
     if ($token->command_name === 'begin') {
+
       $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;
-      return true;
+      return;
+
     }
 
     if ($token->type !== 'list-environment') {      
       $this->current_node = $this->current_node->parent();
-      return true;
+      return;
     }
 
     /* If token was the end of a list-env 
@@ -172,7 +184,7 @@ class LatexParser
     */
     $parent = $this->current_node;
 
-    while ($parent && $parent->type() !== 'list-environment') {
+    while ($parent && !$parent->hasType('list-environment')) {
       $parent = $parent->parent();
     }
     
@@ -182,38 +194,55 @@ class LatexParser
     
   }
 
+  private function handleTheoremEnvironment($token)
+  {
+
+    if ($token->command_name === 'end')
+    {
+      $this->current_node = $this->current_node->parent();
+      return;
+    }
+    
+    $new_node = $this->createCommandNode($token);
+
+    if (!$this->current_node->pathToRootHasType('verbatim') && !$new_node->getArg('starred'))
+    {
+      $new_node->setRefNum($this->getTheoremNumber($new_node));
+    }
+
+    $this->tree->addNode($new_node, $this->current_node);
+    $this->current_node = $new_node;
+    return;
+
+    
+  }
+
   private function handleListItemNode($token)
   {
     $new_node = $this->createCommandNode($token);
 
-    $parent = $this->current_node;
+    $parent = $this->current_node->closest('list-environment');
     
-    /* Move up the tree until we find the parent list-env */
-    while ($parent->type() !== 'list-environment') {
-      $parent = $parent->parent();
-    }
-
     $this->tree->addNode($new_node, $parent);
 
     $this->current_node = $new_node;
 
-    return true;
   }
 
   private function handleLabelNode($token)
   {
     $this->current_node->setLabel($token->command_content);
 
-    if ($this->current_node->type() !== 'section-cmd') {
+    if (!$this->current_node->hasType(['section-cmd', 'thm-environment'])) {      
       $this->current_node->setRefNum($token->command_options);
     }
 
 
-    if ($this->current_node->type() === 'displaymath-environment') {
+    if ($this->current_node->hasType('displaymath-environment')) {
       $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
     }
-    return true;
+    
   }
 
   private function handleCommandNode($token)
@@ -225,19 +254,75 @@ class LatexParser
 
   private function createCommandNode($token)
   {
-    
+
     $args = ['id' => $this->tree->nodeCount(), ...(array) $token];
 
     if ($token->type === 'section-cmd') {
       return new SectionNode($args);
-    } 
-    else if (preg_match('/environment/', $token->type)) {
-      return new EnvironmentNode($args);
     }
+    else if ($token->type === 'thm-environment')
+    {      
+      return $this->createTheoremNode($token, $args);
+    } 
+    else if (preg_match('/environment/', $token->type))
+    {
+      return new EnvironmentNode($args);
+    }    
     else
     {
       return new CommandNode($args);
     }
+  }
+
+  private function createTheoremNode($token, $args)
+  {
+
+    $env_name = $token->command_content;
+    $env = $this->thm_envs[$env_name];
+
+    $args['command_args'] = ['text' => $env->text, 'style' => $env->style, 'starred' => $env->starred];
+    
+    return new EnvironmentNode($args);
+  }
+
+  private function getTheoremNumber(EnvironmentNode $node)
+  {
+    
+    $env_name = $node->commandContent();
+    $env = &$this->thm_envs[$env_name];
+
+    if ($shared_env_name = $env->shared)
+    {
+      $shared_env = &$this->thm_envs[$shared_env_name];
+
+      $shared_env->counter += 1;
+
+      $counter = $shared_env->counter;
+
+      $parent_counter = $this->getSectionNumber($shared_env->parent, increment: false);
+
+      $counter = $parent_counter . '.' . $counter;      
+
+    }
+    else if ($env->parent)
+    {
+      
+      $env->counter += 1;
+
+      $counter = $env->counter;
+
+      $parent_counter = $this->getSectionNumber($env->parent, increment: false);
+
+      $counter = $parent_counter . '.' . $counter;
+
+    }
+    else
+    {
+      $counter = ++$env->counter;
+    }
+
+    return $counter;
+
   }
 
   public function terminateWithError($message)
@@ -256,12 +341,13 @@ class LatexParser
 
   }
 
-  private function getSectionNumber($node)
+  private function getSectionNumber($section_name, $increment=true)
   {
 
-    if (str_contains($node->commandName(), '*')) return '';
+    if (str_contains($section_name, '*')) return '';
 
-    $this->section_counters[$node->commandName()] += 1;
+    if ($increment)
+      $this->section_counters[$section_name] += 1;
 
     $section_numbers = [];
 
@@ -269,17 +355,21 @@ class LatexParser
 
       if ($value) $section_numbers[] = $value;
 
-      if ($key == $node->commandName()) break;
+      if ($key == $section_name) break;
     }
 
     return implode('.', $section_numbers);
 
   }
 
+  /**
+   * Reads preamble of $latex_src and returns
+   * array of \newtheorem declarations as objects
+   */
   private function getTheoremEnvs($latex_src)
   {
 
-    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem|\\\theoremstyle).*/', $latex_src, $matches, PREG_OFFSET_CAPTURE);
+    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle).*/', $latex_src, $matches, PREG_OFFSET_CAPTURE);
 
     if (!isset($matches[1])) return [];
 
@@ -300,34 +390,36 @@ class LatexParser
         continue;
       }
 
-      if ($command === 'newtheorem')
+      if ($command === 'newtheorem' || $command === 'newtheorem*')
       {
 
         $num_args = count($args);
 
         if ($num_args !== 2 && $num_args !== 3) continue;
 
-        // Declaration of the form \newtheorem{env}{text}
+        $env = $args[0]->type === 'arg' ? $args[0]->value : '';
+
+        // Declaration of the form \newtheorem(*?){env}{text}
         if ($num_args === 2) {
 
-          $env = $args[0]->type === 'arg' ? $args[0]->value : '';
           $text = $args[1]->type === 'arg' ? $args[1]->value : '';
           $parent = null;
           $shared = null;
 
         }
-
-        // Declaration of the form \newtheorem{env}[shared]{text} or
-        // \newtheorem{env}{text}[parent-counter]
-        else if ($num_args === 3) {
-
-          $env = $args[0]->type === 'arg' ? $args[0]->value : '';
-
+        // Declaration of the form 
+        // Parent: \newtheorem{env}{text}[parent-counter] or
+        // Shared: \newtheorem{env}[shared]{text}
+        else {
+        
+          // Case Parent
           if ($args[1]->type === 'arg') {
             $text = $args[1]->value;
             $parent = $args[2]->value;
             $shared = null;
-          } else {
+          }
+          else
+          { // Case Shared
             $shared = $args[1]->value;
             $text = $args[2]->value;
             $parent = null;
@@ -335,12 +427,14 @@ class LatexParser
 
         }
 
-        $thm_envs[] = [
-          'env' => $env,
+        $starred = $command === 'newtheorem*';
+
+        $thm_envs[$env] = (object) [          
           'text' => $text,
           'parent' => $parent,
           'shared' => $shared,
           'style' => $current_style,
+          'starred' => $starred,
         ];
 
       }
@@ -350,6 +444,24 @@ class LatexParser
     return $thm_envs;
 
   }
+
+  private function resetTheoremCounters($section_name=null)
+  {
+
+    if ($section_name === null)
+    {
+      foreach ($this->thm_envs as &$env) $env->counter = 0;
+      return;
+    }
+
+    foreach ($this->thm_envs as &$env)
+    {
+      if ($env->parent === $section_name) $env->counter = 0;
+    }
+
+  }
+
+  
 
   // private function parseLine($line, $number) {
 
