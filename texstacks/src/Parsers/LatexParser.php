@@ -140,18 +140,24 @@ class LatexParser
     $new_node = $this->createCommandNode($token);
     $parent = $this->current_node;
     
+    /* If new_node is part of verbatim environment 
+     * then just add new_node to tree */
+
     if ($parent->pathToRootHasType('verbatim'))
     {
       $this->tree->addNode($new_node, $parent);
-      return true;
+      return;
     }
 
-    $new_node->setRefNum($this->getSectionNumber($new_node->commandName()));
+    $section_name = $new_node->commandName();
 
-    $this->resetTheoremCounters($new_node->commandName());
+    $new_node->setRefNum($this->getSectionNumber($section_name));
 
-    /* Move up the tree until we find the first sectioning command
-      with a lower numbered depth level */
+    $this->resetTheoremCounters($section_name);
+
+    /* To set the parent for the new_node, move up the tree 
+     * until we find the first sectioning command
+     * with a lower numbered depth level */
 
     while (!method_exists($parent, 'depthLevel') || $parent->depthLevel() >= $new_node->depthLevel()) {
       $parent = $parent->parent();
@@ -173,24 +179,19 @@ class LatexParser
 
     }
 
+    /* End environment if not a list-environment and update current_node */
     if ($token->type !== 'list-environment') {      
       $this->current_node = $this->current_node->parent();
       return;
     }
 
-    /* If token was the end of a list-env 
-    then we need to move up the tree to find the first
-    list-env node
-    */
-    $parent = $this->current_node;
-
-    while ($parent && !$parent->hasType('list-environment')) {
-      $parent = $parent->parent();
-    }
+    /* If token was the end of a list-env then we need to move up the tree 
+      to find the first list-env node */
+    $parent = $this->current_node->parent()->closest('list-environment');
     
-    $this->current_node = $parent->parent();
+    $this->current_node = $parent->parent() ?? $this->tree->root();
 
-    return true;
+    return;
     
   }
 
@@ -207,7 +208,9 @@ class LatexParser
 
     if (!$this->current_node->pathToRootHasType('verbatim') && !$new_node->getArg('starred'))
     {
-      $new_node->setRefNum($this->getTheoremNumber($new_node));
+      $env_name = $new_node->commandContent();
+
+      $new_node->setRefNum($this->getTheoremNumber($env_name));
     }
 
     $this->tree->addNode($new_node, $this->current_node);
@@ -285,10 +288,8 @@ class LatexParser
     return new EnvironmentNode($args);
   }
 
-  private function getTheoremNumber(EnvironmentNode $node)
+  private function getTheoremNumber($env_name)
   {
-    
-    $env_name = $node->commandContent();
     $env = &$this->thm_envs[$env_name];
 
     if ($shared_env_name = $env->shared)
@@ -346,8 +347,7 @@ class LatexParser
 
     if (str_contains($section_name, '*')) return '';
 
-    if ($increment)
-      $this->section_counters[$section_name] += 1;
+    $this->section_counters[$section_name] += $increment ? 1 : 0;
 
     $section_numbers = [];
 
