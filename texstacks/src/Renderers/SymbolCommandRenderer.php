@@ -9,9 +9,9 @@ class SymbolCommandRenderer
     public static function renderNode(Node $node, string $body = null): string
     {
         if ($node->ancestorOfType(['displaymath-environment', 'verbatim'])) 
-            return "\\" . $node->body();
+            return "\\" . $node->body;
 
-        return match($node->body())
+        return match($node->body)
         {
             '$' => '&#36;',
             '%' => '%',
@@ -21,7 +21,7 @@ class SymbolCommandRenderer
             '{' => '{',
             '}' => '}',
             "\\" => '\\',
-            default => "\\" . $node->body()
+            default => "\\" . $node->body
         };
     }
 }

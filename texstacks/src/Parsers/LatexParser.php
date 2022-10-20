@@ -131,6 +131,7 @@ class LatexParser
         'id' => $this->tree->nodeCount(),
         'type' => 'text',
         'body' => $token->body,
+        'line_number' => $token->line_number
       ]
     ), parent: $this->current_node); 
   }
@@ -138,14 +139,13 @@ class LatexParser
   private function handleSectionNode($token)
   {
     $new_node = $this->createCommandNode($token);
-    $parent = $this->current_node;
     
     /* If new_node is part of verbatim environment 
      * then just add new_node to tree */
 
-    if ($parent->pathToRootHasType('verbatim'))
+    if ($this->current_node->pathToRootHasType('verbatim'))
     {
-      $this->tree->addNode($new_node, $parent);
+      $this->tree->addNode($new_node, $this->current_node);
       return;
     }
 
@@ -159,9 +159,7 @@ class LatexParser
      * until we find the first sectioning command
      * with a lower numbered depth level */
 
-    while (!method_exists($parent, 'depthLevel') || $parent->depthLevel() >= $new_node->depthLevel()) {
-      $parent = $parent->parent();
-    }
+    $parent = $new_node->closestParentSection($this->current_node);
 
     $this->tree->addNode($new_node, $parent);
     $this->current_node = $new_node;

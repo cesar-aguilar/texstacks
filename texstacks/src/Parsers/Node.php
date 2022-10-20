@@ -20,37 +20,22 @@ class Node
 
   protected Node|null $parent = null;
   protected array $children = [];
-  protected int $id;
-  protected string $type;
-  protected string|null $body = null;
-  protected bool $is_terminal;
+  public readonly int $id;
+  public readonly string $type;
+  public readonly string|null $body;
+  public readonly int $line_number;
 
   public function __construct($args)
   {
     $this->id = $args['id'];
     $this->type = $args['type'];
     $this->body = $args['body'] ?? null;
-    $this->is_terminal = $args['is_terminal'] ?? false;
-  }
-
-  public function id()
-  {
-    return $this->id;
-  }
-
-  public function type()
-  {
-    return $this->type;
+    $this->line_number = $args['line_number'] ?? false;
   }
 
   public function children()
   {
     return $this->children;
-  }
-
-  public function body()
-  {
-    return $this->body;
   }
 
   public function parent()
@@ -118,7 +103,7 @@ class Node
 
     while ($ancestor)
     {
-      if (in_array($ancestor->type(), $types))
+      if ($ancestor->hasType($types))
       {
         return true;
       }
@@ -139,7 +124,7 @@ class Node
    * Traverse element towards the root and 
    * return the first node of type 
    * $type, if no such node then return null. 
-   */   
+   */
   public function closest($type)
   {
 

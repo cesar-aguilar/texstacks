@@ -15,13 +15,31 @@ class SectionNode extends CommandNode
     'subsubsection' => 'sssec',
   ];
 
+  public readonly int $depth_level;
+
   public function __construct($args)
   {
     parent::__construct($args);
     $this->setLabel();
+
+    $this->depth_level = $this->getDepthLevel();
+
   }
 
-  public function depthLevel()
+  public function closestParentSection($node)
+  {
+    $parent = $node;
+
+    while ($parent::class !== $this::class  || $parent->depth_level >= $this->depth_level)
+    {
+      $parent = $parent->parent();
+    }
+
+    return $parent;
+
+  }
+
+  private function getDepthLevel()
   {
     switch ($this->commandName()) {
       case 'document':
@@ -54,7 +72,7 @@ class SectionNode extends CommandNode
 
       $prefix = $this->command_name ? (self::PREFIXES[$this->command_name] ?? 'text') : 'text';
 
-      $this->command_label =  $prefix . ":node-{$this->id()}";
+      $this->command_label =  $prefix . ":node-{$this->id}";
     }
 
   }

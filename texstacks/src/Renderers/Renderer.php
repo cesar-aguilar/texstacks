@@ -20,7 +20,7 @@ class Renderer
   private function renderRecursively($node): string
   {
     if ($node->isLeaf()) {
-      return $this->renderNode($node, $node->body());
+      return $this->renderNode($node, $node->body);
     }
 
     return $this->renderNode(
@@ -32,41 +32,43 @@ class Renderer
   private function renderNode($node, string $body = null): string
   {
 
-    if ($node->type() === 'section-cmd') return SectionCommandRenderer::renderNode($node, $body);
+    if ($node->type === 'section-cmd') return SectionCommandRenderer::renderNode($node, $body);
     
-    if ($node->type() === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
+    if ($node->type === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'inlinemath') return "\\(" . $body . "\\)";
+    if ($node->type === 'inlinemath') return "\\(" . $body . "\\)";
 
-    if ($node->type() === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
+    if ($node->type === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'environment') return EnvironmentRenderer::renderNode($node, $body);
+    if ($node->type === 'environment') return EnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'tabular-environment') return TabularEnvironmentRenderer::renderNode($node, $body);
+    if ($node->type === 'tabular-environment') return TabularEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
+    if ($node->type === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'verbatim') return "<pre>$body</pre>";
+    if ($node->type === 'verbatim') return "<pre>$body</pre>";
 
-    if ($node->type() === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
+    if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
+    if ($node->type === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
 
-    if ($node->type() === 'item') return self::renderItemNode($node, $body);
+    if ($node->type === 'item') return self::renderItemNode($node, $body);
 
-    if ($node->type() === 'includegraphics') return self::renderIncludeGraphics($node, $body);
+    if ($node->type === 'includegraphics') return self::renderIncludeGraphics($node, $body);
 
-    if ($node->type() === 'caption') return self::renderCaptionEnvironment($node, $body);
+    if ($node->type === 'caption') return self::renderCaptionEnvironment($node, $body);
 
-    if ($node->type() === 'label') return $node->commandSource();
+    if ($node->type === 'label') return $node->commandSource();
 
-    if ($node->type() === 'ref') return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
+    if ($node->type === 'ref') return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
 
-    if ($node->type() === 'eqref') return "( <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> )";
+    if ($node->type === 'eqref') return "( <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> )";
+
+    if ($node->type === 'cite') return "<span style=\"color:blue\">[\\cite{{$node->commandContent()}}]</span>";
 
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment'])) return $body;
 
-    if ($body == '' && $node->leftSibling()?->type() === 'text') return "<br><br>";
+    if ($body == '' && $node->leftSibling()?->type === 'text') return "<br><br>";
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '', $body);
