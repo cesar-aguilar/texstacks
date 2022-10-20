@@ -173,8 +173,8 @@ class LatexLexer
           continue;
         }
 
-        $this->buffer .= "\\" . $char;
-        // $this->addSymbolToken($char);
+        // $this->buffer .= "\\" . $char;
+        $this->addSymbolToken($char);
         continue;
       }
       

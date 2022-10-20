@@ -68,16 +68,16 @@ class Renderer
 
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment'])) return $body;
 
-    if ($body == '' && $node->leftSibling()?->type === 'text') return "<br><br>";
+    // if ($body == '' && $node->leftSibling()?->type === 'text') return "<br><br>";
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
-    $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '', $body);
+    $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
 
     // If parent is verbatim then add new line
     // if ($node->parent()?->commandContent() === 'verbatim') $output = $output . "\n";
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
-    return preg_replace('/(\\\)(\\\)/', '', $output);
+    return preg_replace('/(\\\)(\\\)/', '<br>', $output);
 
     // return str_replace('\\\\','', $output);
 

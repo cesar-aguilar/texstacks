@@ -100,6 +100,7 @@ class LatexParser
 
         'label' => 'handleLabelNode',
 
+        'symbol',
         'includegraphics',
         'caption',
         'ref',
@@ -265,7 +266,11 @@ class LatexParser
     else if (preg_match('/environment/', $token->type))
     {
       return new EnvironmentNode($args);
-    }    
+    }
+    else if ($token->type === 'symbol')
+    {
+      return new Node($args);
+    }
     else
     {
       return new CommandNode($args);
