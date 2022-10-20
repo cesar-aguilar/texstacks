@@ -51,17 +51,17 @@ class LatexParser
 
   }
 
-  public function getRoot()
+  public function getRoot() : SectionNode
   {
     return $this->tree->root();
   }
 
-  public function setRefLabels($labels)
+  public function setRefLabels($labels) : void
   {
     $this->lexer->setRefLabels($labels);
   }
 
-  public function parse($latex_src_raw)
+  public function parse($latex_src_raw) : void
   {
 
     $thm_envs = $this->getTheoremEnvs($latex_src_raw);
@@ -124,7 +124,7 @@ class LatexParser
     
   }
 
-  private function addToCurrentNode($token)
+  private function addToCurrentNode($token) : void
   {
     $this->tree->addNode(new Node(
       [
@@ -136,7 +136,7 @@ class LatexParser
     ), parent: $this->current_node); 
   }
 
-  private function handleSectionNode($token)
+  private function handleSectionNode($token) : void
   {
     $new_node = $this->createCommandNode($token);
     
@@ -163,10 +163,10 @@ class LatexParser
 
     $this->tree->addNode($new_node, $parent);
     $this->current_node = $new_node;
-    return true;
+    return;
   }
 
-  private function handleEnvironmentNode($token)
+  private function handleEnvironmentNode($token) : void
   {
     if ($token->command_name === 'begin') {
 
@@ -193,7 +193,7 @@ class LatexParser
     
   }
 
-  private function handleTheoremEnvironment($token)
+  private function handleTheoremEnvironment($token) : void
   {
 
     if ($token->command_name === 'end')
@@ -215,10 +215,9 @@ class LatexParser
     $this->current_node = $new_node;
     return;
 
-    
   }
 
-  private function handleListItemNode($token)
+  private function handleListItemNode($token) : void
   {
     $new_node = $this->createCommandNode($token);
 
@@ -230,14 +229,13 @@ class LatexParser
 
   }
 
-  private function handleLabelNode($token)
+  private function handleLabelNode($token) : void
   {
     $this->current_node->setLabel($token->command_content);
 
     if (!$this->current_node->hasType(['section-cmd', 'thm-environment'])) {      
       $this->current_node->setRefNum($token->command_options);
     }
-
 
     if ($this->current_node->hasType('displaymath-environment')) {
       $new_node = $this->createCommandNode($token);
@@ -246,14 +244,13 @@ class LatexParser
     
   }
 
-  private function handleCommandNode($token)
+  private function handleCommandNode($token) : void
   {
     $new_node = $this->createCommandNode($token);
     $this->tree->addNode($new_node, $this->current_node);
-    return true;
   }
 
-  private function createCommandNode($token)
+  private function createCommandNode($token) : mixed
   {
 
     $args = ['id' => $this->tree->nodeCount(), ...(array) $token];
@@ -275,7 +272,7 @@ class LatexParser
     }
   }
 
-  private function createTheoremNode($token, $args)
+  private function createTheoremNode($token, $args) : EnvironmentNode
   {
 
     $env_name = $token->command_content;
@@ -286,7 +283,7 @@ class LatexParser
     return new EnvironmentNode($args);
   }
 
-  private function getTheoremNumber($env_name)
+  private function getTheoremNumber($env_name) : string
   {
     $env = &$this->thm_envs[$env_name];
 
@@ -324,7 +321,7 @@ class LatexParser
 
   }
 
-  public function terminateWithError($message)
+  public function terminateWithError($message) : void
   {
 
     $node = new Node(
@@ -340,7 +337,7 @@ class LatexParser
 
   }
 
-  private function getSectionNumber($section_name, $increment=true)
+  private function getSectionNumber($section_name, $increment=true) : string
   {
 
     if (str_contains($section_name, '*')) return '';
@@ -364,7 +361,7 @@ class LatexParser
    * Reads preamble of $latex_src and returns
    * array of \newtheorem declarations as objects
    */
-  private function getTheoremEnvs($latex_src)
+  private function getTheoremEnvs($latex_src) : array
   {
 
     preg_match_all('/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle).*/', $latex_src, $matches, PREG_OFFSET_CAPTURE);
@@ -443,7 +440,7 @@ class LatexParser
 
   }
 
-  private function resetTheoremCounters($section_name=null)
+  private function resetTheoremCounters($section_name=null) : void
   {
 
     if ($section_name === null)
