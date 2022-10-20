@@ -18,6 +18,7 @@ class LatexParser
   private $lexer;
   private $section_counters;
   private $thm_envs = [];
+  private $src;
 
   public function __construct($data=[])
   {
@@ -64,7 +65,9 @@ class LatexParser
   public function parse($latex_src_raw) : void
   {
 
-    $thm_envs = $this->getTheoremEnvs($latex_src_raw);
+    $this->src = $latex_src_raw;
+
+    $thm_envs = $this->getTheoremEnvs();
 
     $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
 
@@ -73,7 +76,7 @@ class LatexParser
     $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
 
     try {
-      $tokens = $this->lexer->tokenize($latex_src_raw);
+      $tokens = $this->lexer->tokenize($this->src);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
@@ -122,7 +125,41 @@ class LatexParser
     
     // dd($this->tree->root()->children());
     // dd($this->section_counters);
+    // dd($this->getNewCommands());
     
+  }
+
+  public function generateMathJaxConfig() : string
+  {
+
+    $new_commands = $this->getNewCommands();
+    
+    $mathjax_config = [
+      'loader' => ['load' => ['ui/lazy']],
+      'tex' => [
+        'tags' => 'ams',
+        'macros' => [],
+      ]
+    ];
+
+    foreach ($new_commands as $command) {
+
+      if ($command['type'] === 'simple') {
+        $mathjax_config['tex']['macros'][$command['cmd']] = $command['defn'];
+      }
+      else if ($command['type'] === 'with-args')
+      {
+        $mathjax_config['tex']['macros'][$command['cmd']] = [$command['defn'], $command['narg']];
+      }
+      else
+      {
+        $mathjax_config['tex']['macros'][$command['cmd']] = [$command['defn'], $command['narg'], $command['default']];
+      }
+
+    }
+        
+    return json_encode($mathjax_config);
+
   }
 
   private function addToCurrentNode($token) : void
@@ -366,10 +403,10 @@ class LatexParser
    * Reads preamble of $latex_src and returns
    * array of \newtheorem declarations as objects
    */
-  private function getTheoremEnvs($latex_src) : array
+  private function getTheoremEnvs() : array
   {
 
-    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle).*/', $latex_src, $matches, PREG_OFFSET_CAPTURE);
+    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle)/', $this->src, $matches, PREG_OFFSET_CAPTURE);
 
     if (!isset($matches[1])) return [];
 
@@ -383,7 +420,7 @@ class LatexParser
       $command = str_replace("\\", '', $match[0]);
       $offset = $match[1];
 
-      $args = StrHelper::getAllCmdArgsOptions($command, substr($latex_src, $offset));
+      $args = StrHelper::getAllCmdArgsOptions($command, substr($this->src, $offset));
 
       if ($command === 'theoremstyle' && isset($args[0])) {
         $current_style = in_array($args[0]->value, $default_styles) ? $args[0]->value : 'plain';
@@ -459,6 +496,93 @@ class LatexParser
       if ($env->parent === $section_name) $env->counter = 0;
     }
 
+  }
+
+  private function getNewCommands() : array
+  {
+
+    $pattern = '/(\\\newcommand\s*\\\\[\sa-zA-Z\s]+|\\\renewcommand\s*\\\\[\sa-zA-Z\s]+|\\\newcommand|\\\renewcommand)/';
+
+    preg_match_all($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE);
+
+    if (!isset($matches[1])) return [];
+    
+    $new_commands = [];
+
+    $unparsed = [];
+    
+    foreach ($matches[1] as $match)
+    {
+      $offset = (int) $match[1];
+
+      $args = [];
+ 
+      if (substr_count($match[0], "\\") === 1)
+      {
+        $command = trim(str_replace("\\", '', $match[0]));
+
+        $args = StrHelper::getAllCmdArgsOptions($command, substr($this->src, $offset));
+                
+      }
+      else if (substr_count($match[0], "\\") === 2)
+      {
+
+        $to_remove = str_contains($match[0], "renewcommand") ? "\\renewcommand" : "\\newcommand";
+
+        $command = trim(str_replace($to_remove, '', $match[0]));
+
+        $cmd = str_replace("\\", '', trim($command));
+
+        $offset += strlen($to_remove);
+        
+        $args = StrHelper::getAllCmdArgsOptions($cmd, substr($this->src, $offset));
+
+        $cmd_array = [(object) ['type' => 'arg', 'value' => $cmd]];
+
+        $args = [...$cmd_array, ...$args];
+ 
+      }
+
+      $signature = implode('-', array_map(fn($x) => $x->type, $args));
+
+      if (count($args) === 2 && $signature === 'arg-arg')
+        {
+          $new_commands[] = [
+            'type' => 'simple',
+            'cmd' => str_replace("\\", '', trim($args[0]->value)),
+            'defn' => trim($args[1]->value),
+          ];
+          continue;
+        }
+
+        if (count($args) === 3 && $signature === 'arg-option-arg')
+        {
+          $new_commands[] = [
+            'type' => 'with-args',
+            'cmd' => str_replace("\\", '', trim($args[0]->value)),
+            'narg' => trim($args[1]->value),
+            'defn' => trim($args[2]->value),
+          ];
+          continue;
+        }
+
+        if (count($args) === 4 && $signature === 'arg-option-option-arg')
+        {
+          $new_commands[] = [
+            'type' => 'with-args-default',
+            'cmd' => str_replace("\\", '', trim($args[0]->value)),
+            'narg' => trim($args[1]->value),
+            'default' => trim($args[2]->value),
+            'defn' => trim($args[3]->value),
+          ];
+          continue;
+        }
+
+        $unparsed[] = $match;
+
+    }
+
+    return $new_commands;
   }
 
   
