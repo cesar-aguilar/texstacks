@@ -54,6 +54,8 @@ class LatexLexer
     'gather*',
     'flalign',
     'flalign*',
+    'eqnarray',
+    'eqnarray*',
   ];
 
   const SECTION_COMMANDS = [

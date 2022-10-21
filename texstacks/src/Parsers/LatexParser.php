@@ -22,6 +22,7 @@ class LatexParser
   private $raw_src;
   private $src;
   private $preamble_parser;
+  public readonly array $front_matter;
 
   public function __construct($data=[])
   {
@@ -139,6 +140,8 @@ class LatexParser
 
     $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
 
+    $this->front_matter = $this->preamble_parser->getFrontMatter();
+    
     $this->resetTheoremCounters();
  
     $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
@@ -153,6 +156,53 @@ class LatexParser
       '>'   =>   ' &gt; ',
       '\\$' =>   '&#36;',
       '``'  =>   '"',
+      "\'a" =>   '&aacute;',
+      "\'e" =>   '&eacute;',
+      "\'i" =>   '&iacute;',
+      "\'o" =>   '&oacute;',
+      "\'u" =>   '&uacute;',
+      "\'y" =>   '&yacute;',
+      "\'A" =>   '&Aacute;',
+      "\'E" =>   '&Eacute;',
+      "\'I" =>   '&Iacute;',
+      "\'O" =>   '&Oacute;',
+      "\'U" =>   '&Uacute;',
+      "\'Y" =>   '&Yacute;',
+      "\`a" =>   '&agrave;',
+      "\`e" =>   '&egrave;',
+      "\`i" =>   '&igrave;',
+      "\`o" =>   '&ograve;',
+      "\`u" =>   '&ugrave;',
+      "\`y" =>   '&ygrave;',
+      "\`A" =>   '&Agrave;',
+      "\`E" =>   '&Egrave;',
+      "\`I" =>   '&Igrave;',
+      "\`O" =>   '&Ograve;',
+      "\`U" =>   '&Ugrave;',
+      "\`Y" =>   '&Ygrave;',
+      "\^a" =>   '&acirc;',
+      "\^i" =>   '&icirc;',
+      "\^o" =>   '&ocirc;',
+      "\^u" =>   '&ucirc;',
+      "\^y" =>   '&ycirc;',
+      "\^A" =>   '&Acirc;',
+      "\^E" =>   '&Ecirc;',
+      "\^I" =>   '&Icirc;',
+      "\^O" =>   '&Ocirc;',
+      "\^U" =>   '&Ucirc;',
+      "\^Y" =>   '&Ycirc;',
+      '\"a' =>   '&auml;',
+      '\"e' =>   '&euml;',
+      '\"i' =>   '&iuml;',
+      '\"o' =>   '&ouml;',
+      '\"u' =>   '&uuml;',
+      '\"y' =>   '&yuml;',
+      '\"A' =>   '&Auml;',
+      '\"E' =>   '&Euml;',
+      '\"I' =>   '&Iuml;',
+      '\"O' =>   '&Ouml;',
+      '\"U' =>   '&Uuml;',
+      '\"Y' =>   '&Yuml;',
     ];
 
     return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);

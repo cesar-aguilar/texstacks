@@ -227,4 +227,26 @@ class StrHelper
 
   }
 
+  public static function getCmdArg(string $command, string $text) : string
+  {
+    $arg = self::getAllCmdArgsOptions($command, $text, delimiters: ['{' => '}']);
+
+    if (empty($arg)) return '';
+
+    return self::cleanUpText($arg[0]->type === 'arg' ? $arg[0]->value : '');
+
+  }
+
+  public static function consolidateWhiteSpace($text) {
+    return preg_replace('/\s+/', ' ', $text);
+  }
+
+  public static function cleanUpText($text)
+  {
+    $text = str_replace("\n", ' ', $text);
+    $text = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $text);
+    return trim(self::consolidateWhiteSpace($text));
+
+  }
+
 }

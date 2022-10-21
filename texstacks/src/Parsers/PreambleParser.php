@@ -139,5 +139,60 @@ class PreambleParser
     return $thm_envs;
 
   }
+
+  public function getFrontMatter() : array
+  {
+    return [
+        'title' => $this->getArticleTitle(),
+        'authors' => $this->getArticleAuthors(),
+        'date' => $this->getArticleDate(),
+    ];
+  }
+
+  private function getArticleTitle() : string
+  {
+    return StrHelper::getCmdArg("title", $this->src);
+  }
+
+  private function getArticleDate() : string
+  {
+    return StrHelper::getCmdArg("date", $this->src);
+  }
+
+  private function getArticleAuthors() : array
+  {
+
+    $author_args = StrHelper::getAllCmdArgsOptions("author", $this->src);
+
+    if (!empty($author_args))
+    {
+        $authors = [];
+
+        $authors_arr = $author_args[0]->type === 'arg' ? explode("\\and", $author_args[0]->value) : [];
+
+        foreach ($authors_arr as $author)
+        {
+            $author = StrHelper::cleanUpText($author);
+
+            $thanks_arg = StrHelper::getAllCmdArgsOptions("thanks", $author);
+
+            $name = $author;
+            $thanks = null;
+
+            if (!empty($thanks_arg))
+            {
+                $thanks = $thanks_arg[0]->value;
+                $name = $thanks_arg[0]->type === 'arg' ? str_replace('\thanks{' . $thanks . '}', ' ', $author) : $name;
+            }
+
+            $authors[] = (object) ['name' => trim($name), 'thanks' => $thanks ?? ''];
+        }
+
+    }
+
+    return $authors ?? [];
+  }
+
+
   
 }
