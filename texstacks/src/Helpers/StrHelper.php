@@ -65,9 +65,12 @@ class StrHelper
   }
 
 
-  public static function DeleteLatexComments(string $haystack): string
+  public static function DeleteLatexComments(string $haystack, string $replace=null): string
   {
-    $output = preg_replace('/(?<!\\\)%.*\n/', "\n", $haystack);
+
+    $replace = $replace ?? "\n";
+
+    $output = preg_replace('/(?<!\\\)%.*\n/', $replace, $haystack);
 
     return str_replace('\%', '%', $output);
   }

@@ -10,7 +10,7 @@ class Token {
     public readonly array $command_args;
     public readonly string $command_options;
     public readonly string $command_src;
-    public readonly string $body;
+    public string $body;
     public readonly int $line_number;
 
     public function __construct($args) {

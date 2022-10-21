@@ -16,13 +16,18 @@ class PreambleParser
   
   public function getMathMacros() : string
   {
+    /* Match macros should be contained within these delimiters in the preamble */
+    $left_delim = "%\\begin{mathmacros}";
+    $right_delim = "%\\end{mathmacros}";
 
-    $start = str_contains($this->src, "%\\begin{mathmacros}");
-    $end = str_contains($this->src, "%\\end{mathmacros}");
+    $start = str_contains($this->src, $left_delim);
+    $end = str_contains($this->src, $right_delim);
 
     if ($start === false || $end === false) return '';
-        
-    return strip_tags(StrHelper::PluckExcludeDelimiters("%\\begin{mathmacros}", "%\\end{mathmacros}", $this->src));
+
+    $src = StrHelper::PluckExcludeDelimiters($left_delim, $right_delim, $this->src);
+
+    return StrHelper::DeleteLatexComments($src, replace: '');
 
   }
 
@@ -57,7 +62,9 @@ class PreambleParser
   public function getTheoremEnvs() : array
   {
 
-    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle)/', $this->src, $matches, PREG_OFFSET_CAPTURE);
+    $pattern = '/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle)/';
+
+    preg_match_all($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE);
 
     if (!isset($matches[1])) return [];
 

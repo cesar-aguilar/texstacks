@@ -73,6 +73,9 @@ class Renderer
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
 
+    // Replace two \n characters with <br>
+    $output = str_replace("\n\n", '<br><br>', $output);
+
     // If parent is verbatim then add new line
     // if ($node->parent()?->commandContent() === 'verbatim') $output = $output . "\n";
 

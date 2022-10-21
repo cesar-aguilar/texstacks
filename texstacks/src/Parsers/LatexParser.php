@@ -19,6 +19,7 @@ class LatexParser
   private $lexer;
   private $section_counters;
   private $thm_envs = [];
+  private $raw_src;
   private $src;
   private $preamble_parser;
 
@@ -69,17 +70,8 @@ class LatexParser
   public function parse($latex_src_raw) : void
   {
 
-    $this->src = $latex_src_raw;
-
-    $this->preamble_parser->setSrc($this->src);
-
-    $thm_envs = $this->preamble_parser->getTheoremEnvs();
-
-    $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
-
-    $this->resetTheoremCounters();
- 
-    $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
+    /* pre-process raw latex and setup values needed by the lexer before tokenizing */
+    $this->init($latex_src_raw);
 
     try {
       $tokens = $this->lexer->tokenize($this->src);
@@ -133,6 +125,38 @@ class LatexParser
     // dd($this->section_counters);
     // dd($this->getNewCommands());
     
+  }
+
+  private function init($latex_src_raw) : void
+  {
+    $this->raw_src = $latex_src_raw;
+
+    $this->src = $this->preprocessRawSource();
+
+    $this->preamble_parser->setSrc($this->src);
+
+    $thm_envs = $this->preamble_parser->getTheoremEnvs();
+
+    $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
+
+    $this->resetTheoremCounters();
+ 
+    $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
+  }
+
+  private function preprocessRawSource()
+  {
+
+    $search_replace = 
+    [
+      '<'   =>   ' &lt; ',
+      '>'   =>   ' &gt; ',
+      '\\$' =>   '&#36;',
+      '``'  =>   '"',
+    ];
+
+    return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
+
   }
 
   public function generateMathJaxConfig() : string

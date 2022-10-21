@@ -368,6 +368,8 @@ class LatexLexer
 
     $this->addBufferAsToken();
 
+    $this->postProcessTokens();
+
     return $this->tokens;
       
   }
@@ -385,17 +387,7 @@ class LatexLexer
     $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
 
     $html_src = StrHelper::DeleteLatexComments($html_src);
-
-    $html_src = str_replace('``', '"', $html_src);
-
-    // Replace less than and greater than symbols with latex commands
-    // note space after/before \lt and \gt
-    $html_src = str_replace('<', '&lt;', $html_src);
-    $html_src = str_replace('>', '&gt;', $html_src);
-
-    // Replace dollar sign with html entity
-    $html_src = str_replace('\\$', '&#36;', $html_src);
-
+            
     // Replace $$...$$ with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1 \\end{equation*}', $html_src);
@@ -410,10 +402,7 @@ class LatexLexer
     $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
     $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
     $html_src = str_replace('\]', '\end{equation*}', $html_src);
-
-    // Replace more than two newlines with two newlines
-    // $html_src = preg_replace('/\n{3,}/', "\n\n", $html_src);
-    // dd(StrHelper::addLineNumbers($html_src, $n));
+    
     return $html_src;
 
   }
@@ -444,9 +433,12 @@ class LatexLexer
 
       if ($this->buffer === '') return;
 
+      // Replace more than two newlines with two newlines
+      $text = preg_replace('/\n{3,}/', "\n\n", $this->buffer);
+
       $this->tokens[] = new Token([
           'type' => 'text',        
-          'body' => $this->buffer,
+          'body' => $text,
           'line_number' => $this->line_number,
       ]);
 
@@ -796,6 +788,33 @@ class LatexLexer
       'command_src' => $src,
       'line_number' => $this->line_number,
     ]);
+  }
+
+  private function postProcessTokens() : void
+  {
+
+    foreach ($this->tokens as $k => $token)
+    {
+
+      if ($token->type !== 'text') continue;
+
+      if ($k === count($this->tokens) - 1) continue;
+
+      if ($k === 0) {
+        $this->tokens[$k]->body = rtrim($token->body);
+        continue;
+      }
+ 
+      if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'section-cmd') {
+        $this->tokens[$k]->body = rtrim($token->body);
+      }
+
+      if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'section-cmd') {
+        $this->tokens[$k]->body = ltrim($token->body);
+      }
+
+    }
+
   }
     
   private function getCommandContent()
