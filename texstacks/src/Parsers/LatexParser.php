@@ -9,6 +9,7 @@ use TexStacks\Parsers\CommandNode;
 use TexStacks\Parsers\SectionNode;
 use TexStacks\Parsers\EnvironmentNode;
 use TexStacks\Parsers\LatexLexer;
+use TexStacks\Parsers\PreambleParser;
 
 class LatexParser
 {
@@ -19,9 +20,12 @@ class LatexParser
   private $section_counters;
   private $thm_envs = [];
   private $src;
+  private $preamble_parser;
 
   public function __construct($data=[])
   {
+    $this->preamble_parser = new PreambleParser;
+
     $this->tree = new SyntaxTree();
 
     $this->thm_envs = $data['thm_env'] ?? [];
@@ -67,7 +71,9 @@ class LatexParser
 
     $this->src = $latex_src_raw;
 
-    $thm_envs = $this->getTheoremEnvs();
+    $this->preamble_parser->setSrc($this->src);
+
+    $thm_envs = $this->preamble_parser->getTheoremEnvs();
 
     $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
 
@@ -160,6 +166,11 @@ class LatexParser
         
     return json_encode($mathjax_config);
 
+  }
+
+  public function getMathMacros() : string
+  {
+    return $this->preamble_parser->getMathMacros();
   }
 
   private function addToCurrentNode($token) : void
@@ -399,89 +410,6 @@ class LatexParser
 
   }
 
-  /**
-   * Reads preamble of $latex_src and returns
-   * array of \newtheorem declarations as objects
-   */
-  private function getTheoremEnvs() : array
-  {
-
-    preg_match_all('/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle)/', $this->src, $matches, PREG_OFFSET_CAPTURE);
-
-    if (!isset($matches[1])) return [];
-
-    $thm_envs = [];
-    
-    $default_styles = ['plain', 'definition', 'remark'];
-    $current_style = 'plain';
-
-    foreach ($matches[1] as $match) {
-
-      $command = str_replace("\\", '', $match[0]);
-      $offset = $match[1];
-
-      $args = StrHelper::getAllCmdArgsOptions($command, substr($this->src, $offset));
-
-      if ($command === 'theoremstyle' && isset($args[0])) {
-        $current_style = in_array($args[0]->value, $default_styles) ? $args[0]->value : 'plain';
-        continue;
-      }
-
-      if ($command === 'newtheorem' || $command === 'newtheorem*')
-      {
-
-        $num_args = count($args);
-
-        if ($num_args !== 2 && $num_args !== 3) continue;
-
-        $env = $args[0]->type === 'arg' ? $args[0]->value : '';
-
-        // Declaration of the form \newtheorem(*?){env}{text}
-        if ($num_args === 2) {
-
-          $text = $args[1]->type === 'arg' ? $args[1]->value : '';
-          $parent = null;
-          $shared = null;
-
-        }
-        // Declaration of the form 
-        // Parent: \newtheorem{env}{text}[parent-counter] or
-        // Shared: \newtheorem{env}[shared]{text}
-        else {
-        
-          // Case Parent
-          if ($args[1]->type === 'arg') {
-            $text = $args[1]->value;
-            $parent = $args[2]->value;
-            $shared = null;
-          }
-          else
-          { // Case Shared
-            $shared = $args[1]->value;
-            $text = $args[2]->value;
-            $parent = null;
-          }
-
-        }
-
-        $starred = $command === 'newtheorem*';
-
-        $thm_envs[$env] = (object) [          
-          'text' => $text,
-          'parent' => $parent,
-          'shared' => $shared,
-          'style' => $current_style,
-          'starred' => $starred,
-        ];
-
-      }
-
-    }
-
-    return $thm_envs;
-
-  }
-
   private function resetTheoremCounters($section_name=null) : void
   {
 
@@ -508,9 +436,7 @@ class LatexParser
     if (!isset($matches[1])) return [];
     
     $new_commands = [];
-
-    $unparsed = [];
-    
+     
     foreach ($matches[1] as $match)
     {
       $offset = (int) $match[1];
@@ -577,16 +503,12 @@ class LatexParser
           ];
           continue;
         }
-
-        $unparsed[] = $match;
-
+        
     }
 
     return $new_commands;
   }
-
   
-
   // private function parseLine($line, $number) {
 
   //   $commands = [
