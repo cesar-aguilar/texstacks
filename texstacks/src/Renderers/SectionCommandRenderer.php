@@ -11,7 +11,7 @@ class SectionCommandRenderer
   {
     $body = $body ?? '';
 
-    if ($node->ancestorOfType('verbatim')) return $node->commandSource();
+    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
 
     $title = $node->commandRefNum() ? $node->commandRefNum() . '&nbsp;&nbsp;&nbsp;' : '';
 

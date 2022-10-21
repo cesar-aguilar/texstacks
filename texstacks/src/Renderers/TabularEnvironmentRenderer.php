@@ -11,7 +11,7 @@ class TabularEnvironmentRenderer
     {        
         $body = $body ?? '';
 
-        if ($node->ancestorOfType('verbatim'))
+        if ($node->ancestorOfType('verbatim-environment'))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         if ($node->commandContent() !== 'array')

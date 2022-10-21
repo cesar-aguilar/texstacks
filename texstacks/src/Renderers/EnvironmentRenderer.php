@@ -11,7 +11,7 @@ class EnvironmentRenderer
     {
         $body = $body ?? '';
 
-        if ($node->ancestorOfType(['displaymath-environment', 'verbatim']))
+        if ($node->ancestorOfType(['displaymath-environment', 'verbatim-environment']))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         return match ($node->commandContent()) {

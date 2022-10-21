@@ -46,7 +46,7 @@ class Renderer
 
     if ($node->type === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'verbatim') return "<pre>$body</pre>";
+    if ($node->type === 'verbatim-environment') return "<pre>$body</pre>";
 
     if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
@@ -77,7 +77,7 @@ class Renderer
     $output = str_replace("\n\n", '<br><br>', $output);
 
     // If parent is verbatim then add new line
-    // if ($node->parent()?->commandContent() === 'verbatim') $output = $output . "\n";
+    // if ($node->parent()?->hasType('verbatim-environment')) $output = $output . "\n";
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '<br>', $output);
@@ -88,7 +88,7 @@ class Renderer
 
   private function renderItemNode($node, $body)
   {
-    if ($node->ancestorOfType('verbatim')) return $node->commandSource() . ' ' . $body;
+    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
     return "<li>$body</li>";
   }
@@ -96,7 +96,7 @@ class Renderer
   private static function renderIncludeGraphics($node, string $body = null): string
   {
 
-    if ($node->ancestorOfType('verbatim')) return $node->commandSource();
+    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
 
     return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
   }
@@ -104,7 +104,7 @@ class Renderer
   private static function renderCaptionEnvironment($node, string $body = null): string
   {
 
-    if ($node->ancestorOfType('verbatim')) return $node->commandSource();
+    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
 
     return match ($node->parent()->commandContent()) {
 

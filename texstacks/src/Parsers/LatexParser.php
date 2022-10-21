@@ -92,7 +92,7 @@ class LatexParser
         'environment',
         'displaymath-environment',
         'inlinemath',
-        'verbatim',
+        'verbatim-environment',
         'tabular-environment',
         'list-environment' => 'handleEnvironmentNode',
 
@@ -266,7 +266,7 @@ class LatexParser
     /* If new_node is part of verbatim environment 
      * then just add new_node to tree */
 
-    if ($this->current_node->pathToRootHasType('verbatim'))
+    if ($this->current_node->pathToRootHasType('verbatim-environment'))
     {
       $this->tree->addNode($new_node, $this->current_node);
       return;
@@ -327,7 +327,7 @@ class LatexParser
     
     $new_node = $this->createCommandNode($token);
 
-    if (!$this->current_node->pathToRootHasType('verbatim') && !$new_node->getArg('starred'))
+    if (!$this->current_node->pathToRootHasType('verbatim-environment') && !$new_node->getArg('starred'))
     {
       $env_name = $new_node->commandContent();
 

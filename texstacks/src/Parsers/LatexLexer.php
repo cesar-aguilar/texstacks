@@ -8,29 +8,6 @@ use TexStacks\Parsers\Token;
 class LatexLexer
 {
   
-  const AMS_MATH_ENVIRONMENTS = [
-    'math',
-    'align', 'align*',
-    'aligned',
-    'alignedat', 'alignedat*',
-    'alignat', 'alignat*',
-    'flalign', 'flalign*',
-    'subarray',
-    'cases',
-    'CD',
-    'gather', 'gather*',
-    'gathered', 'gathered*',
-    'equation', 'equation*',
-    'eqnarray', 'eqnarray*',
-    'multline', 'multline*',
-    'split',
-    'matrix',
-    'pmatrix',
-    'smallmatrix',
-    'Bmatrix', 'bmatrix',
-    'Vmatrix', 'vmatrix',
-  ];
-
   const ENVS_POST_OPTIONS = [
     'itemize',
     'enumerate',
@@ -40,7 +17,7 @@ class LatexLexer
     'figure',
     'table',
     'center',
-    'verbatim',
+    'verbatim-environment',
   ];
 
   const DISPLAY_MATH_ENVIRONMENTS = [
@@ -508,7 +485,7 @@ class LatexLexer
 
       if (in_array($env, $this->thm_env)) return 'thm-environment';
 
-      if ($env === 'verbatim') return 'verbatim';
+      if ($env === 'verbatim') return 'verbatim-environment';
       
       return 'environment';
 
