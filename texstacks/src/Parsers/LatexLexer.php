@@ -102,7 +102,7 @@ class LatexLexer
   private array $thm_env;
   private array $macros;
   private array $ref_labels;
-
+  
   public function __construct($data=[]) {
     $this->thm_env = $data['thm_env'] ?? [];
     $this->macros = $data['macros'] ?? [];
@@ -134,6 +134,12 @@ class LatexLexer
 
       if ($char === '~') {
         $this->buffer .= ' ';
+        continue;
+      }
+
+      if ($char === '{' || $char === '}')
+      {
+        $this->addGroupEnvToken($char);
         continue;
       }
 
@@ -277,19 +283,23 @@ class LatexLexer
       else if ($this->getCommandType($this->command_name) === 'font-cmd')
       {
 
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
+        // try {
+        //   $content = $this->getCommandContent();
+        // } catch (\Exception $e) {
+        //   throw new \Exception($e->getMessage());
+        // }
+
+        // backup because after running consumeUntilNonAlpha()
+        // the cursor is at the first non-alpha character
+        $this->backup();
 
         $this->addToken(new Token([
           'type' => 'font-cmd',
           'command_name' => $this->command_name,
-          'command_content' => $content,
+          'command_content' => '',
           'command_options' => '',
-          'command_src' => "\\" . $this->command_name . "{" . $content. "}",
-          'body' => $content,
+          'command_src' => "\\" . $this->command_name,
+          'body' => '',
           'line_number' => $this->line_number,
         ]));
 
@@ -436,6 +446,28 @@ class LatexLexer
       'command_src' => "\\" . $char,
       'line_number' => $this->line_number,
     ]));
+  }
+
+  private function addGroupEnvToken($char)
+  {
+    $this->addBufferAsToken();
+
+    $last_token = $this->getLastToken();
+    $options = '';
+
+    if ($last_token?->type === 'font-cmd')
+    {
+      $options = $last_token->command_name;
+    }
+
+    $this->tokens[] = new Token([
+      'type' => 'group-environment',
+      'command_name' => $char === '{' ? 'begin' : 'end',
+      'command_content' => 'unnamed',
+      'command_src' => '',
+      'command_options' => $options,
+      'line_number' => $this->line_number,
+    ]);
   }
 
   private function addUnknownToken($command_name)
@@ -1000,6 +1032,13 @@ class LatexLexer
     
     return $alpha_text;
       
+  }
+
+  private function getLastToken()
+  {
+    $count = count($this->tokens);
+
+    return $count > 0 ? $this->tokens[$count - 1] : null;
   }
 
 

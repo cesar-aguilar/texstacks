@@ -90,6 +90,7 @@ class LatexParser
         'section-cmd' => 'handleSectionNode',
 
         'environment',
+        'group-environment',
         'displaymath-environment',
         'inlinemath',
         'verbatim-environment',
@@ -107,8 +108,9 @@ class LatexParser
         'caption',
         'ref',
         'eqref',
-        'cite',
-        'font-cmd' => 'handleCommandNode',
+        'cite' => 'handleCommandNode',
+
+        'font-cmd' => 'doNothing',
  
         default => 'addToCurrentNode',
 
@@ -257,6 +259,11 @@ class LatexParser
         'line_number' => $token->line_number
       ]
     ), parent: $this->current_node); 
+  }
+
+  private function doNothing()
+  {
+    return;
   }
 
   private function handleSectionNode($token) : void

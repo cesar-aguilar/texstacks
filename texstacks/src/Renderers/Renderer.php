@@ -3,7 +3,7 @@
 namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\EnvironmentRenderer;
-use TexStacks\Renderers\FontCommandRenderer;
+use TexStacks\Renderers\GroupEnvironmentRenderer;
 use TexStacks\Renderers\SectionCommandRenderer;
 use TexStacks\Renderers\ThmEnvironmentRenderer;
 use TexStacks\Renderers\ListEnvironmentRenderer;
@@ -40,6 +40,8 @@ class Renderer
 
     if ($node->type === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
 
+    if ($node->type === 'group-environment') return GroupEnvironmentRenderer::renderNode($node, $body);
+
     if ($node->type === 'environment') return EnvironmentRenderer::renderNode($node, $body);
 
     if ($node->type === 'tabular-environment') return TabularEnvironmentRenderer::renderNode($node, $body);
@@ -48,7 +50,7 @@ class Renderer
 
     if ($node->type === 'verbatim-environment') return "<pre>$body</pre>";
 
-    if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
+    // if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
     if ($node->type === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
 
