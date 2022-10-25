@@ -52,13 +52,14 @@ class LatexLexer
   const ONE_ARGS_CMDS_PRE_OPTIONS = [
     'includegraphics',
     'caption',
+    'bibitem',
+    'cite',
   ];
 
   const ONE_ARGS_CMDS = [
     'label',
     'ref',
     'eqref',
-    'cite',
   ];
 
   const TABULAR_ENVIRONMENTS = [
@@ -86,6 +87,7 @@ class LatexLexer
   const FONT_DECLARATIONS = [
     'rm' => 'font-serif',
     'sl' => 'italic',
+    'sc' => 'small-caps',
     'it' => 'italic',
     'tt' => 'font-mono',
     'bf' => 'font-bold',
@@ -131,6 +133,7 @@ class LatexLexer
   private array $thm_env;
   private array $macros;
   private array $ref_labels;
+  private array $citations;
   
   public function __construct($data=[]) {
     $this->thm_env = $data['thm_env'] ?? [];
@@ -145,6 +148,11 @@ class LatexLexer
   public function setTheoremEnvs($thm_envs)
   {
     $this->thm_env = array_unique([...$this->thm_env, ...$thm_envs]); 
+  }
+
+  public function setCitations($citations)
+  {
+    $this->citations = $citations;
   }
 
   public function tokenize(string $latex_src)
@@ -305,6 +313,32 @@ class LatexLexer
           ]));
 
         }
+        else if ($this->getCommandType($this->command_name, $env) === 'bibliography-environment')
+        {
+          $command_src = "\\" . $this->command_name . "{" . $env . "}";
+
+          try {
+            $args = $this->getContentBetweenDelimiters('{', '}');
+          } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+          }
+
+          if ($args === '') {
+            throw new \Exception("Parse error: Missing arguments for tabular environment on line " . $this->line_number);
+          }
+
+          $command_src .= "{" . $args . "}";
+
+          $this->addToken(new Token([
+            'type' => $this->getCommandType($this->command_name, $env),
+            'command_name' => $this->command_name,
+            'command_content' => $env,
+            'command_args' => [$args],
+            'command_src' => $command_src,
+            'line_number' => $this->line_number,
+          ]));
+
+        }
         else
         {
           $this->addToken(new Token([
@@ -371,7 +405,9 @@ class LatexLexer
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
-  
+
+        if ($this->command_name === 'cite') $this->tokenizeCitation($token);
+        
         $this->addToken($token);
       }
       else if ($this->getCommandType($this->command_name) === 'cmd-with-options')
@@ -401,7 +437,7 @@ class LatexLexer
     $this->postProcessTokens();
 
     return $this->tokens;
-      
+
   }
 
   private function preprocessLatexSource(string $latex_src)
@@ -575,6 +611,8 @@ class LatexLexer
       if (in_array($env, $this->thm_env)) return 'thm-environment';
 
       if ($env === 'verbatim') return 'verbatim-environment';
+
+      if ($env === 'thebibliography') return 'bibliography-environment';
       
       return 'environment';
 
@@ -858,6 +896,24 @@ class LatexLexer
       'command_src' => $src,
       'line_number' => $this->line_number,
     ]);
+  }
+
+  private function tokenizeCitation($token) : void
+  {
+    $labels = array_map(trim(...), explode(',', $token->command_content));
+
+    $citation_numbers = [];
+
+    foreach ($labels as $label)
+    {
+      if (isset($this->citations[$label])) {
+        $citation_numbers[] = $this->citations[$label];
+      } else {
+        $citation_numbers[] = '?';
+      }
+    }
+
+    $token->body = implode(',', $citation_numbers);
   }
 
   private function postProcessTokens() : void

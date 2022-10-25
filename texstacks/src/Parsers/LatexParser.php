@@ -68,6 +68,11 @@ class LatexParser
     $this->lexer->setRefLabels($labels);
   }
 
+  public function setCitations($citations) : void
+  {
+    $this->lexer->setCitations($citations);
+  }
+
   public function parse($latex_src_raw) : void
   {
 
@@ -95,20 +100,23 @@ class LatexParser
         'inlinemath',
         'verbatim-environment',
         'tabular-environment',
-        'list-environment' => 'handleEnvironmentNode',
+        'list-environment',
+        'bibliography-environment' => 'handleEnvironmentNode',
 
         'thm-environment' => 'handleTheoremEnvironment',
 
         'item' => 'handleListItemNode',
+
+        'bibitem' => 'handleBibItemNode',
 
         'label' => 'handleLabelNode',
 
         'symbol',
         'includegraphics',
         'caption',
+        'cite',
         'ref',
-        'eqref',
-        'cite' => 'handleCommandNode',
+        'eqref' => 'handleCommandNode',
 
         'font-declaration' => 'handleFontDeclaration',
 
@@ -143,7 +151,7 @@ class LatexParser
     $thm_envs = $this->preamble_parser->getTheoremEnvs();
 
     $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
-
+    
     $this->front_matter = $this->preamble_parser->getFrontMatter();
     
     $this->resetTheoremCounters();
@@ -160,6 +168,7 @@ class LatexParser
       '>'   =>   ' &gt; ',
       '\\$' =>   '&#36;',
       '``'  =>   '"',
+      '\/'  =>   ' ',
       "\'a" =>   '&aacute;',
       "\'e" =>   '&eacute;',
       "\'i" =>   '&iacute;',
@@ -310,14 +319,15 @@ class LatexParser
     }
 
     /* End environment if not a list-environment and update current_node */
-    if ($token->type !== 'list-environment') {      
+    if ($token->type !== 'list-environment' && $token->type !== 'bibliography-environment') {
       $this->current_node = $this->current_node->parent();
       return;
     }
 
-    /* If token was the end of a list-env then we need to move up the tree 
-      to find the first list-env node */
-    $parent = $this->current_node->parent()->closest('list-environment');
+    /* If token was the end of a list-env/bibliography-env then we need to move up the tree 
+      to find the first list-env/bibliography-env node */
+ 
+    $parent = $this->current_node->parent()->closest($token->type);
     
     $this->current_node = $parent->parent() ?? $this->tree->root();
 
@@ -359,6 +369,17 @@ class LatexParser
 
     $this->current_node = $new_node;
 
+  }
+
+  private function handleBibItemNode($token) : void
+  {
+    $new_node = $this->createCommandNode($token);
+
+    $parent = $this->current_node->closest('bibliography-environment');
+
+    $this->tree->addNode($new_node, $parent);
+
+    $this->current_node = $new_node;
   }
 
   private function handleLabelNode($token) : void

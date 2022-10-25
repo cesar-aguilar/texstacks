@@ -48,6 +48,8 @@ class Renderer
 
     if ($node->type === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
 
+    if ($node->type === 'bibliography-environment') return BibliographyEnvironmentRenderer::renderNode($node, $body);
+
     if ($node->type === 'verbatim-environment') return "<pre>$body</pre>";
 
     // if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
@@ -55,6 +57,8 @@ class Renderer
     if ($node->type === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
 
     if ($node->type === 'item') return self::renderItemNode($node, $body);
+
+    if ($node->type === 'bibitem') return self::renderBibItemNode($node, $body);
 
     if ($node->type === 'includegraphics') return self::renderIncludeGraphics($node, $body);
 
@@ -66,13 +70,11 @@ class Renderer
 
     if ($node->type === 'eqref') return "( <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> )";
 
-    if ($node->type === 'cite') return "<span style=\"color:blue\">[\\cite{{$node->commandContent()}}]</span>";
+    if ($node->type === 'cite') return self::renderCitations($node, $body);
 
     if ($node->type === 'font-declaration') return self::renderFontDeclaration($node);
 
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment'])) return $body;
-
-    // if ($body == '' && $node->leftSibling()?->type === 'text') return "<br><br>";
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
@@ -80,13 +82,8 @@ class Renderer
     // Replace two \n characters with <br>
     $output = str_replace("\n\n", '<br><br>', $output);
 
-    // If parent is verbatim then add new line
-    // if ($node->parent()?->hasType('verbatim-environment')) $output = $output . "\n";
-
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '<br>', $output);
-
-    // return str_replace('\\\\','', $output);
 
   }
 
@@ -95,6 +92,13 @@ class Renderer
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
     return "<li>$body</li>";
+  }
+
+  private function renderBibItemNode($node, $body)
+  {
+    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
+
+    return "<li id=\"{$node->commandContent()}\">$body</li>";
   }
 
   private function renderFontDeclaration($node)
@@ -126,5 +130,24 @@ class Renderer
       default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
 
     };
+  }
+
+  private static function renderCitations($node, string $body = null) : string
+  {
+
+    $options = $node->commandOptions() != '' ? ", " . $node->commandOptions() : null;
+
+    $ids = array_map(trim(...), explode(',', $node->commandContent()));
+
+    $nums = explode(',', $node->body);
+
+    foreach (array_combine($ids, $nums) as $id => $num) {
+      $a[] = "<a href=\"#$id\">$num</a>";
+    }
+
+    $value = implode(', ', $a);
+
+    return "[$value$options]";
+
   }
 }

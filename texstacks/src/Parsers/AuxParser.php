@@ -11,6 +11,7 @@ class AuxParser
   private $aux_file;
   private $labels = [];
   private $sections = [];
+  private $citations = [];
 
   public function __construct(private $absolute_path)
   {
@@ -38,6 +39,11 @@ class AuxParser
     return $this->sections;
   }
 
+  public function getCitationsAsArray(): array
+  {
+    return $this->citations;
+  }
+
   private function parse()
   {
     while (!$this->aux_file->eof())
@@ -46,6 +52,8 @@ class AuxParser
       $line = trim($line);
       if (str_contains($line, '\newlabel')) {
         $this->parseNewLabel($line);
+      } else if (str_contains($line, '\bibcite')) {
+        $this->parseBibCite($line);
       }
     }
   }
@@ -61,6 +69,19 @@ class AuxParser
     $reference_number = StrHelper::PluckExcludeDelimiters('{{', '}{', $ref_num_component);
 
     $this->labels[$label] = $reference_number;
+  }
+
+  private function parseBibCite($line)
+  {
+    $args = StrHelper::getAllCmdArgsOptions('bibcite', $line);
+
+    if (count($args) !== 2) return;
+
+    if ($args[0]->type === 'arg' && $args[1]->type === 'arg')
+    {
+      $this->citations[$args[0]->value] = $args[1]->value;
+    }
+
   }
 
   private function parseContentsLine($line)

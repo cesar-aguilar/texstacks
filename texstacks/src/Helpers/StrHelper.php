@@ -188,7 +188,7 @@ class StrHelper
 
       $current_arg = '';
 
-      while ($char)
+      while (!is_null($char))
       {
   
         if ($char !== $right_delim)
