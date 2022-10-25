@@ -164,33 +164,31 @@ class PreambleParser
 
     $author_args = StrHelper::getAllCmdArgsOptions("author", $this->src);
 
-    if (!empty($author_args))
+    if (empty($author_args)) return [];
+
+    $authors = [];
+
+    $authors_arr = $author_args[0]->type === 'arg' ? explode("\\and", $author_args[0]->value) : [];
+
+    foreach ($authors_arr as $author)
     {
-        $authors = [];
+      $author = StrHelper::cleanUpText($author);
 
-        $authors_arr = $author_args[0]->type === 'arg' ? explode("\\and", $author_args[0]->value) : [];
+      $thanks_arg = StrHelper::getAllCmdArgsOptions("thanks", $author);
 
-        foreach ($authors_arr as $author)
-        {
-            $author = StrHelper::cleanUpText($author);
+      $name = str_replace("\\\\", "<br>", $author);
+      $thanks = null;
 
-            $thanks_arg = StrHelper::getAllCmdArgsOptions("thanks", $author);
+      if (!empty($thanks_arg))
+      {
+        $thanks = $thanks_arg[0]->value;
+        $name = $thanks_arg[0]->type === 'arg' ? str_replace('\thanks{' . $thanks . '}', ' ', $author) : $name;
+      }
 
-            $name = $author;
-            $thanks = null;
-
-            if (!empty($thanks_arg))
-            {
-                $thanks = $thanks_arg[0]->value;
-                $name = $thanks_arg[0]->type === 'arg' ? str_replace('\thanks{' . $thanks . '}', ' ', $author) : $name;
-            }
-
-            $authors[] = (object) ['name' => trim($name), 'thanks' => $thanks ?? ''];
-        }
-
+      $authors[] = (object) ['name' => trim($name), 'thanks' => $thanks ?? ''];
     }
 
-    return $authors ?? [];
+    return $authors;
   }
 
 

@@ -83,6 +83,35 @@ class LatexLexer
     'textsubscript',
   ];
 
+  const FONT_DECLARATIONS = [
+    'rm' => 'font-serif',
+    'sl' => 'italic',
+    'it' => 'italic',
+    'tt' => 'font-mono',
+    'bf' => 'font-bold',
+    'bfseries' => 'font-bold',
+    'mdseries' => 'font-medium',
+    'rmfamily' => 'font-serif',
+    'sffamily' => 'italic',
+    'ttfamily' => 'font-mono',
+    'upshape' => 'non-italic',
+    'itshape' => 'italic',
+    'scshape' => 'small-caps',
+    'slshape' => 'italic',
+    'em' => 'font-bold',
+    'normalfont' => 'font-serif',
+    'tiny' => 'text-xs',
+    'scriptsize' => 'text-xs',
+    'footnotesize' => 'text-sm',
+    'small' => 'text-sm',
+    'normalsize' => 'text-base',
+    'large' => 'text-lg',
+    'Large' => 'text-xl',
+    'LARGE' => 'text-2xl',
+    'huge' => 'text-3xl',
+    'Huge' => 'text-4xl',
+  ];
+
   const LIST_ENVIRONMENTS = [
     'itemize',
     'enumerate',    
@@ -143,6 +172,12 @@ class LatexLexer
         continue;
       }
 
+      if ($char === '%')
+      {
+        $this->consumeUntilTarget("\n");
+        continue;
+      }
+
       if ($char !== '\\') {
         $this->buffer .= $char;
         continue;
@@ -157,6 +192,8 @@ class LatexLexer
           $this->addInlineMathToken($char);
           continue;
         }
+
+        $this->command_name = "\\";
 
         // $this->buffer .= "\\" . $char;
         $this->addSymbolToken($char);
@@ -347,6 +384,10 @@ class LatexLexer
         
         $this->addToken($token);
       }
+      else if ($this->getCommandType($this->command_name) === 'font-declaration')
+      {
+        $this->addFontDeclarationToken();
+      }
       else
       {
         $this->buffer .= "\\" . $this->command_name;
@@ -375,8 +416,8 @@ class LatexLexer
 
     $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
 
-    $html_src = StrHelper::DeleteLatexComments($html_src);
-            
+    // $html_src = StrHelper::DeleteLatexComments($html_src);
+
     // Replace $$...$$ with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
     $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1 \\end{equation*}', $html_src);
@@ -391,7 +432,7 @@ class LatexLexer
     $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
     $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
     $html_src = str_replace('\]', '\end{equation*}', $html_src);
-    
+
     return $html_src;
 
   }
@@ -407,14 +448,30 @@ class LatexLexer
   private function addSymbolToken(string $char)
   {
 
-    $this->addBufferAsToken();
+    $this->getNextChar();
 
+    try {
+      $token = $this->tokenizeCmdWithOptions();
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    $token->type = 'symbol';
+    $token->body = $char;
+
+    $this->addToken($token);
+
+  }
+
+  private function addFontDeclarationToken()
+  {
+    $this->addBufferAsToken();
+ 
     $this->tokens[] = new Token([
-      'type' => 'symbol',
-      'body' => $char,
+      'type' => 'font-declaration',
+      'body' => self::FONT_DECLARATIONS[$this->command_name],
       'line_number' => $this->line_number,
     ]);
-
   }
 
   private function addBufferAsToken()
@@ -526,6 +583,8 @@ class LatexLexer
     if (in_array($name, self::SECTION_COMMANDS)) return 'section-cmd';
 
     if (in_array($name, self::FONT_COMMANDS))    return 'font-cmd';
+
+    if (in_array($name, array_keys(self::FONT_DECLARATIONS))) return 'font-declaration';
 
     if (in_array($name, self::ONE_ARGS_CMDS)) return 'one-arg-cmd';
 
@@ -781,7 +840,7 @@ class LatexLexer
         try {
           $options = $this->getContentUpToDelimiter(']');
         } catch (\Exception $e) {
-          die($e->getMessage());
+          throw new \Exception($e->getMessage());
         }
 
         $src .= '[' . $options . ']';
@@ -1032,6 +1091,27 @@ class LatexLexer
     
     return $alpha_text;
       
+  }
+
+  private function consumeUntilTarget($target)
+  {
+
+    if ($this->cursor === $this->num_chars) {
+      throw new \Exception("Unexpected end of file on line {$this->line_number}");
+    }
+
+    $char = $this->getChar();
+
+    while (!is_null($char) && $char !== $target) {
+      $char = $this->getNextChar();
+    }
+
+    if ($char === $target) {
+      return;
+    }
+
+    throw new \Exception("Parse error: missing $target on line {$this->line_number}");
+
   }
 
   private function getLastToken()

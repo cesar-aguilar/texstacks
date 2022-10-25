@@ -110,6 +110,8 @@ class LatexParser
         'eqref',
         'cite' => 'handleCommandNode',
 
+        'font-declaration' => 'handleFontDeclaration',
+
         'font-cmd' => 'doNothing',
  
         default => 'addToCurrentNode',
@@ -376,6 +378,13 @@ class LatexParser
 
   private function handleCommandNode($token) : void
   {
+    $new_node = $this->createCommandNode($token);
+    $this->tree->addNode($new_node, $this->current_node);
+  }
+
+  private function handleFontDeclaration($token) : void
+  {
+    $this->current_node->addClass($token->body);
     $new_node = $this->createCommandNode($token);
     $this->tree->addNode($new_node, $this->current_node);
   }

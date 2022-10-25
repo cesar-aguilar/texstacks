@@ -30,45 +30,61 @@ class GroupEnvironmentRenderer
 
         if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'verbatim-environment'])) {
 
-            if ($font_style) return "\\" . $font_style . "{" . $body . "}";
+            if ($font_style) return " \\" . $font_style . "{" . $body . "} ";
 
-            return "{" . $body . "}";
+            return " {" . $body . "} ";
 
         }
 
-        return match ($font_style) {
+        $tag = match ($font_style) {
 
-            'emph' => " <em>$body</em> ",
+            'emph' => ['tag' => 'em'],
 
-            'textbf' => " <strong>$body</strong> ",
+            'textbf' => ['tag' => 'strong'],
 
-            'textit' => " <em>$body</em> ",
+            'textit' => ['tag' => 'em'],
 
-            'texttt' => " <code>$body</code> ",
+            'texttt' => ['tag' => 'code'],
 
-            'textsc' => " <span style=\"font-variant: small-caps\">$body</span> ",
+            'textsc' => ['tag' => 'span', 'style' => ['font-variant' => 'small-caps']],
 
-            'textsf' => " <span style=\"font-family: sans-serif\">$body</span> ",
+            'textsf' => ['tag' => 'span', 'style' => ['font-variant' => 'sans-serif']],
 
-            'textsl' => " <em>$body</em> ",
+            'textsl' => ['tag' => 'em'],
 
-            'textmd' => " <span style=\"font-weight: 500\">$body</span> ",
+            'textmd' => ['tag' => 'span', 'style' => ['font-weight' => '500']],
 
-            'textup' => " <span style=\"font-variant: normal\">$body</span> ",
+            'textup' => ['tag' => 'span', 'style' => ['font-variant' => 'normal']],
 
-            'textnormal' => " <span style=\"font-variant: normal\">$body</span> ",
+            'textnormal' => ['tag' => 'span', 'style' => ['font-variant' => 'normal']],
 
-            'text' => " <span style=\"font-variant: normal\">$body</span> ",
+            'text' => ['tag' => 'span', 'style' => ['font-variant' => 'normal']],
 
-            'textsuperscript' => "<sup>$body</sup> ",
+            'textsuperscript' => ['tag' => 'sup'],
 
-            'textsubscript' => "<sub>$body</sub> ",
+            'textsubscript' => ['tag' => 'sub'],
 
-            default => "<span class=\"grouping\">$body</span>"
+            default => ['tag' => 'span'],
 
         };
 
-   
+        $html = " <{$tag['tag']}";
+
+        if (isset($tag['style'])) {
+            $html .= " style=\"";
+            foreach ($tag['style'] as $name => $value) {
+                $html .= "$name:$value;";
+            }
+            $html .= '"';
+        }
+
+        if ($node->hasClasses()) {
+            $html .= " class=\"{$node->getClasses()}\"";
+        }
+
+        $html .= ">$body</{$tag['tag']}> ";
+
+        return $html;
 
     }
 

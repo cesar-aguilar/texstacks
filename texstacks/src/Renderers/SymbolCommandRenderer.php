@@ -20,7 +20,7 @@ class SymbolCommandRenderer
             '_' => '_',
             '{' => '{',
             '}' => '}',
-            "\\" => '\\',
+            "\\" => '<br>',
             default => "\\" . $node->body
         };
     }

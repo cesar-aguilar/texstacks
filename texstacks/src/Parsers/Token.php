@@ -4,7 +4,7 @@ namespace TexStacks\Parsers;
 
 class Token {
 
-    public readonly string $type;
+    public string $type;
     public readonly string $command_name;
     public readonly string $command_content;
     public readonly array $command_args;

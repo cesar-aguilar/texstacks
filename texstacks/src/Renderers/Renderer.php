@@ -68,6 +68,8 @@ class Renderer
 
     if ($node->type === 'cite') return "<span style=\"color:blue\">[\\cite{{$node->commandContent()}}]</span>";
 
+    if ($node->type === 'font-declaration') return self::renderFontDeclaration($node);
+
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment'])) return $body;
 
     // if ($body == '' && $node->leftSibling()?->type === 'text') return "<br><br>";
@@ -93,6 +95,13 @@ class Renderer
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
     return "<li>$body</li>";
+  }
+
+  private function renderFontDeclaration($node)
+  {
+    if ($node->ancestorOfType('verbatim-environment')) return "\\" . $node->body;
+
+    return '';
   }
   
   private static function renderIncludeGraphics($node, string $body = null): string
