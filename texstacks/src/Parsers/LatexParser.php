@@ -54,6 +54,8 @@ class LatexParser
       'section' => 0,
       'subsection' => 0,
       'subsubsection' => 0,
+      'paragraph' => 0,
+      'subparagraph' => 0,
     ];
 
   }
@@ -129,7 +131,7 @@ class LatexParser
       try {
         $this->$handler($token);
       } catch (\Exception $e) {
-        throw new \Exception($e->getMessage());
+        throw new \Exception($e->getMessage() . ' Trace: ' . $e->getTraceAsString());
       }
       
     }
@@ -492,7 +494,7 @@ class LatexParser
       [
         'id' => $this->tree->nodeCount(),
         'type' => 'text',
-        'body' => "<span class=\"parse-error\">" . $message . "</span>",
+        'body' => "<div class=\"parse-error\">" . $message . "</div>",
       ]
       );
 
@@ -517,7 +519,24 @@ class LatexParser
       if ($key == $section_name) break;
     }
 
+    if ($increment) $this->resetSectionCounters($section_name);
+
     return implode('.', $section_numbers);
+
+  }
+
+  private function resetSectionCounters($section_name=null) : void
+  {
+
+    $flag = false;
+
+    foreach ($this->section_counters as $key => $value)
+    {
+      if ($flag) $this->section_counters[$key] = 0;
+
+      if ($key === $section_name) $flag = true;
+
+    }
 
   }
 

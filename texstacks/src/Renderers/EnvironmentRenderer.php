@@ -35,7 +35,10 @@ class EnvironmentRenderer
     
     private static function renderProofEnvironment(EnvironmentNode $node, string $body = null): string
     {
-        return "<div class=\"proof-env\"><div class=\"proof-head\" id=\"{$node->commandLabel()}\">Proof</div><div class=\"proof-body\">$body <span style=\"font-variant: small-caps\">QED</span></div></div>";
+
+        $head = $node->commandOptions() ? $node->commandOptions() : 'Proof';
+
+        return "<div class=\"proof-env\"><span class=\"proof-head\" id=\"{$node->commandLabel()}\">$head. </span> $body <span style=\"font-variant: small-caps\">QED</span></div>";
     }
 
     private static function renderExampleEnvironment(EnvironmentNode $node, string $body = null): string

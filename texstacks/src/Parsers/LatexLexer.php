@@ -18,6 +18,7 @@ class LatexLexer
     'table',
     'center',
     'verbatim-environment',
+    'proof',
   ];
 
   const DISPLAY_MATH_ENVIRONMENTS = [

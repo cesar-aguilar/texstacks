@@ -13,6 +13,8 @@ class SectionNode extends CommandNode
     'section' => 'sec',
     'subsection' => 'ssec',
     'subsubsection' => 'sssec',
+    'paragraph' => 'par',
+    'subparagraph' => 'subpar',
   ];
 
   public readonly int $depth_level;
@@ -56,8 +58,14 @@ class SectionNode extends CommandNode
       case 'subsubsection':
       case 'subsubsection*':
         return 3;
-      default:
+      case 'paragraph':
+      case 'paragraph*':
         return 4;
+      case 'subparagraph':
+        case 'subparagraph*':
+        return 5;
+      default:
+        return 6;
     }
   }
 

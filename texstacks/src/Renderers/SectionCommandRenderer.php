@@ -40,6 +40,10 @@ class SectionCommandRenderer
 
         "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>$title</h4>$body</section>",
 
+      'paragraph', 'paragraph*', 'subparagraph', 'subparagraph*' =>
+
+        "<p id=\"{$node->commandLabel()}\"><strong>$title</strong>$body</p>",
+
       default =>
 
         "<div>$body</div>"

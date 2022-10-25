@@ -53,7 +53,7 @@ class LatexArticle
     try {
       $this->parser->parse($this->html_src);
     } catch (\Exception $e) {
-      $this->parser->terminateWithError($e->getMessage());
+      $this->parser->terminateWithError("<div>Message: {$e->getMessage()}</div><div>File: {$e->getFile()}</div><div>Line: {$e->getLine()}</div>");
     }
   }
 
