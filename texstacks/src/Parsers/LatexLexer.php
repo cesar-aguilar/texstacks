@@ -166,7 +166,7 @@ class LatexLexer
     if ($this->num_chars === 0) return [];
   
     $this->cursor = -1;
-    
+
     while (!is_null($char = $this->getNextChar()))
     {
 
@@ -187,7 +187,7 @@ class LatexLexer
         continue;
       }
 
-      if ($char !== '\\') {
+      if ($char !== "\\") {
         $this->buffer .= $char;
         continue;
       }
@@ -234,6 +234,7 @@ class LatexLexer
 
         if ($this->command_name === 'end')
         {
+
           $this->addToken(new Token([
             'type' => $this->getCommandType($this->command_name, $env),
             'command_name' => $this->command_name,
@@ -354,12 +355,6 @@ class LatexLexer
       }
       else if ($this->getCommandType($this->command_name) === 'font-cmd')
       {
-
-        // try {
-        //   $content = $this->getCommandContent();
-        // } catch (\Exception $e) {
-        //   throw new \Exception($e->getMessage());
-        // }
 
         // backup because after running consumeUntilNonAlpha()
         // the cursor is at the first non-alpha character
@@ -517,7 +512,8 @@ class LatexLexer
       if ($this->buffer === '') return;
 
       // Replace more than two newlines with two newlines
-      $text = preg_replace('/\n{3,}/', "\n\n", $this->buffer);
+      // $text = preg_replace('/\n{3,}/', "\n\n", $this->buffer);
+      $text = $this->buffer;
 
       $this->tokens[] = new Token([
           'type' => 'text',        

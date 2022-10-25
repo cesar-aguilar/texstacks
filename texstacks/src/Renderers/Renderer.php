@@ -74,13 +74,15 @@ class Renderer
 
     if ($node->type === 'font-declaration') return self::renderFontDeclaration($node);
 
-    if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment'])) return $body;
+    if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment', 'verbatim-environment'])) return $body;
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
 
+    $output = preg_replace('/\n{3,}/', "<br><br>", $output);
+
     // Replace two \n characters with <br>
-    $output = str_replace("\n\n", '<br><br>', $output);
+    // $output = str_replace("\n\n", '<br><br>', $output);
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '<br>', $output);

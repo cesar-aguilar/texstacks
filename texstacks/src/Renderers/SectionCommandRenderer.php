@@ -42,7 +42,7 @@ class SectionCommandRenderer
 
       'paragraph', 'paragraph*', 'subparagraph', 'subparagraph*' =>
 
-        "<p id=\"{$node->commandLabel()}\"><strong>$title</strong>$body</p>",
+        "<p id=\"{$node->commandLabel()}\"><strong>$title</strong> $body</p>",
 
       default =>
 

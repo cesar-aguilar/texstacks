@@ -508,6 +508,8 @@ class LatexParser
 
     if (str_contains($section_name, '*')) return '';
 
+    if (str_contains($section_name, 'paragraph')) return '';
+
     $this->section_counters[$section_name] += $increment ? 1 : 0;
 
     $section_numbers = [];
