@@ -20,6 +20,7 @@ class GroupEnvironmentRenderer
         'textnormal',
         'textsuperscript',
         'textsubscript',
+        'footnote',
     ];
     
     public static function renderNode(EnvironmentNode $node, string $body = null): string
@@ -64,9 +65,13 @@ class GroupEnvironmentRenderer
 
             'textsubscript' => ['tag' => 'sub'],
 
+            'footnote' => 'footnote',
+
             default => ['tag' => 'span'],
 
         };
+
+        if ($tag === 'footnote') return self::renderFootnote($node, $body);
 
         $html = " <{$tag['tag']}";
 
@@ -83,6 +88,16 @@ class GroupEnvironmentRenderer
         }
 
         $html .= ">$body</{$tag['tag']}> ";
+
+        return $html;
+
+    }
+
+    private static function renderFootnote($node, $body) {
+
+        $num = $node->commandRefNum();
+
+        $html = "<details class=\"footnote\"><summary class=\"footnote\">$num</summary><p class=\"footnote-content\">$body</p></details>";
 
         return $html;
 

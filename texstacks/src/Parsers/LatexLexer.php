@@ -83,6 +83,7 @@ class LatexLexer
     'textnormal',
     'textsuperscript',
     'textsubscript',
+    'footnote',
   ];
 
   const FONT_DECLARATIONS = [

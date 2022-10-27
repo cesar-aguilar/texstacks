@@ -18,6 +18,7 @@ class LatexParser
   private $current_node;
   private $lexer;
   private $section_counters;
+  private $counters;
   private $thm_envs = [];
   private $raw_src;
   private $src;
@@ -56,6 +57,10 @@ class LatexParser
       'subsubsection' => 0,
       'paragraph' => 0,
       'subparagraph' => 0,
+    ];
+
+    $this->counters = [
+      'footnote' => 0,
     ];
 
   }
@@ -314,6 +319,10 @@ class LatexParser
     if ($token->command_name === 'begin') {
 
       $new_node = $this->createCommandNode($token);
+
+      if ($new_node->commandOptions() === 'footnote')
+        $new_node->setRefNum($this->getCounter('footnote'));
+
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;
       return;
@@ -556,6 +565,10 @@ class LatexParser
       if ($env->parent === $section_name) $env->counter = 0;
     }
 
+  }
+
+  private function getCounter($counter) {
+    return ++$this->counters[$counter];
   }
 
   private function getNewCommands() : array
