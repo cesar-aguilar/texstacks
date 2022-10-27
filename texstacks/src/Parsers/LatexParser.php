@@ -127,7 +127,7 @@ class LatexParser
 
         'font-declaration' => 'handleFontDeclaration',
 
-        'font-cmd' => 'doNothing',
+        'font-cmd','tag' => 'doNothing',
  
         default => 'addToCurrentNode',
 
@@ -404,6 +404,18 @@ class LatexParser
     if ($this->current_node->hasType('displaymath-environment')) {
       $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
+
+      // Add a \tag command using ref_num from token
+      $this->tree->addNode(new CommandNode(
+        [
+          'id' => $this->tree->nodeCount(),
+          'type' => 'tag',
+          'command_src' => "\\tag{" . $token->command_options . "}",
+          'body' => $token->command_options,
+          'line_number' => $token->line_number
+        ]
+      ), parent: $this->current_node);
+
     }
     
   }

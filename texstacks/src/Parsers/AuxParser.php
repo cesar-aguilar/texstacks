@@ -60,15 +60,24 @@ class AuxParser
 
   private function parseNewLabel($line)
   {
-    $line = str_replace('\newlabel', '', $line);
 
-    $label = StrHelper::PluckExcludeDelimiters('{', '}', $line);
+    $args = StrHelper::getAllCmdArgsOptions('newlabel', $line);
 
-    $ref_num_component = StrHelper::PluckIncludeDelimiters('{{', '}}', $line);
+    if (count($args) !== 2) return;
 
-    $reference_number = StrHelper::PluckExcludeDelimiters('{{', '}{', $ref_num_component);
+    $label = $args[0]?->type === 'arg' ? $args[0]?->value : '';
 
-    $this->labels[$label] = $reference_number;
+    $fake_cmd = '\fake' . $args[1]->value;
+
+    $ref_num_args = StrHelper::getAllCmdArgsOptions('fake', $fake_cmd);
+
+    if (count($ref_num_args) < 2) return;
+
+    $reference_number = trim($ref_num_args[0]->value, characters: "{}");
+
+    $reference_number = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\( $1 \\)", $reference_number);
+
+    if ($label && $reference_number) $this->labels[$label] = $reference_number;
   }
 
   private function parseBibCite($line)

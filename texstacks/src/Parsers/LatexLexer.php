@@ -61,6 +61,7 @@ class LatexLexer
     'label',
     'ref',
     'eqref',
+    'tag',
   ];
 
   const TABULAR_ENVIRONMENTS = [

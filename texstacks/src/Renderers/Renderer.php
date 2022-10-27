@@ -68,9 +68,11 @@ class Renderer
 
     if ($node->type === 'ref') return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
 
-    if ($node->type === 'eqref') return "( <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> )";
+    if ($node->type === 'eqref') return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
 
     if ($node->type === 'cite') return self::renderCitations($node, $body);
+
+    if ($node->type === 'tag') return "\\tag{" . $body . "}";
 
     if ($node->type === 'font-declaration') return self::renderFontDeclaration($node);
 
