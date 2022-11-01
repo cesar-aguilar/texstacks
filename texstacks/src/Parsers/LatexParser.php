@@ -295,11 +295,11 @@ class LatexParser
       return;
     }
 
-    $section_name = $new_node->commandName();
+    // $section_name = $new_node->commandName();
 
-    $new_node->setRefNum($this->getSectionNumber($section_name));
+    // $new_node->setRefNum($this->getSectionNumber($section_name));
 
-    $this->resetTheoremCounters($section_name);
+    // $this->resetTheoremCounters($section_name);
 
     /* To set the parent for the new_node, move up the tree 
      * until we find the first sectioning command
@@ -320,6 +320,14 @@ class LatexParser
 
       if ($new_node->commandOptions() === 'footnote')
         $new_node->setRefNum($this->getCounter('footnote'));
+
+      if ($new_node->commandContent() === 'section-heading') {
+        $section_name = $new_node->commandOptions();
+
+        $new_node->setRefNum($this->getSectionNumber($section_name));
+
+        $this->resetTheoremCounters($section_name);
+      }
 
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;

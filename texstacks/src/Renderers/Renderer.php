@@ -32,49 +32,51 @@ class Renderer
   private function renderNode($node, string $body = null): string
   {
 
-    if ($node->type === 'section-cmd') return SectionCommandRenderer::renderNode($node, $body);
-    
-    if ($node->type === 'displaymath-environment') return DisplayMathEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('section-cmd')) return SectionCommandRenderer::renderNode($node, $body);
 
-    if ($node->type === 'inlinemath') return "\\(" . $body . "\\)";
+    if ($node->hasType('group-environment') && $node->commandContent() === 'section-heading') return HeadingEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'thm-environment') return ThmEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('displaymath-environment')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'group-environment') return GroupEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('inlinemath')) return "\\(" . $body . "\\)";
 
-    if ($node->type === 'environment') return EnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('thm-environment')) return ThmEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'tabular-environment') return TabularEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('group-environment')) return GroupEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'list-environment') return ListEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment')) return EnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'bibliography-environment') return BibliographyEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('tabular-environment')) return TabularEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->type === 'verbatim-environment') return "<pre>$body</pre>";
+    if ($node->hasType('list-environment')) return ListEnvironmentRenderer::renderNode($node, $body);
+
+    if ($node->hasType('bibliography-environment')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
+
+    if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
 
     // if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
-    if ($node->type === 'symbol') return SymbolCommandRenderer::renderNode($node, $body);
+    if ($node->hasType('symbol')) return SymbolCommandRenderer::renderNode($node, $body);
 
-    if ($node->type === 'item') return self::renderItemNode($node, $body);
+    if ($node->hasType('item')) return self::renderItemNode($node, $body);
 
-    if ($node->type === 'bibitem') return self::renderBibItemNode($node, $body);
+    if ($node->hasType('bibitem')) return self::renderBibItemNode($node, $body);
 
-    if ($node->type === 'includegraphics') return self::renderIncludeGraphics($node, $body);
+    if ($node->hasType('includegraphics')) return self::renderIncludeGraphics($node, $body);
 
-    if ($node->type === 'caption') return self::renderCaptionEnvironment($node, $body);
+    if ($node->hasType('caption')) return self::renderCaptionEnvironment($node, $body);
 
-    if ($node->type === 'label') return $node->commandSource();
+    if ($node->hasType('label')) return $node->commandSource();
 
-    if ($node->type === 'ref') return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
+    if ($node->hasType('ref')) return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
 
-    if ($node->type === 'eqref') return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
+    if ($node->hasType('eqref')) return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
 
-    if ($node->type === 'cite') return self::renderCitations($node, $body);
+    if ($node->hasType('cite')) return self::renderCitations($node, $body);
 
-    if ($node->type === 'tag') return "\\tag{" . $body . "}";
+    if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 
-    if ($node->type === 'font-declaration') return self::renderFontDeclaration($node);
+    if ($node->hasType('font-declaration')) return self::renderFontDeclaration($node);
 
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment', 'verbatim-environment'])) return $body;
 
@@ -88,7 +90,6 @@ class Renderer
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '<br>', $output);
-
   }
 
   private function renderItemNode($node, $body)
@@ -111,7 +112,7 @@ class Renderer
 
     return '';
   }
-  
+
   private static function renderIncludeGraphics($node, string $body = null): string
   {
 
@@ -132,11 +133,10 @@ class Renderer
       'table' => "<div class=\"table-caption\">$body</div>",
 
       default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
-
     };
   }
 
-  private static function renderCitations($node, string $body = null) : string
+  private static function renderCitations($node, string $body = null): string
   {
 
     $options = $node->commandOptions() != '' ? ", " . $node->commandOptions() : null;
@@ -152,6 +152,5 @@ class Renderer
     $value = implode(', ', $a);
 
     return "[$value$options]";
-
   }
 }

@@ -13,43 +13,35 @@ class SectionCommandRenderer
 
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
 
-    $title = $node->commandRefNum() ? $node->commandRefNum() . '&nbsp;&nbsp;&nbsp;' : '';
-
-    $title .= $node->commandContent();
-
-    return match ($node->commandName())
-    {
+    return match ($node->commandName()) {
 
       'document' =>
 
-        "<main>$body</main>",
+      "<main>$body</main>",
 
       'chapter', 'chapter*' =>
 
-        "<article id=\"{$node->commandLabel()}\" class=\"chapter\"><h1>$title</h1>$body</article>",
+      "<article id=\"{$node->commandLabel()}\" class=\"chapter\">$body</article>",
 
       'section', 'section*' =>
 
-        "<section id=\"{$node->commandLabel()}\" class=\"section\"><h2>$title</h2>$body</section>",
+      "<section id=\"{$node->commandLabel()}\" class=\"section\">$body</section>",
 
       'subsection', 'subsection*' =>
 
-        "<section id=\"{$node->commandLabel()}\" class=\"subsection\"><h3>$title</h3>$body</section>",
+      "<section id=\"{$node->commandLabel()}\" class=\"subsection\">$body</section>",
 
       'subsubsection', 'subsubsection*' =>
 
-        "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\"><h4>$title</h4>$body</section>",
+      "<section id=\"{$node->commandLabel()}\" class=\"subsubsection\">$body</section>",
 
       'paragraph', 'paragraph*', 'subparagraph', 'subparagraph*' =>
 
-        "<p id=\"{$node->commandLabel()}\"><strong>$title</strong> $body</p>",
+      "<p id=\"{$node->commandLabel()}\">$body</p>",
 
       default =>
 
-        "<div>$body</div>"
-
+      "<div>$body</div>"
     };
-
   }
-
 }
