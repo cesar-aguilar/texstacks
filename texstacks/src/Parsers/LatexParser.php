@@ -25,11 +25,13 @@ class LatexParser
   private $preamble_parser;
   public readonly array $front_matter;
 
-  public function __construct($data=[])
+  public function __construct($data = [])
   {
-    $this->preamble_parser = new PreambleParser;
 
-    $this->tree = new SyntaxTree();
+    $this->initTree();
+    $this->initCounters();
+
+    $this->preamble_parser = new PreambleParser;
 
     $this->thm_envs = $data['thm_env'] ?? [];
 
@@ -39,6 +41,11 @@ class LatexParser
     ];
 
     $this->lexer = new LatexLexer($lexer_data);
+  }
+
+  private function initTree()
+  {
+    $this->tree = new SyntaxTree();
 
     $root = new SectionNode([
       'id' => 0,
@@ -49,7 +56,10 @@ class LatexParser
     $this->tree->setRoot($root);
 
     $this->current_node = $root;
+  }
 
+  private function initCounters()
+  {
     $this->section_counters = [
       'chapter' => 0,
       'section' => 0,
@@ -62,25 +72,24 @@ class LatexParser
     $this->counters = [
       'footnote' => 0,
     ];
-
   }
 
-  public function getRoot() : SectionNode
+  public function getRoot(): SectionNode
   {
     return $this->tree->root();
   }
 
-  public function setRefLabels($labels) : void
+  public function setRefLabels($labels): void
   {
     $this->lexer->setRefLabels($labels);
   }
 
-  public function setCitations($citations) : void
+  public function setCitations($citations): void
   {
     $this->lexer->setCitations($citations);
   }
 
-  public function parse($latex_src_raw) : void
+  public function parse($latex_src_raw): void
   {
 
     /* pre-process raw latex and setup values needed by the lexer before tokenizing */
@@ -94,10 +103,9 @@ class LatexParser
     // dd($tokens);
     // die($this->lexer->prettyPrintTokens());
     /* From token add node to syntax tree using depth-first traversal */
-    foreach ($tokens as $token)
-    {
+    foreach ($tokens as $token) {
 
-      $handler = match($token->type) {
+      $handler = match ($token->type) {
 
         'section-cmd' => 'handleSectionNode',
 
@@ -127,10 +135,9 @@ class LatexParser
 
         'font-declaration' => 'handleFontDeclaration',
 
-        'font-cmd','tag' => 'doNothing',
- 
-        default => 'addToCurrentNode',
+        'font-cmd', 'tag' => 'doNothing',
 
+        default => 'addToCurrentNode',
       };
 
       try {
@@ -138,16 +145,15 @@ class LatexParser
       } catch (\Exception $e) {
         throw new \Exception($e->getMessage() . ' Trace: ' . $e->getTraceAsString());
       }
-      
     }
-    
+
     // dd($this->tree->root()->children());
     // dd($this->section_counters);
     // dd($this->getNewCommands());
-    
+
   }
 
-  private function init($latex_src_raw) : void
+  private function init($latex_src_raw): void
   {
     $this->raw_src = $latex_src_raw;
 
@@ -158,82 +164,81 @@ class LatexParser
     $thm_envs = $this->preamble_parser->getTheoremEnvs();
 
     $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
-    
+
     $this->front_matter = $this->preamble_parser->getFrontMatter();
-    
+
     $this->resetTheoremCounters();
- 
+
     $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
   }
 
   private function preprocessRawSource()
   {
 
-    $search_replace = 
-    [
-      '<'   =>   ' &lt; ',
-      '>'   =>   ' &gt; ',
-      '\\$' =>   '&#36;',
-      '``'  =>   '"',
-      '\/'  =>   ' ',
-      "\'a" =>   '&aacute;',
-      "\'e" =>   '&eacute;',
-      "\'i" =>   '&iacute;',
-      "\'o" =>   '&oacute;',
-      "\'u" =>   '&uacute;',
-      "\'y" =>   '&yacute;',
-      "\'A" =>   '&Aacute;',
-      "\'E" =>   '&Eacute;',
-      "\'I" =>   '&Iacute;',
-      "\'O" =>   '&Oacute;',
-      "\'U" =>   '&Uacute;',
-      "\'Y" =>   '&Yacute;',
-      "\`a" =>   '&agrave;',
-      "\`e" =>   '&egrave;',
-      "\`i" =>   '&igrave;',
-      "\`o" =>   '&ograve;',
-      "\`u" =>   '&ugrave;',
-      "\`y" =>   '&ygrave;',
-      "\`A" =>   '&Agrave;',
-      "\`E" =>   '&Egrave;',
-      "\`I" =>   '&Igrave;',
-      "\`O" =>   '&Ograve;',
-      "\`U" =>   '&Ugrave;',
-      "\`Y" =>   '&Ygrave;',
-      "\^a" =>   '&acirc;',
-      "\^i" =>   '&icirc;',
-      "\^o" =>   '&ocirc;',
-      "\^u" =>   '&ucirc;',
-      "\^y" =>   '&ycirc;',
-      "\^A" =>   '&Acirc;',
-      "\^E" =>   '&Ecirc;',
-      "\^I" =>   '&Icirc;',
-      "\^O" =>   '&Ocirc;',
-      "\^U" =>   '&Ucirc;',
-      "\^Y" =>   '&Ycirc;',
-      '\"a' =>   '&auml;',
-      '\"e' =>   '&euml;',
-      '\"i' =>   '&iuml;',
-      '\"o' =>   '&ouml;',
-      '\"u' =>   '&uuml;',
-      '\"y' =>   '&yuml;',
-      '\"A' =>   '&Auml;',
-      '\"E' =>   '&Euml;',
-      '\"I' =>   '&Iuml;',
-      '\"O' =>   '&Ouml;',
-      '\"U' =>   '&Uuml;',
-      '\"Y' =>   '&Yuml;',
-    ];
+    $search_replace =
+      [
+        '<'   =>   ' &lt; ',
+        '>'   =>   ' &gt; ',
+        '\\$' =>   '&#36;',
+        '``'  =>   '"',
+        '\/'  =>   ' ',
+        "\'a" =>   '&aacute;',
+        "\'e" =>   '&eacute;',
+        "\'i" =>   '&iacute;',
+        "\'o" =>   '&oacute;',
+        "\'u" =>   '&uacute;',
+        "\'y" =>   '&yacute;',
+        "\'A" =>   '&Aacute;',
+        "\'E" =>   '&Eacute;',
+        "\'I" =>   '&Iacute;',
+        "\'O" =>   '&Oacute;',
+        "\'U" =>   '&Uacute;',
+        "\'Y" =>   '&Yacute;',
+        "\`a" =>   '&agrave;',
+        "\`e" =>   '&egrave;',
+        "\`i" =>   '&igrave;',
+        "\`o" =>   '&ograve;',
+        "\`u" =>   '&ugrave;',
+        "\`y" =>   '&ygrave;',
+        "\`A" =>   '&Agrave;',
+        "\`E" =>   '&Egrave;',
+        "\`I" =>   '&Igrave;',
+        "\`O" =>   '&Ograve;',
+        "\`U" =>   '&Ugrave;',
+        "\`Y" =>   '&Ygrave;',
+        "\^a" =>   '&acirc;',
+        "\^i" =>   '&icirc;',
+        "\^o" =>   '&ocirc;',
+        "\^u" =>   '&ucirc;',
+        "\^y" =>   '&ycirc;',
+        "\^A" =>   '&Acirc;',
+        "\^E" =>   '&Ecirc;',
+        "\^I" =>   '&Icirc;',
+        "\^O" =>   '&Ocirc;',
+        "\^U" =>   '&Ucirc;',
+        "\^Y" =>   '&Ycirc;',
+        '\"a' =>   '&auml;',
+        '\"e' =>   '&euml;',
+        '\"i' =>   '&iuml;',
+        '\"o' =>   '&ouml;',
+        '\"u' =>   '&uuml;',
+        '\"y' =>   '&yuml;',
+        '\"A' =>   '&Auml;',
+        '\"E' =>   '&Euml;',
+        '\"I' =>   '&Iuml;',
+        '\"O' =>   '&Ouml;',
+        '\"U' =>   '&Uuml;',
+        '\"Y' =>   '&Yuml;',
+      ];
 
     return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
-
   }
 
-  public function generateMathJaxConfig() : string
+  public function generateMathJaxConfig(): string
   {
 
     $new_commands = $this->getNewCommands();
-    
+
     $mathjax_config = [
       'loader' => ['load' => ['ui/lazy']],
       'tex' => [
@@ -246,28 +251,22 @@ class LatexParser
 
       if ($command['type'] === 'simple') {
         $mathjax_config['tex']['macros'][$command['cmd']] = $command['defn'];
-      }
-      else if ($command['type'] === 'with-args')
-      {
+      } else if ($command['type'] === 'with-args') {
         $mathjax_config['tex']['macros'][$command['cmd']] = [$command['defn'], $command['narg']];
-      }
-      else
-      {
+      } else {
         $mathjax_config['tex']['macros'][$command['cmd']] = [$command['defn'], $command['narg'], $command['default']];
       }
-
     }
-        
-    return json_encode($mathjax_config);
 
+    return json_encode($mathjax_config);
   }
 
-  public function getMathMacros() : string
+  public function getMathMacros(): string
   {
     return $this->preamble_parser->getMathMacros();
   }
 
-  private function addToCurrentNode($token) : void
+  private function addToCurrentNode($token): void
   {
     $this->tree->addNode(new Node(
       [
@@ -276,7 +275,7 @@ class LatexParser
         'body' => $token->body,
         'line_number' => $token->line_number
       ]
-    ), parent: $this->current_node); 
+    ), parent: $this->current_node);
   }
 
   private function doNothing()
@@ -284,15 +283,14 @@ class LatexParser
     return;
   }
 
-  private function handleSectionNode($token) : void
+  private function handleSectionNode($token): void
   {
     $new_node = $this->createCommandNode($token);
-    
+
     /* If new_node is part of verbatim environment 
      * then just add new_node to tree */
 
-    if ($this->current_node->pathToRootHasType('verbatim-environment'))
-    {
+    if ($this->current_node->pathToRootHasType('verbatim-environment')) {
       $this->tree->addNode($new_node, $this->current_node);
       return;
     }
@@ -314,7 +312,7 @@ class LatexParser
     return;
   }
 
-  private function handleEnvironmentNode($token) : void
+  private function handleEnvironmentNode($token): void
   {
     if ($token->command_name === 'begin') {
 
@@ -326,7 +324,6 @@ class LatexParser
       $this->tree->addNode($new_node, $this->current_node);
       $this->current_node = $new_node;
       return;
-
     }
 
     /* End environment if not a list-environment and update current_node */
@@ -337,28 +334,25 @@ class LatexParser
 
     /* If token was the end of a list-env/bibliography-env then we need to move up the tree 
       to find the first list-env/bibliography-env node */
- 
+
     $parent = $this->current_node->parent()->closest($token->type);
-    
+
     $this->current_node = $parent->parent() ?? $this->tree->root();
 
     return;
-    
   }
 
-  private function handleTheoremEnvironment($token) : void
+  private function handleTheoremEnvironment($token): void
   {
 
-    if ($token->command_name === 'end')
-    {
+    if ($token->command_name === 'end') {
       $this->current_node = $this->current_node->parent();
       return;
     }
-    
+
     $new_node = $this->createCommandNode($token);
 
-    if (!$this->current_node->pathToRootHasType('verbatim-environment') && !$new_node->getArg('starred'))
-    {
+    if (!$this->current_node->pathToRootHasType('verbatim-environment') && !$new_node->getArg('starred')) {
       $env_name = $new_node->commandContent();
 
       $new_node->setRefNum($this->getTheoremNumber($env_name));
@@ -367,22 +361,20 @@ class LatexParser
     $this->tree->addNode($new_node, $this->current_node);
     $this->current_node = $new_node;
     return;
-
   }
 
-  private function handleListItemNode($token) : void
+  private function handleListItemNode($token): void
   {
     $new_node = $this->createCommandNode($token);
 
     $parent = $this->current_node->closest('list-environment');
-    
+
     $this->tree->addNode($new_node, $parent);
 
     $this->current_node = $new_node;
-
   }
 
-  private function handleBibItemNode($token) : void
+  private function handleBibItemNode($token): void
   {
     $new_node = $this->createCommandNode($token);
 
@@ -393,11 +385,11 @@ class LatexParser
     $this->current_node = $new_node;
   }
 
-  private function handleLabelNode($token) : void
+  private function handleLabelNode($token): void
   {
     $this->current_node->setLabel($token->command_content);
 
-    if (!$this->current_node->hasType(['section-cmd', 'thm-environment'])) {      
+    if (!$this->current_node->hasType(['section-cmd', 'thm-environment'])) {
       $this->current_node->setRefNum($token->command_options);
     }
 
@@ -415,67 +407,56 @@ class LatexParser
           'line_number' => $token->line_number
         ]
       ), parent: $this->current_node);
-
     }
-    
   }
 
-  private function handleCommandNode($token) : void
+  private function handleCommandNode($token): void
   {
     $new_node = $this->createCommandNode($token);
     $this->tree->addNode($new_node, $this->current_node);
   }
 
-  private function handleFontDeclaration($token) : void
+  private function handleFontDeclaration($token): void
   {
     $this->current_node->addClass($token->body);
     $new_node = $this->createCommandNode($token);
     $this->tree->addNode($new_node, $this->current_node);
   }
 
-  private function createCommandNode($token) : mixed
+  private function createCommandNode($token): mixed
   {
 
     $args = ['id' => $this->tree->nodeCount(), ...(array) $token];
 
     if ($token->type === 'section-cmd') {
       return new SectionNode($args);
-    }
-    else if ($token->type === 'thm-environment')
-    {      
+    } else if ($token->type === 'thm-environment') {
       return $this->createTheoremNode($token, $args);
-    } 
-    else if (preg_match('/environment/', $token->type))
-    {
+    } else if (preg_match('/environment/', $token->type)) {
       return new EnvironmentNode($args);
-    }
-    else if ($token->type === 'symbol')
-    {
+    } else if ($token->type === 'symbol') {
       return new Node($args);
-    }
-    else
-    {
+    } else {
       return new CommandNode($args);
     }
   }
 
-  private function createTheoremNode($token, $args) : EnvironmentNode
+  private function createTheoremNode($token, $args): EnvironmentNode
   {
 
     $env_name = $token->command_content;
     $env = $this->thm_envs[$env_name];
 
     $args['command_args'] = ['text' => $env->text, 'style' => $env->style, 'starred' => $env->starred];
-    
+
     return new EnvironmentNode($args);
   }
 
-  private function getTheoremNumber($env_name) : string
+  private function getTheoremNumber($env_name): string
   {
     $env = &$this->thm_envs[$env_name];
 
-    if ($shared_env_name = $env->shared)
-    {
+    if ($shared_env_name = $env->shared) {
       $shared_env = &$this->thm_envs[$shared_env_name];
 
       $shared_env->counter += 1;
@@ -484,12 +465,9 @@ class LatexParser
 
       $parent_counter = $this->getSectionNumber($shared_env->parent, increment: false);
 
-      $counter = $parent_counter . '.' . $counter;      
+      $counter = $parent_counter . '.' . $counter;
+    } else if ($env->parent) {
 
-    }
-    else if ($env->parent)
-    {
-      
       $env->counter += 1;
 
       $counter = $env->counter;
@@ -497,18 +475,14 @@ class LatexParser
       $parent_counter = $this->getSectionNumber($env->parent, increment: false);
 
       $counter = $parent_counter . '.' . $counter;
-
-    }
-    else
-    {
+    } else {
       $counter = ++$env->counter;
     }
 
     return $counter;
-
   }
 
-  public function terminateWithError($message) : void
+  public function terminateWithError($message): void
   {
 
     $node = new Node(
@@ -517,14 +491,13 @@ class LatexParser
         'type' => 'text',
         'body' => "<div class=\"parse-error\">" . $message . "</div>",
       ]
-      );
+    );
 
     $this->tree->addNode($node, parent: $this->current_node);
     $this->tree->prependNode($node);
-
   }
 
-  private function getSectionNumber($section_name, $increment=true) : string
+  private function getSectionNumber($section_name, $increment = true): string
   {
 
     if (str_contains($section_name, '*')) return '';
@@ -545,45 +518,39 @@ class LatexParser
     if ($increment) $this->resetSectionCounters($section_name);
 
     return implode('.', $section_numbers);
-
   }
 
-  private function resetSectionCounters($section_name=null) : void
+  private function resetSectionCounters($section_name = null): void
   {
 
     $flag = false;
 
-    foreach ($this->section_counters as $key => $value)
-    {
+    foreach ($this->section_counters as $key => $value) {
       if ($flag) $this->section_counters[$key] = 0;
 
       if ($key === $section_name) $flag = true;
-
     }
-
   }
 
-  private function resetTheoremCounters($section_name=null) : void
+  private function resetTheoremCounters($section_name = null): void
   {
 
-    if ($section_name === null)
-    {
+    if ($section_name === null) {
       foreach ($this->thm_envs as &$env) $env->counter = 0;
       return;
     }
 
-    foreach ($this->thm_envs as &$env)
-    {
+    foreach ($this->thm_envs as &$env) {
       if ($env->parent === $section_name) $env->counter = 0;
     }
-
   }
 
-  private function getCounter($counter) {
+  private function getCounter($counter)
+  {
     return ++$this->counters[$counter];
   }
 
-  private function getNewCommands() : array
+  private function getNewCommands(): array
   {
 
     $pattern = '/(\\\newcommand\s*\\\\[\sa-zA-Z\s]+|\\\renewcommand\s*\\\\[\sa-zA-Z\s]+|\\\newcommand|\\\renewcommand)/';
@@ -591,24 +558,19 @@ class LatexParser
     preg_match_all($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE);
 
     if (!isset($matches[1])) return [];
-    
+
     $new_commands = [];
-     
-    foreach ($matches[1] as $match)
-    {
+
+    foreach ($matches[1] as $match) {
       $offset = (int) $match[1];
 
       $args = [];
- 
-      if (substr_count($match[0], "\\") === 1)
-      {
+
+      if (substr_count($match[0], "\\") === 1) {
         $command = trim(str_replace("\\", '', $match[0]));
 
         $args = StrHelper::getAllCmdArgsOptions($command, substr($this->src, $offset));
-                
-      }
-      else if (substr_count($match[0], "\\") === 2)
-      {
+      } else if (substr_count($match[0], "\\") === 2) {
 
         $to_remove = str_contains($match[0], "renewcommand") ? "\\renewcommand" : "\\newcommand";
 
@@ -617,55 +579,50 @@ class LatexParser
         $cmd = str_replace("\\", '', trim($command));
 
         $offset += strlen($to_remove);
-        
+
         $args = StrHelper::getAllCmdArgsOptions($cmd, substr($this->src, $offset));
 
         $cmd_array = [(object) ['type' => 'arg', 'value' => $cmd]];
 
         $args = [...$cmd_array, ...$args];
- 
       }
 
-      $signature = implode('-', array_map(fn($x) => $x->type, $args));
+      $signature = implode('-', array_map(fn ($x) => $x->type, $args));
 
-      if (count($args) === 2 && $signature === 'arg-arg')
-        {
-          $new_commands[] = [
-            'type' => 'simple',
-            'cmd' => str_replace("\\", '', trim($args[0]->value)),
-            'defn' => trim($args[1]->value),
-          ];
-          continue;
-        }
+      if (count($args) === 2 && $signature === 'arg-arg') {
+        $new_commands[] = [
+          'type' => 'simple',
+          'cmd' => str_replace("\\", '', trim($args[0]->value)),
+          'defn' => trim($args[1]->value),
+        ];
+        continue;
+      }
 
-        if (count($args) === 3 && $signature === 'arg-option-arg')
-        {
-          $new_commands[] = [
-            'type' => 'with-args',
-            'cmd' => str_replace("\\", '', trim($args[0]->value)),
-            'narg' => trim($args[1]->value),
-            'defn' => trim($args[2]->value),
-          ];
-          continue;
-        }
+      if (count($args) === 3 && $signature === 'arg-option-arg') {
+        $new_commands[] = [
+          'type' => 'with-args',
+          'cmd' => str_replace("\\", '', trim($args[0]->value)),
+          'narg' => trim($args[1]->value),
+          'defn' => trim($args[2]->value),
+        ];
+        continue;
+      }
 
-        if (count($args) === 4 && $signature === 'arg-option-option-arg')
-        {
-          $new_commands[] = [
-            'type' => 'with-args-default',
-            'cmd' => str_replace("\\", '', trim($args[0]->value)),
-            'narg' => trim($args[1]->value),
-            'default' => trim($args[2]->value),
-            'defn' => trim($args[3]->value),
-          ];
-          continue;
-        }
-        
+      if (count($args) === 4 && $signature === 'arg-option-option-arg') {
+        $new_commands[] = [
+          'type' => 'with-args-default',
+          'cmd' => str_replace("\\", '', trim($args[0]->value)),
+          'narg' => trim($args[1]->value),
+          'default' => trim($args[2]->value),
+          'defn' => trim($args[3]->value),
+        ];
+        continue;
+      }
     }
 
     return $new_commands;
   }
-  
+
   // private function parseLine($line, $number) {
 
   //   $commands = [
@@ -694,7 +651,7 @@ class LatexParser
   // }
 
   // private function matchCommand($name, $line) {
-    
+
   //   if (!preg_match('/^\\\\' . $name . '\s*/m', $line)) return false;
 
   //   $content = preg_match('/\{(?<content>[^}]*)\}/', $line, $match) ? $match['content'] : null;
@@ -712,10 +669,10 @@ class LatexParser
   //   ];
 
   // }
-    
+
   // private function putCommandsOnNewLine(string $latex_src): string
   // {
-    
+
   //   foreach (self::SECTION_COMMANDS as $command) {
   //     $latex_src = preg_replace($this->cmdWithOptionsRegex($command), "\n$1$2\n", $latex_src);
   //   }

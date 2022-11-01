@@ -2,7 +2,6 @@
 
 namespace TexStacks;
 
-use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\LatexParser;
 use TexStacks\Parsers\AuxParser;
 use TexStacks\Renderers\Renderer;
@@ -49,7 +48,7 @@ class LatexArticle
     $this->parser->setCitations($citations);
 
     $this->html_src = $this->latex_src;
-    
+
     try {
       $this->parser->parse($this->html_src);
     } catch (\Exception $e) {

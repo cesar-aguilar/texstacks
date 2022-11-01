@@ -46,8 +46,7 @@ class AuxParser
 
   private function parse()
   {
-    while (!$this->aux_file->eof())
-    {
+    while (!$this->aux_file->eof()) {
       $line = $this->aux_file->fgets();
       $line = trim($line);
       if (str_contains($line, '\newlabel')) {
@@ -58,6 +57,11 @@ class AuxParser
     }
   }
 
+  /**
+   * Parses a line containing a \newlabel command
+   * e.g., \newlabel{<label>}{{currentlabel}{thepage}{labelname}{href}{}}
+   * and adds to the labels array
+   */
   private function parseNewLabel($line)
   {
 
@@ -80,23 +84,27 @@ class AuxParser
     if ($label && $reference_number) $this->labels[$label] = $reference_number;
   }
 
+  /**
+   * Parses a line containing a \bibcite command
+   * e.g., \bibcite{DG:98}{3}, and adds to the citations array
+   * 
+   * @param string $line
+   */
   private function parseBibCite($line)
   {
     $args = StrHelper::getAllCmdArgsOptions('bibcite', $line);
 
     if (count($args) !== 2) return;
 
-    if ($args[0]->type === 'arg' && $args[1]->type === 'arg')
-    {
+    if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
       $this->citations[$args[0]->value] = $args[1]->value;
     }
-
   }
 
   private function parseContentsLine($line)
   {
     $args = StrHelper::getAllCmdArgs('contentsline', $line);
-          
+
     if (!isset($args[0])) return;
 
     $type = $args[0];
@@ -104,9 +112,9 @@ class AuxParser
     if (!isset($args[1])) return;
 
     $toc_entry = $args[1];
-    
+
     $number = StrHelper::getAllCmdArgs('numberline', $toc_entry);
-    
+
     $ref_num = $number[0] ?? null;
 
     $toc_entry = str_replace('{' . $ref_num . '}', '', preg_replace('/\\\numberline\s*/', '', $toc_entry));
@@ -116,7 +124,5 @@ class AuxParser
       'ref_num' => $ref_num,
       'toc_entry' => $toc_entry
     ];
-
   }
-
 }
