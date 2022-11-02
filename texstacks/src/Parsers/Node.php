@@ -24,6 +24,7 @@ class Node
   public readonly string $type;
   public readonly string|null $body;
   public readonly int $line_number;
+  protected array|null $class = [];
 
   public function __construct($args)
   {
@@ -143,6 +144,13 @@ class Node
 
     return null;
 
+  }
+
+  public function addClass($name) {
+
+    if (in_array($name, $this->class)) return;
+
+    $this->class[] = $name;
   }
   
 }

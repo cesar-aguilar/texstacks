@@ -36,8 +36,6 @@ class Renderer
 
     if ($node->hasType('section-cmd')) return SectionCommandRenderer::renderNode($node, $body);
 
-    if ($node->hasType('group-environment') && $node->commandContent() === 'section-heading') return HeadingEnvironmentRenderer::renderNode($node, $body);
-
     if ($node->hasType('displaymath-environment')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('inlinemath')) return "\\(" . $body . "\\)";
@@ -55,8 +53,6 @@ class Renderer
     if ($node->hasType('bibliography-environment')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
-
-    // if ($node->type === 'font-cmd') return FontCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType('symbol')) return SymbolCommandRenderer::renderNode($node, $body);
 

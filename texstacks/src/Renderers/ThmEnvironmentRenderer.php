@@ -4,6 +4,7 @@ namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\Renderer;
 use TexStacks\Parsers\EnvironmentNode;
+use TexStacks\Parsers\Node;
 
 class ThmEnvironmentRenderer
 {
@@ -16,7 +17,7 @@ class ThmEnvironmentRenderer
         $heading = ucwords($node->getArg('text'));
         $heading .= $node->commandRefNum() ? " {$node->commandRefNum()}" : '';
 
-        if ($node->commandOptions()) {
+        if ($node->commandOptions() && $node->commandOptions() instanceof Node) {
             $options = (new Renderer)->renderTree($node->commandOptions());
             $heading .= ' (' . $options . ')';
         }

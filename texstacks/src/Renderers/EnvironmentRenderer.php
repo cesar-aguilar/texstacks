@@ -2,6 +2,7 @@
 
 namespace TexStacks\Renderers;
 
+use TexStacks\Parsers\Node;
 use TexStacks\Parsers\EnvironmentNode;
 
 class EnvironmentRenderer
@@ -37,7 +38,7 @@ class EnvironmentRenderer
     {
         $head = 'Proof';
 
-        if ($node->commandOptions()) {
+        if ($node->commandOptions() instanceof Node) {
             $head = (new Renderer)->renderTree($node->commandOptions());
         }
 

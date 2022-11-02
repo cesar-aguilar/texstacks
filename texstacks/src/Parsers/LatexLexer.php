@@ -548,7 +548,7 @@ class LatexLexer
     $options = $last_token->command_name;
     $src = $last_token->command_src;
 
-    $command_content = $last_token->type === 'section-cmd' ? 'section-heading' : 'unnamed';
+    $command_content = 'unnamed';
 
     $this->tokens[] = new Token([
       'type' => 'group-environment',
@@ -638,12 +638,13 @@ class LatexLexer
   private function tokenizeSection(): Token
   {
 
+    $content = '';
     $options = '';
     $src = '\\' . $this->command_name;
     $STARRED = false;
     $TOC_ENTRY = false;
 
-    $ALLOWED_CHARS = [' ', '*', '[', '{'];
+    $ALLOWED_CHARS = [' ', '*', '{', '['];
 
     while (!is_null($char = $this->getChar())) {
 
@@ -686,19 +687,30 @@ class LatexLexer
 
         $src .= '[' . $options . ']';
 
-        break;
+        $this->cursor++;
+        $TOC_ENTRY = true;
+        continue;
+
       }
 
-      if ($char === '{') {
-        $this->backup();
+      if ($char === '{' ) {
+
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
         break;
+
       }
     }
 
     return new Token([
       'type' => 'section-cmd',
       'command_name' => $this->command_name,
-      'command_content' => '',
+      'command_content' => $content,
       'command_options' => $options,
       'command_src' => $src,
       'line_number' => $this->line_number,

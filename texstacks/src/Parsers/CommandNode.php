@@ -26,9 +26,8 @@ class CommandNode extends Node
   protected string|null $command_name;
   protected string|null $command_label;
   protected string|null $command_refnum ;
-  protected string|null $command_content;
+  protected $command_content;
   protected $command_options;
-  protected array|null $class = [];
 
   public function __construct($args)
   {
@@ -79,13 +78,6 @@ class CommandNode extends Node
     return $this->command_args[$name] ?? null;
   }
 
-  public function addClass($name) {
-
-    if (in_array($name, $this->class)) return;
-
-    $this->class[] = $name;
-  }
-
   public function getClasses() {
     return implode(' ', $this->class);
   }
@@ -101,6 +93,10 @@ class CommandNode extends Node
 
   public function setOptions($data) {
     $this->command_options = $data;
+  }
+
+  public function setCommandContent($data) {
+    $this->command_content = $data;
   }
 
   public function setRefNum($ref_num)

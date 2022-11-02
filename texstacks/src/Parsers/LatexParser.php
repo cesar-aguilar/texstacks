@@ -151,6 +151,13 @@ class LatexParser
 
   }
 
+  private static function parseText($text)
+  {
+    $parser = new self;
+    $parser->parse($text);
+    return $parser->tree->root();
+  }
+
   private function init($latex_src_raw): void
   {
     $this->raw_src = $latex_src_raw;
@@ -293,11 +300,15 @@ class LatexParser
       return;
     }
 
-    // $section_name = $new_node->commandName();
+    $section_name = $new_node->commandName();
 
-    // $new_node->setRefNum($this->getSectionNumber($section_name));
+    $new_node->setRefNum($this->getSectionNumber($section_name));
 
-    // $this->resetTheoremCounters($section_name);
+    $this->resetTheoremCounters($section_name);
+
+    if ($new_node->commandContent() && !StrHelper::isAlpha($new_node->commandContent())) {
+      $new_node->setCommandContent(self::parseText($new_node->commandContent()));
+    }
 
     /* To set the parent for the new_node, move up the tree 
      * until we find the first sectioning command
@@ -321,19 +332,7 @@ class LatexParser
 
       if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '')
       {
-
-        $option_parser = new self;
-        $option_parser->parse($new_node->commandOptions());
-        $new_node->setOptions($option_parser->tree->root());
-
-      }
-
-      if ($new_node->commandContent() === 'section-heading') {
-        $section_name = $new_node->commandOptions();
-
-        $new_node->setRefNum($this->getSectionNumber($section_name));
-
-        $this->resetTheoremCounters($section_name);
+        $new_node->setOptions(self::parseText($new_node->commandOptions()));
       }
 
       $this->tree->addNode($new_node, $this->current_node);
@@ -373,13 +372,8 @@ class LatexParser
       $new_node->setRefNum($this->getTheoremNumber($env_name));
     }
 
-    if ($new_node->commandOptions() != '')
-    {
-
-      $option_parser = new self;
-      $option_parser->parse($new_node->commandOptions());
-      $new_node->setOptions($option_parser->tree->root());
-
+    if ($new_node->commandOptions() && !StrHelper::isAlpha($new_node->commandOptions())) {
+      $new_node->setOptions(self::parseText($new_node->commandOptions()));
     }
 
     $this->tree->addNode($new_node, $this->current_node);
