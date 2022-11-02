@@ -11,14 +11,14 @@ class ThmEnvironmentRenderer
         if ($node->ancestorOfType('verbatim-environment')) {
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
         }
-        
+
         $heading = ucwords($node->getArg('text'));
         $heading .= $node->commandRefNum() ? " {$node->commandRefNum()}" : '';
         $heading .= $node->commandOptions() ? ' (' . $node->commandOptions() . ')' : '';
 
         $style = $node->getArg('style');
 
-        return "<div class=\"thm-env thm-style-{$style}\"><div class=\"thm-env-head\" id=\"{$node->commandLabel()}\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
+        return "<div class=\"thm-env thm-style-{$style}\" id=\"{$node->commandLabel()}\"><div class=\"thm-env-head\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
     }
 
 }

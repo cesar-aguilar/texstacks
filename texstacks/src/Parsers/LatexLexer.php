@@ -125,8 +125,8 @@ class LatexLexer
     'asparaenum',
   ];
 
-  private array $tokens = [];
-  private string $buffer = '';
+  private array $tokens;
+  private string $buffer;
   private int $line_number = 0;
   private string $stream;
   private int $cursor;
@@ -161,6 +161,10 @@ class LatexLexer
 
   public function tokenize(string $latex_src)
   {
+
+    $this->tokens = [];
+
+    $this->buffer = '';
 
     $this->stream = $this->preprocessLatexSource($latex_src);
 
@@ -220,7 +224,9 @@ class LatexLexer
         }
 
         $this->addToken($token);
-      } else if ($this->getCommandType($this->command_name) === 'environment') {
+      }
+      else if ($this->getCommandType($this->command_name) === 'environment')
+      {
 
         try {
           $env = $this->getEnvName();
@@ -237,8 +243,9 @@ class LatexLexer
             'command_src' => "\\end{" . $env . "}",
             'line_number' => $this->line_number,
           ]));
-        } else if ($this->getCommandType($this->command_name, $env) === 'displaymath-environment') {
-
+        } 
+        else if ($this->getCommandType($this->command_name, $env) === 'displaymath-environment')
+        {
           $this->addToken(new Token([
             'type' => $this->getCommandType($this->command_name, $env),
             'command_name' => $this->command_name,
@@ -247,7 +254,10 @@ class LatexLexer
             'command_src' => "\\" . $this->command_name . "{" . $env . "}",
             'line_number' => $this->line_number,
           ]));
-        } else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...$this->thm_env])) {
+
+        }
+        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...$this->thm_env]))
+        {
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
           } catch (\Exception $e) {
@@ -268,7 +278,11 @@ class LatexLexer
             'command_src' => $command_src,
             'line_number' => $this->line_number,
           ]));
-        } else if ($this->getCommandType($this->command_name, $env) === 'tabular-environment') {
+
+        }
+        else if ($this->getCommandType($this->command_name, $env) === 'tabular-environment')
+        {
+
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
           } catch (\Exception $e) {
@@ -277,10 +291,15 @@ class LatexLexer
 
           $command_src = "\\" . $this->command_name . "{" . $env . "}";
 
-          if ($options !== '') $command_src .= "[" . $options . "]";
+          if ($options !== '') {
+            $command_src .= "[" . $options . "]";
+          }
+
+          $this->forward();
 
           try {
-            $args = $this->getContentBetweenDelimiters('{', '}');
+            // $args = $this->getContentBetweenDelimiters('{', '}');
+            $args = $this->getCommandContent();
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
           }
@@ -300,7 +319,9 @@ class LatexLexer
             'command_src' => $command_src,
             'line_number' => $this->line_number,
           ]));
-        } else if ($this->getCommandType($this->command_name, $env) === 'bibliography-environment') {
+        }
+        else if ($this->getCommandType($this->command_name, $env) === 'bibliography-environment')
+        {
           $command_src = "\\" . $this->command_name . "{" . $env . "}";
 
           try {
@@ -323,7 +344,9 @@ class LatexLexer
             'command_src' => $command_src,
             'line_number' => $this->line_number,
           ]));
-        } else {
+        }
+        else
+        {
           $this->addToken(new Token([
             'type' => $this->getCommandType($this->command_name, $env),
             'command_name' => $this->command_name,
@@ -332,7 +355,9 @@ class LatexLexer
             'line_number' => $this->line_number,
           ]));
         }
-      } else if ($this->getCommandType($this->command_name) === 'font-cmd') {
+      }
+      else if ($this->getCommandType($this->command_name) === 'font-cmd')
+      {
 
         // backup because after running consumeUntilNonAlpha()
         // the cursor is at the first non-alpha character
@@ -347,7 +372,9 @@ class LatexLexer
           'body' => '',
           'line_number' => $this->line_number,
         ]));
-      } else if ($this->getCommandType($this->command_name) === 'one-arg-cmd') {
+      }
+      else if ($this->getCommandType($this->command_name) === 'one-arg-cmd')
+      {
         try {
           $content = $this->getCommandContent();
         } catch (\Exception $e) {
@@ -368,7 +395,9 @@ class LatexLexer
           'body' => $content,
           'line_number' => $this->line_number,
         ]));
-      } else if ($this->getCommandType($this->command_name) === 'one-arg-cmd-pre-options') {
+      }
+      else if ($this->getCommandType($this->command_name) === 'one-arg-cmd-pre-options')
+      {
         try {
           $token = $this->tokenizeCmdWithOptionsArg();
         } catch (\Exception $e) {
@@ -378,7 +407,9 @@ class LatexLexer
         if ($this->command_name === 'cite') $this->tokenizeCitation($token);
 
         $this->addToken($token);
-      } else if ($this->getCommandType($this->command_name) === 'cmd-with-options') {
+      }
+      else if ($this->getCommandType($this->command_name) === 'cmd-with-options')
+      {
         try {
           $token = $this->tokenizeCmdWithOptions();
         } catch (\Exception $e) {
@@ -386,9 +417,13 @@ class LatexLexer
         }
 
         $this->addToken($token);
-      } else if ($this->getCommandType($this->command_name) === 'font-declaration') {
+      }
+      else if ($this->getCommandType($this->command_name) === 'font-declaration')
+      {
         $this->addFontDeclarationToken();
-      } else {
+      }
+      else
+      {
         $this->buffer .= "\\" . $this->command_name;
         $this->backup();
       }
@@ -538,6 +573,12 @@ class LatexLexer
   {
     if ($this->getChar() === "\n") $this->line_number--;
     $this->cursor--;
+  }
+
+  private function forward()
+  {
+    if ($this->getChar() === "\n") $this->line_number++;
+    $this->cursor++;
   }
 
   private function getChar()
