@@ -15,10 +15,6 @@ class SectionCommandRenderer
 
     return match ($node->commandName()) {
 
-      'document' =>
-
-      "<main>$body</main>",
-
       'chapter', 'chapter*' =>
 
       "<article id=\"{$node->commandLabel()}\" class=\"chapter\">$body</article>",
@@ -39,9 +35,7 @@ class SectionCommandRenderer
 
       "<p id=\"{$node->commandLabel()}\">$body</p>",
 
-      default =>
-
-      "<div>$body</div>"
+      default => $body
     };
   }
 }

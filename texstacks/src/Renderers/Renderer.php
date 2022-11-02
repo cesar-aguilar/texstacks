@@ -32,6 +32,8 @@ class Renderer
   private function renderNode($node, string $body = null): string
   {
 
+    if ($node->hasType('root')) return $body;
+
     if ($node->hasType('section-cmd')) return SectionCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType('group-environment') && $node->commandContent() === 'section-heading') return HeadingEnvironmentRenderer::renderNode($node, $body);
@@ -68,9 +70,9 @@ class Renderer
 
     if ($node->hasType('label')) return $node->commandSource();
 
-    if ($node->hasType('ref')) return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
+    if ($node->hasType('ref')) return " <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> ";
 
-    if ($node->hasType('eqref')) return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
+    if ($node->hasType('eqref')) return " (<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>) ";
 
     if ($node->hasType('cite')) return self::renderCitations($node, $body);
 
@@ -151,6 +153,6 @@ class Renderer
 
     $value = implode(', ', $a);
 
-    return "[$value$options]";
+    return " [$value$options]";
   }
 }

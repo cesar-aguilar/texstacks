@@ -21,13 +21,13 @@ use TexStacks\Parsers\LatexParser;
 class CommandNode extends Node
 {
   
-  protected array|null $commmand_args = [];
-  protected string|null $command_src = '';
-  protected string|null $command_name = '';
-  protected string|null $command_label = '';
-  protected string|null $command_refnum = '';
-  protected string|null $command_content = '';
-  protected string|null $command_options = '';
+  protected array|null $commmand_args;
+  protected string|null $command_src;
+  protected string|null $command_name;
+  protected string|null $command_label;
+  protected string|null $command_refnum ;
+  protected string|null $command_content;
+  protected $command_options;
   protected array|null $class = [];
 
   public function __construct($args)
@@ -97,6 +97,10 @@ class CommandNode extends Node
   public function setLabel($label)
   {
     $this->command_label = $label;
+  }
+
+  public function setOptions($data) {
+    $this->command_options = $data;
   }
 
   public function setRefNum($ref_num)

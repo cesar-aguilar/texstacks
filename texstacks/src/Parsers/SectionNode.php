@@ -32,7 +32,7 @@ class SectionNode extends CommandNode
   {
     $parent = $node;
 
-    while ($parent::class !== $this::class  || $parent->depth_level >= $this->depth_level)
+    while ($parent && ($parent::class !== $this::class  || $parent->depth_level >= $this->depth_level))
     {
       $parent = $parent->parent();
     }

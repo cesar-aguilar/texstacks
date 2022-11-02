@@ -127,40 +127,43 @@ class LatexLexer
 
   private array $tokens;
   private string $buffer;
-  private int $line_number = 0;
+  private int $line_number;
   private string $stream;
   private int $cursor;
   private string|null $prev_char;
-  private int $num_chars = 0;
+  private int $num_chars;
+
   private string $command_name;
-  private array $thm_env;
-  private array $macros;
-  private array $ref_labels;
-  private array $citations;
+  private static array $thm_env = [];
+  private static array $ref_labels;
+  private static array $citations;
 
   public function __construct($data = [])
   {
-    $this->thm_env = $data['thm_env'] ?? [];
-    $this->macros = $data['macros'] ?? [];
+    if (isset($data['thm_env'])) self::setTheoremEnvs($data['thm_env']);
   }
 
-  public function setRefLabels($labels)
+  public static function setRefLabels($labels)
   {
-    $this->ref_labels = $labels;
+    self::$ref_labels = $labels;
   }
 
-  public function setTheoremEnvs($thm_envs)
+  public static function setTheoremEnvs($thm_envs)
   {
-    $this->thm_env = array_unique([...$this->thm_env, ...$thm_envs]);
+    self::$thm_env = array_unique([...self::$thm_env, ...$thm_envs]);
   }
 
-  public function setCitations($citations)
+  public static function setCitations($citations)
   {
-    $this->citations = $citations;
+    self::$citations = $citations;
   }
 
   public function tokenize(string $latex_src)
   {
+
+    $this->line_number = 0;
+
+    $this->num_chars = 0;
 
     $this->tokens = [];
 
@@ -256,7 +259,7 @@ class LatexLexer
           ]));
 
         }
-        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...$this->thm_env]))
+        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...self::$thm_env]))
         {
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
@@ -384,7 +387,7 @@ class LatexLexer
         $label = '';
 
         if (in_array($this->command_name, ['ref', 'eqref', 'label']))
-          $label = $this->ref_labels[$content] ?? '?';
+          $label = self::$ref_labels[$content] ?? '?';
 
         $this->addToken(new Token([
           'type' => $this->command_name,
@@ -608,7 +611,7 @@ class LatexLexer
 
       if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
 
-      if (in_array($env, $this->thm_env)) return 'thm-environment';
+      if (in_array($env, self::$thm_env)) return 'thm-environment';
 
       if ($env === 'verbatim') return 'verbatim-environment';
 
@@ -885,8 +888,8 @@ class LatexLexer
     $citation_numbers = [];
 
     foreach ($labels as $label) {
-      if (isset($this->citations[$label])) {
-        $citation_numbers[] = $this->citations[$label];
+      if (isset(self::$citations[$label])) {
+        $citation_numbers[] = self::$citations[$label];
       } else {
         $citation_numbers[] = '?';
       }

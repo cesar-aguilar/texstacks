@@ -25,7 +25,7 @@ class LatexParser
   private $preamble_parser;
   public readonly array $front_matter;
 
-  public function __construct($data = [])
+  public function __construct($args = [])
   {
 
     $this->initTree();
@@ -33,11 +33,10 @@ class LatexParser
 
     $this->preamble_parser = new PreambleParser;
 
-    $this->thm_envs = $data['thm_env'] ?? [];
+    $this->thm_envs = $args['thm_env'] ?? [];
 
     $lexer_data = [
-      'thm_env' => array_keys($this->thm_envs),
-      'macros' => $data['macros'] ?? [],
+      'thm_env' => array_keys($this->thm_envs),      
     ];
 
     $this->lexer = new LatexLexer($lexer_data);
@@ -47,10 +46,9 @@ class LatexParser
   {
     $this->tree = new SyntaxTree();
 
-    $root = new SectionNode([
+    $root = new Node([
       'id' => 0,
-      'type' => 'section-cmd',
-      'command_name' => 'document'
+      'type' => 'root',
     ]);
 
     $this->tree->setRoot($root);
@@ -74,7 +72,7 @@ class LatexParser
     ];
   }
 
-  public function getRoot(): SectionNode
+  public function getRoot()
   {
     return $this->tree->root();
   }
@@ -305,7 +303,7 @@ class LatexParser
      * until we find the first sectioning command
      * with a lower numbered depth level */
 
-    $parent = $new_node->closestParentSection($this->current_node);
+    $parent = $new_node->closestParentSection($this->current_node) ?? $this->tree->root();
 
     $this->tree->addNode($new_node, $parent);
     $this->current_node = $new_node;
@@ -320,6 +318,15 @@ class LatexParser
 
       if ($new_node->commandOptions() === 'footnote')
         $new_node->setRefNum($this->getCounter('footnote'));
+
+      if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '')
+      {
+
+        $option_parser = new self;
+        $option_parser->parse($new_node->commandOptions());
+        $new_node->setOptions($option_parser->tree->root());
+
+      }
 
       if ($new_node->commandContent() === 'section-heading') {
         $section_name = $new_node->commandOptions();
@@ -366,8 +373,18 @@ class LatexParser
       $new_node->setRefNum($this->getTheoremNumber($env_name));
     }
 
+    if ($new_node->commandOptions() != '')
+    {
+
+      $option_parser = new self;
+      $option_parser->parse($new_node->commandOptions());
+      $new_node->setOptions($option_parser->tree->root());
+
+    }
+
     $this->tree->addNode($new_node, $this->current_node);
     $this->current_node = $new_node;
+
     return;
   }
 
