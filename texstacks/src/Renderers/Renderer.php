@@ -56,6 +56,8 @@ class Renderer
 
     if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
 
+    if ($node->hasType('font-cmd')) return FontCommandRenderer::renderNode($node, $body);
+
     if ($node->hasType('symbol')) return SymbolCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType('item')) return self::renderItemNode($node, $body);

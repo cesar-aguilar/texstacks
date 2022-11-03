@@ -362,17 +362,23 @@ class LatexLexer
       else if ($this->getCommandType($this->command_name) === 'font-cmd')
       {
 
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
         // backup because after running consumeUntilNonAlpha()
         // the cursor is at the first non-alpha character
-        $this->backup();
-
+        // $this->backup();
+        
         $this->addToken(new Token([
           'type' => 'font-cmd',
           'command_name' => $this->command_name,
-          'command_content' => '',
+          'command_content' => $content,
           'command_options' => '',
-          'command_src' => "\\" . $this->command_name,
-          'body' => '',
+          'command_src' => "\\" . $this->command_name . "{" . $content. "}",
+          'body' => $content,
           'line_number' => $this->line_number,
         ]));
       }
@@ -544,9 +550,9 @@ class LatexLexer
 
     $command_name = $char === '{' ? 'begin' : 'end';
 
-    $last_token = $this->getLastToken();
-    $options = $last_token->command_name;
-    $src = $last_token->command_src;
+    // $last_token = $this->getLastToken();
+    // $options = $last_token->command_name;
+    // $src = $last_token->command_src;
 
     $command_content = 'unnamed';
 
@@ -554,8 +560,8 @@ class LatexLexer
       'type' => 'group-environment',
       'command_name' => $command_name,
       'command_content' => $command_content,
-      'command_src' => $src,
-      'command_options' => $options,
+      'command_src' => '',
+      'command_options' => '',
       'line_number' => $this->line_number,
     ]);
   }

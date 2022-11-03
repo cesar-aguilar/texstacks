@@ -127,12 +127,13 @@ class LatexParser
         'includegraphics',
         'caption',
         'cite',
+        'font-cmd',
         'ref',
         'eqref' => 'handleCommandNode',
 
         'font-declaration' => 'handleFontDeclaration',
 
-        'font-cmd', 'tag' => 'doNothing',
+        'tag' => 'doNothing',
 
         default => 'addToCurrentNode',
       };
@@ -439,6 +440,11 @@ class LatexParser
   private function handleCommandNode($token): void
   {
     $new_node = $this->createCommandNode($token);
+
+    if ($new_node->hasType('font-cmd')) {
+      $new_node->setCommandContent(self::parseText($new_node->commandContent()));
+    }
+
     $this->tree->addNode($new_node, $this->current_node);
   }
 
