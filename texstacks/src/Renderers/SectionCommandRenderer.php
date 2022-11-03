@@ -16,7 +16,7 @@ class SectionCommandRenderer
 
     if ($node->commandContent() instanceof Node) {
       $section_name = Renderer::render($node->commandContent());
-      $title .= " $section_name ";
+      $title .= " $section_name";
     } else {
       $title .= $node->commandContent();
     }

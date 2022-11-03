@@ -20,6 +20,13 @@ class ListEnvironmentRenderer
 
         if (in_array($node->commandContent(), self::ORDERED_LISTS))
         {
+            if ($node->commandOptions()) {
+
+                if (trim($node->commandOptions()) === '(a)') return "<ol type=\"a\">$body</ol>";
+
+                if (trim($node->commandOptions()) === '(i)') return "<ol type=\"i\">$body</ol>";
+            }
+
             return "<ol>$body</ol>";
         } 
         else

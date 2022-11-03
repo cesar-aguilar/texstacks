@@ -251,7 +251,11 @@ class StrHelper
 
   public static function isAlpha($string)
   {
-    return preg_match('/[a-zA-Z\s]+/', trim($string));
+    return ctype_alpha(str_replace(' ', '', $string));
+  }
+
+  public static function isNotAlpha($string) {
+    return !self::isAlpha($string);
   }
 
 }

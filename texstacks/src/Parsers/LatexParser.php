@@ -314,7 +314,7 @@ class LatexParser
 
     $this->resetTheoremCounters($section_name);
 
-    if ($new_node->commandContent() && !StrHelper::isAlpha($new_node->commandContent())) {
+    if ($new_node->commandContent() && StrHelper::isNotAlpha($new_node->commandContent())) {
       $new_node->setCommandContent(self::parseText($new_node->commandContent()));
     }
 
@@ -334,9 +334,6 @@ class LatexParser
     if ($token->command_name === 'begin') {
 
       $new_node = $this->createCommandNode($token);
-
-      if ($new_node->commandOptions() === 'footnote')
-        $new_node->setRefNum($this->getCounter('footnote'));
 
       if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '')
       {
@@ -380,7 +377,7 @@ class LatexParser
       $new_node->setRefNum($this->getTheoremNumber($env_name));
     }
 
-    if ($new_node->commandOptions() && !StrHelper::isAlpha($new_node->commandOptions())) {
+    if ($new_node->commandOptions() && StrHelper::isNotAlpha($new_node->commandOptions())) {
       $new_node->setOptions(self::parseText($new_node->commandOptions()));
     }
 
@@ -441,9 +438,12 @@ class LatexParser
   {
     $new_node = $this->createCommandNode($token);
 
-    if ($new_node->hasType('font-cmd')) {
+    if ($new_node->hasType(['font-cmd', 'caption']) && StrHelper::isNotAlpha($new_node->commandContent())) {
       $new_node->setCommandContent(self::parseText($new_node->commandContent()));
     }
+
+    if ($new_node->hasType('font-cmd') && $new_node->commandName() === 'footnote')
+        $new_node->setRefNum($this->getCounter('footnote'));
 
     $this->tree->addNode($new_node, $this->current_node);
   }

@@ -259,7 +259,7 @@ class LatexLexer
           ]));
 
         }
-        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...self::$thm_env]))
+        else if (in_array($env, [...self::ENVS_POST_OPTIONS, ...self::$thm_env, ...self::LIST_ENVIRONMENTS]))
         {
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
@@ -926,16 +926,16 @@ class LatexLexer
       if ($k === count($this->tokens) - 1) continue;
 
       if ($k === 0) {
-        $this->tokens[$k]->body = rtrim($token->body);
+        $this->tokens[$k]->body = rtrim($token->body, "\n");
         continue;
       }
 
       if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'section-cmd') {
-        $this->tokens[$k]->body = rtrim($token->body);
+        $this->tokens[$k]->body = rtrim($token->body, "\n");
       }
 
       if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'section-cmd') {
-        $this->tokens[$k]->body = ltrim($token->body);
+        $this->tokens[$k]->body = ltrim($token->body, "\n");
       }
     }
   }
