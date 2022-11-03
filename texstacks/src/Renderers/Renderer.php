@@ -58,7 +58,7 @@ class Renderer
 
     if ($node->hasType('font-cmd')) return FontCommandRenderer::renderNode($node, $body);
 
-    if ($node->hasType('symbol')) return SymbolCommandRenderer::renderNode($node, $body);
+    if ($node->hasType(['symbol', 'alpha-symbol'])) return SymbolCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType('item')) return self::renderItemNode($node, $body);
 
@@ -104,6 +104,8 @@ class Renderer
   private static function renderBibItemNode($node, $body)
   {
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
+
+    $body = str_replace('<br>', '', $body);
 
     return "<li id=\"{$node->commandContent()}\">$body</li>";
   }
@@ -158,11 +160,11 @@ class Renderer
 
   private static function renderRef($node, string $body = null): string
   {
-    return " <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> ";
+    return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
   }
 
   private static function renderEqref($node, string $body = null): string
   {
-    return " (<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>) ";
+    return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
   }
 }

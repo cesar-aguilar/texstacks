@@ -125,6 +125,15 @@ class LatexLexer
     'asparaenum',
   ];
 
+  const ALPHA_SYMBOLS = [
+    'S',
+    'P',
+    'pounds',
+    'copyright',
+    'dag',
+    'ddag',
+  ];
+
   private array $tokens;
   private string $buffer;
   private int $line_number;
@@ -431,6 +440,17 @@ class LatexLexer
       {
         $this->addFontDeclarationToken();
       }
+      else if ($this->getCommandType($this->command_name) === 'alpha-symbol')
+      {
+        $this->addToken(new Token([
+          'type' => 'alpha-symbol',
+          'command_name' => $this->command_name,
+          'command_src' => "\\" . $this->command_name,
+          'body' => $this->command_name,
+          'line_number' => $this->line_number,
+        ]));
+        $this->backup();
+      }
       else
       {
         $this->buffer .= "\\" . $this->command_name;
@@ -637,6 +657,8 @@ class LatexLexer
     if (in_array($name, self::ONE_ARGS_CMDS_PRE_OPTIONS)) return 'one-arg-cmd-pre-options';
 
     if (in_array($name, self::CMD_WITH_OPTIONS)) return 'cmd-with-options';
+
+    if (in_array($name, self::ALPHA_SYMBOLS)) return 'alpha-symbol';
 
     return 'text';
   }

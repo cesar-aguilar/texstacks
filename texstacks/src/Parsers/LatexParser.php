@@ -124,6 +124,7 @@ class LatexParser
         'label' => 'handleLabelNode',
 
         'symbol',
+        'alpha-symbol',
         'includegraphics',
         'caption',
         'cite',
@@ -495,9 +496,12 @@ class LatexParser
 
       $counter = $shared_env->counter;
 
-      $parent_counter = $this->getSectionNumber($shared_env->parent, increment: false);
+      if ($shared_env->parent) {
+        $parent_counter = $this->getSectionNumber($shared_env->parent, increment: false);
+        $counter = $parent_counter . '.' . $counter;
+      }
 
-      $counter = $parent_counter . '.' . $counter;
+
     } else if ($env->parent) {
 
       $env->counter += 1;
@@ -535,6 +539,8 @@ class LatexParser
     if (str_contains($section_name, '*')) return '';
 
     if (str_contains($section_name, 'paragraph')) return '';
+
+    if (!key_exists($section_name, $this->section_counters)) return '';
 
     $this->section_counters[$section_name] += $increment ? 1 : 0;
 

@@ -22,6 +22,14 @@ class SymbolCommandRenderer
             '{' => '{',
             '}' => '}',
             "\\" => '<br>',
+            ' ' => '&nbsp;',
+            ',' => ' ',
+            'S' => '&sect;',
+            'P' => '&para;',
+            'pounds' => '&pound;',
+            'dag' => '&dagger;',
+            'ddag' => '&Dagger;',
+            'copyright' => '&copy;',
             default => "\\" . $node->body
         };
     }
