@@ -12,25 +12,27 @@ use TexStacks\Renderers\DisplayMathEnvironmentRenderer;
 
 class Renderer
 {
-  public function renderTree($root): string
+  public static function render($root): string
   {
-    return $this->renderRecursively($root);
+    return self::renderRecursively($root);
   }
 
-  private function renderRecursively($node): string
+  private static function renderRecursively($node): string
   {
     if ($node->isLeaf()) {
-      return $this->renderNode($node, $node->body);
+      return self::renderNode($node, $node->body);
     }
 
-    return $this->renderNode(
+    return self::renderNode(
       $node,
-      implode('', array_map(fn ($child) => $this->renderRecursively($child), $node->children()))
+      implode('', array_map(fn ($child) => self::renderRecursively($child), $node->children()))
     );
   }
 
-  private function renderNode($node, string $body = null): string
+  private static function renderNode($node, string $body = null): string
   {
+
+    $body = $body ?? '';
 
     if ($node->hasType('root')) return $body;
 
@@ -66,9 +68,9 @@ class Renderer
 
     if ($node->hasType('label')) return $node->commandSource();
 
-    if ($node->hasType('ref')) return " <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> ";
+    if ($node->hasType('ref')) return self::renderRef($node, $body);
 
-    if ($node->hasType('eqref')) return " (<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>) ";
+    if ($node->hasType('eqref')) return self::renderEqref($node, $body);
 
     if ($node->hasType('cite')) return self::renderCitations($node, $body);
 
@@ -90,21 +92,21 @@ class Renderer
     return preg_replace('/(\\\)(\\\)/', '<br>', $output);
   }
 
-  private function renderItemNode($node, $body)
+  private static function renderItemNode($node, $body)
   {
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
     return "<li>$body</li>";
   }
 
-  private function renderBibItemNode($node, $body)
+  private static function renderBibItemNode($node, $body)
   {
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
     return "<li id=\"{$node->commandContent()}\">$body</li>";
   }
 
-  private function renderFontDeclaration($node)
+  private static function renderFontDeclaration($node)
   {
     if ($node->ancestorOfType('verbatim-environment')) return "\\" . $node->body;
 
@@ -150,5 +152,15 @@ class Renderer
     $value = implode(', ', $a);
 
     return " [$value$options]";
+  }
+
+  private static function renderRef($node, string $body = null): string
+  {
+    return " <a href='#{$node->commandContent()}'>{$node->commandOptions()}</a> ";
+  }
+
+  private static function renderEqref($node, string $body = null): string
+  {
+    return " (<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>) ";
   }
 }

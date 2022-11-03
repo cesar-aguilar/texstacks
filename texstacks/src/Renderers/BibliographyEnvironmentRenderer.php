@@ -9,7 +9,6 @@ class BibliographyEnvironmentRenderer
     
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
-        $body = $body ?? '';
 
         if ($node->ancestorOfType('verbatim-environment'))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";

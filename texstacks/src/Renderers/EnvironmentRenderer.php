@@ -3,6 +3,7 @@
 namespace TexStacks\Renderers;
 
 use TexStacks\Parsers\Node;
+use TexStacks\Renderers\Renderer;
 use TexStacks\Parsers\EnvironmentNode;
 
 class EnvironmentRenderer
@@ -10,7 +11,6 @@ class EnvironmentRenderer
 
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
-        $body = $body ?? '';
 
         if ($node->ancestorOfType(['displaymath-environment', 'verbatim-environment']))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
@@ -39,7 +39,7 @@ class EnvironmentRenderer
         $head = 'Proof';
 
         if ($node->commandOptions() instanceof Node) {
-            $head = (new Renderer)->renderTree($node->commandOptions());
+            $head = Renderer::render($node->commandOptions());
         }
 
         return "<div class=\"proof-env\"><span class=\"proof-head\" id=\"{$node->commandLabel()}\">$head. </span> $body <span style=\"font-variant: small-caps\">QED</span></div>";

@@ -25,7 +25,6 @@ class GroupEnvironmentRenderer
     
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
-        $body = $body ?? '';
 
         $font_style = in_array($node->commandOptions(), self::FONT_COMMANDS) ? $node->commandOptions() : null;
 
@@ -73,7 +72,7 @@ class GroupEnvironmentRenderer
 
         if ($tag === 'footnote') return self::renderFootnote($node, $body);
 
-        $html = " <{$tag['tag']}";
+        $html = "<{$tag['tag']}";
 
         if (isset($tag['style'])) {
             $html .= " style=\"";
@@ -87,7 +86,7 @@ class GroupEnvironmentRenderer
             $html .= " class=\"{$node->getClasses()}\"";
         }
 
-        $html .= ">$body</{$tag['tag']}> ";
+        $html .= ">$body</{$tag['tag']}>";
 
         return $html;
 

@@ -2,20 +2,20 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\SectionNode;
 use TexStacks\Parsers\Node;
+use TexStacks\Renderers\Renderer;
+use TexStacks\Parsers\SectionNode;
 
 class SectionCommandRenderer
 {
 
   public static function renderNode(SectionNode $node, string $body = null): string
   {
-    $body = $body ?? '';
 
     $title = $node->commandRefNum() ? $node->commandRefNum() . '&nbsp;&nbsp;&nbsp;' : '';
 
     if ($node->commandContent() instanceof Node) {
-      $section_name = (new Renderer)->renderTree($node->commandContent());
+      $section_name = Renderer::render($node->commandContent());
       $title .= " $section_name ";
     } else {
       $title .= $node->commandContent();

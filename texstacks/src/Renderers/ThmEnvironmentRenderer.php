@@ -18,7 +18,7 @@ class ThmEnvironmentRenderer
         $heading .= $node->commandRefNum() ? " {$node->commandRefNum()}" : '';
 
         if ($node->commandOptions() && $node->commandOptions() instanceof Node) {
-            $options = (new Renderer)->renderTree($node->commandOptions());
+            $options = Renderer::render($node->commandOptions());
             $heading .= ' (' . $options . ')';
         }
 

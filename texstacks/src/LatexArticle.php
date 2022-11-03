@@ -20,8 +20,7 @@ class LatexArticle
 
   public function __construct(
     private $absolute_path,
-    public LatexParser $parser,
-    private Renderer $renderer
+    public LatexParser $parser
   ) {
 
     if (!file_exists($absolute_path)) {
@@ -68,7 +67,17 @@ class LatexArticle
 
   public function convert()
   {
-    return $this->renderer->renderTree($this->getRoot());
+    return Renderer::render($this->getRoot());
+  }
+
+  public function getFrontMatter()
+  {
+    $front_matter = $this->parser->getFrontMatter();
+    
+    $front_matter['title'] = Renderer::render($front_matter['title']);
+
+    return $front_matter;
+
   }
 
   public function getRoot()

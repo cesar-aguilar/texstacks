@@ -8,8 +8,6 @@ class DisplayMathEnvironmentRenderer
   public static function renderNode($node, $body = null)
   {
 
-    $body = $body ?? '';
-    
     $latex =  $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
     if (($node->ancestorOfType('verbatim-environment'))) return $latex;
