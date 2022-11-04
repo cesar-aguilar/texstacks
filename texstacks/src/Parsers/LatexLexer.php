@@ -103,7 +103,7 @@ class LatexLexer
     'itshape' => 'italic',
     'scshape' => 'small-caps',
     'slshape' => 'italic',
-    'em' => 'font-bold',
+    'em' => 'italic',
     'normalfont' => 'font-serif',
     'tiny' => 'text-xs',
     'scriptsize' => 'text-xs',
@@ -531,6 +531,7 @@ class LatexLexer
       'body' => self::FONT_DECLARATIONS[$this->command_name],
       'line_number' => $this->line_number,
     ]);
+    $this->backup();
   }
 
   private function addBufferAsToken()
