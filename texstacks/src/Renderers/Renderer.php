@@ -2,11 +2,12 @@
 
 namespace TexStacks\Renderers;
 
+use TexStacks\Renderers\CaptionRenderer;
 use TexStacks\Renderers\EnvironmentRenderer;
-use TexStacks\Renderers\GroupEnvironmentRenderer;
 use TexStacks\Renderers\SectionCommandRenderer;
 use TexStacks\Renderers\ThmEnvironmentRenderer;
 use TexStacks\Renderers\ListEnvironmentRenderer;
+use TexStacks\Renderers\GroupEnvironmentRenderer;
 use TexStacks\Renderers\TabularEnvironmentRenderer;
 use TexStacks\Renderers\DisplayMathEnvironmentRenderer;
 
@@ -54,19 +55,19 @@ class Renderer
 
     if ($node->hasType('bibliography-environment')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
-
     if ($node->hasType('font-cmd')) return FontCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType(['symbol', 'alpha-symbol'])) return SymbolCommandRenderer::renderNode($node, $body);
+
+    if ($node->hasType('caption')) return CaptionRenderer::renderNode($node, $body);
+
+    if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
 
     if ($node->hasType('item')) return self::renderItemNode($node, $body);
 
     if ($node->hasType('bibitem')) return self::renderBibItemNode($node, $body);
 
     if ($node->hasType('includegraphics')) return self::renderIncludeGraphics($node, $body);
-
-    if ($node->hasType('caption')) return self::renderCaptionEnvironment($node, $body);
 
     if ($node->hasType('label')) return $node->commandSource();
 
@@ -132,21 +133,6 @@ class Renderer
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
 
     return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
-  }
-
-  private static function renderCaptionEnvironment($node, string $body = null): string
-  {
-
-    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
-
-    return match ($node->parent()->commandContent()) {
-
-      'figure' => "<figcaption>$body</figcaption>",
-
-      'table' => "<div class=\"table-caption\">$body</div>",
-
-      default => "<div class=\"{$node->parent()->commandContent()}-caption\">$body</div>",
-    };
   }
 
   private static function renderCitations($node, string $body = null): string

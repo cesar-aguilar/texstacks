@@ -137,7 +137,8 @@ class LatexParser
 
         'font-declaration' => 'handleFontDeclaration',
 
-        'tag' => 'doNothing',
+        'tag',
+        'spacing-cmd' => 'doNothing',
 
         default => 'addToCurrentNode',
       };
@@ -286,6 +287,10 @@ class LatexParser
 
   private function addToCurrentNode($token): void
   {
+    if ($this->current_node->isLeaf()) {
+      $token->body = ltrim($token->body, "\n");
+    }
+
     $this->tree->addNode(new Node(
       [
         'id' => $this->tree->nodeCount(),

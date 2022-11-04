@@ -134,6 +134,17 @@ class LatexLexer
     'ddag',
   ];
 
+  const SPACING_CMDS = [
+    'quad',
+    'qquad',
+    'hspace',
+    'vspace',
+    'smallskip',
+    'medskip',
+    'bigskip',
+    'noindent',
+  ];
+
   private array $tokens;
   private string $buffer;
   private int $line_number;
@@ -218,6 +229,9 @@ class LatexLexer
         continue;
       }
 
+      // The current char is alphabetic so consume and
+      // return the command name; cursor will be a non-alphabetic char
+      // when complete
       $this->command_name = $this->consumeUntilNonAlpha();
 
       // Make token
@@ -417,6 +431,42 @@ class LatexLexer
           'line_number' => $this->line_number,
         ]));
         $this->backup();
+      } else if ($this->getCommandType($this->command_name) === 'spacing-cmd') {
+
+        if (!str_contains($this->command_name, 'space')) {
+
+          $this->addToken(new Token([
+            'type' => 'spacing-cmd',
+            'command_name' => $this->command_name,
+            'command_src' => "\\" . $this->command_name,
+            'line_number' => $this->line_number,
+          ]));
+
+          if ($this->getChar() !== ' ') $this->backup();
+
+          continue;
+        }
+
+        $this->consumeWhiteSpace();
+
+        if ($this->getChar() === '*') {
+          $this->command_name .= '*';
+          $this->forward();
+        }
+
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $this->addToken(new Token([
+          'type' => 'spacing-cmd',
+          'command_name' => $this->command_name,
+          'command_content' => $content,
+          'command_src' => "\\" . $this->command_name . "{" . $content . "}",
+          'line_number' => $this->line_number,
+        ]));
       } else {
         $this->buffer .= "\\" . $this->command_name;
         $this->backup();
@@ -627,6 +677,8 @@ class LatexLexer
     if (in_array($name, self::CMD_WITH_OPTIONS)) return 'cmd-with-options';
 
     if (in_array($name, self::ALPHA_SYMBOLS)) return 'alpha-symbol';
+
+    if (in_array($name, self::SPACING_CMDS)) return 'spacing-cmd';
 
     return 'text';
   }
@@ -1106,6 +1158,31 @@ class LatexLexer
     throw new \Exception("Parse error: missing $target on line {$this->line_number}");
   }
 
+  /**
+   * Consume white space from current cursor position
+   * 
+   * After this method is called, the cursor will be at the first
+   * non white space character
+   */
+  private function consumeWhiteSpace()
+  {
+
+    if ($this->cursor === $this->num_chars) {
+      return;
+    }
+
+    $char = $this->getChar();
+
+    while (!is_null($char) && $char === ' ') {
+      $char = $this->getNextChar();
+    }
+  }
+
+  /**
+   * Consumes and returns all alphabetic characters.
+   * After running the method, the cursor will be at
+   * a non-alphabetic character
+   */
   private function consumeUntilNonAlpha($from_cursor = true)
   {
 
