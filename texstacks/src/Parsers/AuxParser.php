@@ -103,7 +103,7 @@ class AuxParser
 
   private function parseContentsLine($line)
   {
-    $args = StrHelper::getAllCmdArgs('contentsline', $line);
+    $args = StrHelper::getAllCmdArgsOptions('contentsline', $line);
 
     if (!isset($args[0])) return;
 
@@ -113,7 +113,7 @@ class AuxParser
 
     $toc_entry = $args[1];
 
-    $number = StrHelper::getAllCmdArgs('numberline', $toc_entry);
+    $number = StrHelper::getAllCmdArgsOptions('numberline', $toc_entry);
 
     $ref_num = $number[0] ?? null;
 
