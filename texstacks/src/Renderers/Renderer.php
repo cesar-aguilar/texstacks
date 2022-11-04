@@ -83,15 +83,15 @@ class Renderer
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment', 'verbatim-environment'])) return $body;
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
-    $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
+    // $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
 
-    $output = preg_replace('/\n{3,}/', "<br><br>", $output);
+    return preg_replace('/\n{2,}/', "<br><br>", $body);
 
     // Replace two \n characters with <br>
-    // $output = str_replace("\n\n", '<br><br>', $output);
+    // return str_replace("\n\n", '<br><br>', $output);
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
-    return preg_replace('/(\\\)(\\\)/', '<br>', $output);
+    // return preg_replace('/(\\\)(\\\)/', '<br>', $output);
   }
 
   private static function renderRoot($node, $body)

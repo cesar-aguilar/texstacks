@@ -214,7 +214,6 @@ class LatexLexer
 
         $this->command_name = "\\";
 
-        // $this->buffer .= "\\" . $char;
         $this->addSymbolToken($char);
         continue;
       }
@@ -485,6 +484,9 @@ class LatexLexer
   private function addSymbolToken(string $char)
   {
 
+    // Move one character forward and
+    // see if there are any options, this handles
+    // the commands like \\[1cm]
     $this->getNextChar();
 
     try {
