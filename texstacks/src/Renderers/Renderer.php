@@ -63,6 +63,8 @@ class Renderer
 
     if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
 
+    if ($node->hasType('spacing-cmd')) return self::renderSpacingCommand($node, $body);
+
     if ($node->hasType('item')) return self::renderItemNode($node, $body);
 
     if ($node->hasType('bibitem')) return self::renderBibItemNode($node, $body);
@@ -161,5 +163,12 @@ class Renderer
   private static function renderEqref($node, string $body = null): string
   {
     return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
+  }
+
+  private static function renderSpacingCommand($node, string $body = null): string
+  {
+    if ($node->ancestorOfType(['verbatim-environment', 'displaymath-environment', 'inlinemath'])) return $node->commandSource() . ' ';
+
+    return '';
   }
 }

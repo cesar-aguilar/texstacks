@@ -132,13 +132,13 @@ class LatexParser
         'caption',
         'cite',
         'font-cmd',
+        'spacing-cmd',
         'ref',
         'eqref' => 'handleCommandNode',
 
         'font-declaration' => 'handleFontDeclaration',
 
-        'tag',
-        'spacing-cmd' => 'doNothing',
+        'tag' => 'doNothing',
 
         default => 'addToCurrentNode',
       };
@@ -158,7 +158,7 @@ class LatexParser
 
   }
 
-  private static function parseText($text)
+  private static function parseText($text): Node
   {
     $parser = new self(['called_internally' => true]);
     $parser->parse($text);
@@ -325,7 +325,8 @@ class LatexParser
     $this->resetTheoremCounters($section_name);
 
     if ($new_node->commandContent() && StrHelper::isNotAlpha($new_node->commandContent())) {
-      $new_node->setCommandContent(self::parseText($new_node->commandContent()));
+      $section_content = self::parseText($new_node->commandContent());
+      $new_node->setCommandContent($section_content);
     }
 
     /* To set the parent for the new_node, move up the tree 
@@ -346,7 +347,8 @@ class LatexParser
       $new_node = $this->createCommandNode($token);
 
       if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '') {
-        $new_node->setOptions(self::parseText($new_node->commandOptions()));
+        $env_options = self::parseText($new_node->commandOptions());
+        $new_node->setOptions($env_options);
       }
 
       $this->tree->addNode($new_node, $this->current_node);
@@ -387,7 +389,8 @@ class LatexParser
     }
 
     if ($new_node->commandOptions() && StrHelper::isNotAlpha($new_node->commandOptions())) {
-      $new_node->setOptions(self::parseText($new_node->commandOptions()));
+      $thm_options = self::parseText($new_node->commandOptions());
+      $new_node->setOptions($thm_options);
     }
 
     $this->tree->addNode($new_node, $this->current_node);
@@ -448,7 +451,8 @@ class LatexParser
     $new_node = $this->createCommandNode($token);
 
     if ($new_node->hasType(['font-cmd', 'caption']) && StrHelper::isNotAlpha($new_node->commandContent())) {
-      $new_node->setCommandContent(self::parseText($new_node->commandContent()));
+      $command_content = self::parseText($new_node->commandContent());
+      $new_node->setCommandContent($command_content);
     }
 
     if ($new_node->hasType('font-cmd') && $new_node->commandName() === 'footnote')
