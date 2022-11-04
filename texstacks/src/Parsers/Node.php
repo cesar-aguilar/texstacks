@@ -102,10 +102,8 @@ class Node
 
     $types = is_array($type) ? $type : [$type];
 
-    while ($ancestor)
-    {
-      if ($ancestor->hasType($types))
-      {
+    while ($ancestor) {
+      if ($ancestor->hasType($types)) {
         return true;
       }
       $ancestor = $ancestor->parent();
@@ -133,24 +131,31 @@ class Node
 
     $ancestor = $this->parent;
 
-    while ($ancestor)
-    {
-      if ($ancestor->type === $type)
-      {
+    while ($ancestor) {
+      if ($ancestor->type === $type) {
         return $ancestor;
       }
       $ancestor = $ancestor->parent;
     }
 
     return null;
-
   }
 
-  public function addClass($name) {
+  public function addClass($name)
+  {
 
     if (in_array($name, $this->class)) return;
 
     $this->class[] = $name;
   }
-  
+
+  public function getClasses()
+  {
+    return implode(' ', $this->class);
+  }
+
+  public function hasClasses()
+  {
+    return !empty($this->class);
+  }
 }

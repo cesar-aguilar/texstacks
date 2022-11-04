@@ -12,7 +12,7 @@ class EnvironmentRenderer
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['displaymath-environment', 'verbatim-environment']))
+        if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'verbatim-environment']))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         return match ($node->commandContent()) {
@@ -31,9 +31,8 @@ class EnvironmentRenderer
 
             default => self::renderUnknownEnvironment($node, $body)
         };
-
     }
-    
+
     private static function renderProofEnvironment(EnvironmentNode $node, string $body = null): string
     {
         $head = 'Proof';
@@ -66,10 +65,9 @@ class EnvironmentRenderer
     {
         return "<div class=\"table-container\" id=\"{$node->commandLabel()}\">$body</div>";
     }
-    
+
     private static function renderAbstract(EnvironmentNode $node, string $body = null): string
     {
         return "<div class=\"abstract-container\"><div class=\"abstract-head\">Abstract</div><div class=\"abstract-body\">$body</div></div>";
     }
-
 }

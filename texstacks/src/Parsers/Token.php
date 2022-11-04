@@ -2,7 +2,8 @@
 
 namespace TexStacks\Parsers;
 
-class Token {
+class Token
+{
 
     public string $type;
     public readonly string $command_name;
@@ -13,7 +14,8 @@ class Token {
     public string $body;
     public readonly int $line_number;
 
-    public function __construct($args) {
+    public function __construct($args)
+    {
         $this->type = $args['type'];
         $this->command_name = $args['command_name'] ?? '';
         $this->command_content = $args['command_content'] ?? '';
@@ -24,7 +26,8 @@ class Token {
         $this->line_number = $args['line_number'];
     }
 
-    public function __toString(): string {
+    public function __toString(): string
+    {
 
         $as_array = (array) $this;
 
@@ -38,6 +41,6 @@ class Token {
 
         $str = implode(' | ', $array);
 
-        return "<span style=\"font-size:0.8rem\">$str</span>";
+        return "<div style=\"font-size:0.8rem;padding:5px;border:1px solid lightgray;margin:10px 0;\">$str</div>";
     }
 }

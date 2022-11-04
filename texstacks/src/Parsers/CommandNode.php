@@ -20,12 +20,12 @@ use TexStacks\Parsers\LatexParser;
  */
 class CommandNode extends Node
 {
-  
+
   protected array|null $commmand_args;
   protected string|null $command_src;
   protected string|null $command_name;
   protected string|null $command_label;
-  protected string|null $command_refnum ;
+  protected string|null $command_refnum;
   protected $command_content;
   protected $command_options;
 
@@ -78,24 +78,18 @@ class CommandNode extends Node
     return $this->command_args[$name] ?? null;
   }
 
-  public function getClasses() {
-    return implode(' ', $this->class);
-  }
-
-  public function hasClasses() {
-    return !empty($this->class);
-  }
-
   public function setLabel($label)
   {
     $this->command_label = $label;
   }
 
-  public function setOptions($data) {
+  public function setOptions($data)
+  {
     $this->command_options = $data;
   }
 
-  public function setCommandContent($data) {
+  public function setCommandContent($data)
+  {
     $this->command_content = $data;
   }
 

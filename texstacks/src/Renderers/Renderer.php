@@ -34,7 +34,7 @@ class Renderer
 
     $body = $body ?? '';
 
-    if ($node->hasType('root')) return $body;
+    if ($node->hasType('root')) return self::renderRoot($node, $body);
 
     if ($node->hasType('section-cmd')) return SectionCommandRenderer::renderNode($node, $body);
 
@@ -92,6 +92,15 @@ class Renderer
 
     // Remove double backslashes (the node is text and should not be in math or tabular environment)
     return preg_replace('/(\\\)(\\\)/', '<br>', $output);
+  }
+
+  private static function renderRoot($node, $body)
+  {
+    if ($node->hasClasses()) {
+      $classes = $node->getClasses();
+      return "<span class='$classes'>$body</span>";
+    }
+    return $body;
   }
 
   private static function renderItemNode($node, $body)

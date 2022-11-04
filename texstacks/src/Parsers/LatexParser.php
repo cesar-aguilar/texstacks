@@ -14,6 +14,7 @@ use TexStacks\Parsers\PreambleParser;
 class LatexParser
 {
 
+  private $called_internally = false;
   protected SyntaxTree $tree;
   private $current_node;
   private $lexer;
@@ -27,6 +28,8 @@ class LatexParser
   public function __construct($args = [])
   {
 
+    $this->called_internally = isset($args['called_internally']) ? $args['called_internally'] : false;
+
     $this->initTree();
     $this->initCounters();
 
@@ -35,7 +38,7 @@ class LatexParser
     $this->thm_envs = $args['thm_env'] ?? [];
 
     $lexer_data = [
-      'thm_env' => array_keys($this->thm_envs),      
+      'thm_env' => array_keys($this->thm_envs),
     ];
 
     $this->lexer = new LatexLexer($lexer_data);
@@ -98,7 +101,7 @@ class LatexParser
       throw new \Exception($e->getMessage());
     }
     // dd($tokens);
-    // die($this->lexer->prettyPrintTokens());
+    // $this->lexer->prettyPrintTokens();
     /* From token add node to syntax tree using depth-first traversal */
     foreach ($tokens as $token) {
 
@@ -146,7 +149,9 @@ class LatexParser
       }
     }
 
-    // dd($this->tree->root()->children());
+    // if (!$this->called_internally) {
+    //   dd($this->tree->root()->children());
+    // }
     // dd($this->section_counters);
     // dd($this->getNewCommands());
 
@@ -154,7 +159,7 @@ class LatexParser
 
   private static function parseText($text)
   {
-    $parser = new self;
+    $parser = new self(['called_internally' => true]);
     $parser->parse($text);
     return $parser->tree->root();
   }
@@ -275,9 +280,8 @@ class LatexParser
     $front_matter = $this->preamble_parser->getFrontMatter();
 
     $front_matter['title'] = self::parseText($front_matter['title']);
-        
-    return $front_matter;
 
+    return $front_matter;
   }
 
   private function addToCurrentNode($token): void
@@ -336,8 +340,7 @@ class LatexParser
 
       $new_node = $this->createCommandNode($token);
 
-      if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '')
-      {
+      if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '') {
         $new_node->setOptions(self::parseText($new_node->commandOptions()));
       }
 
@@ -444,7 +447,7 @@ class LatexParser
     }
 
     if ($new_node->hasType('font-cmd') && $new_node->commandName() === 'footnote')
-        $new_node->setRefNum($this->getCounter('footnote'));
+      $new_node->setRefNum($this->getCounter('footnote'));
 
     $this->tree->addNode($new_node, $this->current_node);
   }
@@ -500,8 +503,6 @@ class LatexParser
         $parent_counter = $this->getSectionNumber($shared_env->parent, increment: false);
         $counter = $parent_counter . '.' . $counter;
       }
-
-
     } else if ($env->parent) {
 
       $env->counter += 1;
@@ -660,5 +661,4 @@ class LatexParser
 
     return $new_commands;
   }
-
 }
