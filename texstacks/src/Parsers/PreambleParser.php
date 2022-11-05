@@ -178,6 +178,8 @@ class PreambleParser
 
       $thanks = null;
 
+      $name = $author;
+
       if (!empty($thanks_arg))
       {
         $thanks = $thanks_arg[0]->value;
