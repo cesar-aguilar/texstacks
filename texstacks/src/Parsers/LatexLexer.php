@@ -649,6 +649,7 @@ class LatexLexer
   {
     if ($this->getChar() === "\n") $this->line_number--;
     $this->cursor--;
+    if ($this->cursor -1 > -1) $this->prev_char = $this->stream[$this->cursor - 1];
   }
 
   private function forward()
@@ -1088,10 +1089,7 @@ class LatexLexer
         break;
       }
 
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
+      if ($char === ' ') continue;
 
       if ($char === $left_delim) {
 
