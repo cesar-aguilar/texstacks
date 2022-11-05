@@ -76,6 +76,10 @@ class LatexArticle
     
     $front_matter['title'] = Renderer::render($front_matter['title']);
 
+    foreach ($front_matter['authors'] as $author) {
+      $author->name = Renderer::render($author->name);
+    }
+
     return $front_matter;
 
   }

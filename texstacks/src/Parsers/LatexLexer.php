@@ -62,6 +62,9 @@ class LatexLexer
     'ref',
     'eqref',
     'tag',
+    'title',
+    'author',
+    'date',
   ];
 
   const TABULAR_ENVIRONMENTS = [
@@ -393,8 +396,10 @@ class LatexLexer
         if (in_array($this->command_name, ['ref', 'eqref', 'label']))
           $label = self::$ref_labels[$content] ?? '?';
 
+        $type = in_array($this->command_name, ['title', 'author', 'date']) ? 'ignore' : $this->command_name;
+
         $this->addToken(new Token([
-          'type' => $this->command_name,
+          'type' => $type,
           'command_name' => $this->command_name,
           'command_content' => $content,
           'command_options' => $label,
@@ -654,8 +659,8 @@ class LatexLexer
 
   private function forward()
   {
-    if ($this->getChar() === "\n") $this->line_number++;
     $this->cursor++;
+    if ($this->getChar() === "\n") $this->line_number++;
   }
 
   private function getChar()

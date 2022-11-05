@@ -176,13 +176,12 @@ class PreambleParser
 
       $thanks_arg = StrHelper::getAllCmdArgsOptions("thanks", $author);
 
-      $name = str_replace("\\\\", "<br>", $author);
       $thanks = null;
 
       if (!empty($thanks_arg))
       {
         $thanks = $thanks_arg[0]->value;
-        $name = $thanks_arg[0]->type === 'arg' ? str_replace('\thanks{' . $thanks . '}', ' ', $author) : $name;
+        $name = $thanks_arg[0]->type === 'arg' ? str_replace('\thanks{' . $thanks . '}', ' ', $author) : $author;
       }
 
       $authors[] = (object) ['name' => trim($name), 'thanks' => $thanks ?? ''];

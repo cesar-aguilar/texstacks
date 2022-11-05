@@ -140,7 +140,8 @@ class LatexParser
 
         'two-args-cmd' => 'handleTwoArgCommandNode',
 
-        'tag' => 'doNothing',
+        'tag',
+        'ignore' => 'doNothing',
 
         default => 'addToCurrentNode',
       };
@@ -283,6 +284,10 @@ class LatexParser
     $front_matter = $this->preamble_parser->getFrontMatter();
 
     $front_matter['title'] = self::parseText($front_matter['title']);
+    
+    foreach ($front_matter['authors'] as $author) {
+      $author->name = self::parseText($author->name);
+    }
 
     return $front_matter;
   }
