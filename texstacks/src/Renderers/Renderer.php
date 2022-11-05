@@ -171,7 +171,12 @@ class Renderer
   {
     if ($node->ancestorOfType(['verbatim-environment', 'displaymath-environment', 'inlinemath'])) return $node->commandSource() . ' ';
 
-    return '';
+    return match($node->commandName()) {
+      'smallskip' => '<div style="height: 1em;"></div>',
+      'medskip' => '<div style="height: 2em;"></div>',
+      'bigskip' => '<div style="height: 3em;"></div>',
+      default => '',
+    };
   }
 
   private static function renderTwoArgsCommand($node, string $body = null): string
