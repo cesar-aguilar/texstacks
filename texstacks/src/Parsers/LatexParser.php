@@ -138,6 +138,8 @@ class LatexParser
 
         'font-declaration' => 'handleFontDeclaration',
 
+        'two-args-cmd' => 'handleTwoArgCommandNode',
+
         'tag' => 'doNothing',
 
         default => 'addToCurrentNode',
@@ -466,6 +468,22 @@ class LatexParser
     $this->current_node->addClass($token->body);
     $new_node = $this->createCommandNode($token);
     $this->tree->addNode($new_node, $this->current_node);
+  }
+
+  private function handleTwoArgCommandNode($token): void
+  {
+    if ($token->command_name === 'texorpdfstring') {
+      $new_node = $this->createCommandNode($token);
+
+      if ($new_node->getArg('arg1')) {
+        $arg1 = self::parseText($new_node->getArg('arg1'));
+        $new_node->setCommandContent($arg1);
+      }
+
+      $this->tree->addNode($new_node, $this->current_node);
+
+      return;
+    }
   }
 
   private function createCommandNode($token): mixed

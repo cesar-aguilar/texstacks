@@ -145,6 +145,10 @@ class LatexLexer
     'noindent',
   ];
 
+  const TWO_ARGS_CMDS = [
+    'texorpdfstring',
+  ];
+
   private array $tokens;
   private string $buffer;
   private int $line_number;
@@ -368,10 +372,6 @@ class LatexLexer
           throw new \Exception($e->getMessage());
         }
 
-        // backup because after running consumeUntilNonAlpha()
-        // the cursor is at the first non-alpha character
-        // $this->backup();
-
         $this->addToken(new Token([
           'type' => 'font-cmd',
           'command_name' => $this->command_name,
@@ -467,6 +467,35 @@ class LatexLexer
           'command_src' => "\\" . $this->command_name . "{" . $content . "}",
           'line_number' => $this->line_number,
         ]));
+      } else if ($this->getCommandType($this->command_name) === 'two-args-cmd') {
+
+        try {
+          $arg_1 = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $this->forward();
+        $this->consumeWhiteSpace();
+
+        if ($this->getChar() !== '{') {
+          throw new \Exception("Parse error: Missing opening brace for second argument of command " . $this->command_name . " on line " . $this->line_number);
+        }
+
+        try {
+          $arg_2 = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $this->addToken(new Token([
+          'type' => 'two-args-cmd',
+          'command_name' => $this->command_name,
+          'command_args' => ['arg1' => $arg_1, 'arg2' => $arg_2],
+          'command_src' => "\\" . $this->command_name . "{" . $arg_1 . "}{" . $arg_2 . "}",
+          'line_number' => $this->line_number,
+        ]));
+
       } else {
         $this->buffer .= "\\" . $this->command_name;
         $this->backup();
@@ -679,6 +708,8 @@ class LatexLexer
     if (in_array($name, self::ALPHA_SYMBOLS)) return 'alpha-symbol';
 
     if (in_array($name, self::SPACING_CMDS)) return 'spacing-cmd';
+
+    if (in_array($name, self::TWO_ARGS_CMDS)) return 'two-args-cmd';
 
     return 'text';
   }

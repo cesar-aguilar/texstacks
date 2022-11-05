@@ -61,6 +61,8 @@ class Renderer
 
     if ($node->hasType('caption')) return CaptionRenderer::renderNode($node, $body);
 
+    if ($node->hasType('two-args-cmd')) return self::renderTwoArgsCommand($node, $body);
+
     if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
 
     if ($node->hasType('spacing-cmd')) return self::renderSpacingCommand($node, $body);
@@ -170,5 +172,16 @@ class Renderer
     if ($node->ancestorOfType(['verbatim-environment', 'displaymath-environment', 'inlinemath'])) return $node->commandSource() . ' ';
 
     return '';
+  }
+
+  private static function renderTwoArgsCommand($node, string $body = null): string
+  {
+    if ($node->ancestorOfType(['verbatim-environment', 'displaymath-environment', 'inlinemath'])) return $node->commandSource();
+
+    if ($node->commandName() === 'texorpdfstring') {
+      return Renderer::render($node->commandContent());
+    }
+
+    return $node->commandSource();
   }
 }
