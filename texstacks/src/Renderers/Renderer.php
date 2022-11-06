@@ -85,6 +85,8 @@ class Renderer
 
     if ($node->hasType('font-declaration')) return self::renderFontDeclaration($node);
 
+    if ($node->hasType('accent-cmd')) return $node->body;
+
     if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment', 'verbatim-environment'])) return $body;
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
@@ -119,7 +121,7 @@ class Renderer
   {
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
-    $body = str_replace('<br>', '', $body);
+    $body = str_replace(['<br>', '\newblock'], '', $body);
 
     return "<li id=\"{$node->commandContent()}\">$body</li>";
   }

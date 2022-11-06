@@ -34,6 +34,7 @@ class LatexLexer
     'flalign*',
     'eqnarray',
     'eqnarray*',
+    'displaymath',
   ];
 
   const SECTION_COMMANDS = [
@@ -152,6 +153,13 @@ class LatexLexer
     'texorpdfstring',
   ];
 
+  const ACCENT_CMDS = [
+    "'" => 'acute',
+    "`" => 'grave',
+    "^" => 'circ',
+    '"' => 'uml',
+  ];
+
   private array $tokens;
   private string $buffer;
   private int $line_number;
@@ -227,6 +235,11 @@ class LatexLexer
 
         if ($char === '(' || $char === ')') {
           $this->addInlineMathToken($char);
+          continue;
+        }
+
+        if (key_exists($char, self::ACCENT_CMDS)) {
+          $this->addAccentToken($char);
           continue;
         }
 
@@ -648,6 +661,57 @@ class LatexLexer
       'command_options' => '',
       'line_number' => $this->line_number,
     ]);
+  }
+
+  private function addAccentToken($char)
+  {
+    $this->forward();
+    $this->consumeWhiteSpace();
+
+    if ($this->getChar() === '{') {
+
+      try {
+        $content = ltrim($this->getCommandContent());
+      } catch (\Exception $e) {
+        throw new \Exception($e->getMessage());
+      }
+
+      $letter = $content[0];
+      $tail = substr($content, 1);
+      $command_src = "\\" . $char . "{" . $letter . "}";
+
+    } else {
+      $letter = $this->getChar();
+      $tail = '';
+      $command_src = "\\" . $char . $letter;
+    }
+
+    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'])) {
+      $this->buffer .= $command_src . $tail;
+      return;
+    }
+
+    $accent = self::ACCENT_CMDS[$char];
+
+    $body = "&$letter$accent;";
+
+    $this->addToken(new Token([
+      'type' => 'accent-cmd',
+      'command_name' => $char,
+      'command_content' => $letter,
+      'command_src' => $command_src,
+      'body' => $body,
+      'line_number' => $this->line_number,
+    ]));
+
+    if ($tail) {
+      $this->addToken(new Token([
+        'type' => 'text',
+        'body' => $tail,
+        'line_number' => $this->line_number,
+      ]));
+    }
+
   }
 
   private function backup()

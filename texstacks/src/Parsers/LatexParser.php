@@ -133,6 +133,7 @@ class LatexParser
         'cite',
         'font-cmd',
         'spacing-cmd',
+        'accent-cmd',
         'ref',
         'eqref' => 'handleCommandNode',
 
@@ -188,63 +189,9 @@ class LatexParser
   private function preprocessRawSource()
   {
 
-    $search_replace =
-      [
-        '<'   =>   ' &lt; ',
-        '>'   =>   ' &gt; ',
-        '\\$' =>   '&#36;',
-        '``'  =>   '"',
-        '\/'  =>   ' ',
-        "\'a" =>   '&aacute;',
-        "\'e" =>   '&eacute;',
-        "\'i" =>   '&iacute;',
-        "\'o" =>   '&oacute;',
-        "\'u" =>   '&uacute;',
-        "\'y" =>   '&yacute;',
-        "\'A" =>   '&Aacute;',
-        "\'E" =>   '&Eacute;',
-        "\'I" =>   '&Iacute;',
-        "\'O" =>   '&Oacute;',
-        "\'U" =>   '&Uacute;',
-        "\'Y" =>   '&Yacute;',
-        "\`a" =>   '&agrave;',
-        "\`e" =>   '&egrave;',
-        "\`i" =>   '&igrave;',
-        "\`o" =>   '&ograve;',
-        "\`u" =>   '&ugrave;',
-        "\`y" =>   '&ygrave;',
-        "\`A" =>   '&Agrave;',
-        "\`E" =>   '&Egrave;',
-        "\`I" =>   '&Igrave;',
-        "\`O" =>   '&Ograve;',
-        "\`U" =>   '&Ugrave;',
-        "\`Y" =>   '&Ygrave;',
-        "\^a" =>   '&acirc;',
-        "\^i" =>   '&icirc;',
-        "\^o" =>   '&ocirc;',
-        "\^u" =>   '&ucirc;',
-        "\^y" =>   '&ycirc;',
-        "\^A" =>   '&Acirc;',
-        "\^E" =>   '&Ecirc;',
-        "\^I" =>   '&Icirc;',
-        "\^O" =>   '&Ocirc;',
-        "\^U" =>   '&Ucirc;',
-        "\^Y" =>   '&Ycirc;',
-        '\"a' =>   '&auml;',
-        '\"e' =>   '&euml;',
-        '\"i' =>   '&iuml;',
-        '\"o' =>   '&ouml;',
-        '\"u' =>   '&uuml;',
-        '\"y' =>   '&yuml;',
-        '\"A' =>   '&Auml;',
-        '\"E' =>   '&Euml;',
-        '\"I' =>   '&Iuml;',
-        '\"O' =>   '&Ouml;',
-        '\"U' =>   '&Uuml;',
-        '\"Y' =>   '&Yuml;',
-      ];
+    return $this->raw_src;
 
-    return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
+    // return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
   }
 
   public function generateMathJaxConfig(): string

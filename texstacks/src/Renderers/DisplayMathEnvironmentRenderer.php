@@ -12,6 +12,10 @@ class DisplayMathEnvironmentRenderer
 
     if (($node->ancestorOfType('verbatim-environment'))) return $latex;
 
+    if ($node->commandContent() === 'displaymath') {
+      $latex = "\\begin{equation*}" . $body . "\\end{equation*}";
+    }
+
     // If $node is a nested displaymath-env, then we need to render it as text
     // if ($node->ancestorOfType('displaymath-environment')) return $latex;
 
