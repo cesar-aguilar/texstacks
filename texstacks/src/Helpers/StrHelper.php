@@ -160,10 +160,10 @@ class StrHelper
     $args = [];
 
     while ($cursor < $length) {
-      
+
       $char = $line[$cursor];
-          
-      if (in_array($char, [" ", "\n"] )) {
+
+      if (in_array($char, [" ", "\n", "\t"] )) {
         $cursor++;
         continue;
       }
@@ -174,7 +174,7 @@ class StrHelper
         }
         continue;
       }
- 
+
       if (!in_array($char, $left_delimiters)) return $args;
 
       $left_delim = $char;

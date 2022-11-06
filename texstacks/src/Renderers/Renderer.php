@@ -92,7 +92,9 @@ class Renderer
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     // $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
 
-    return preg_replace('/\n{2,}/', "<br><br>", $body);
+    // return preg_replace('/\n{2,}/', "<br><br>", $body);
+
+    return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
 
     // Replace two \n characters with <br>
     // return str_replace("\n\n", '<br><br>', $output);

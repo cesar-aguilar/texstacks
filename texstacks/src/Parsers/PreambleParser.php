@@ -151,7 +151,12 @@ class PreambleParser
 
   private function getArticleTitle() : string
   {
-    return StrHelper::getCmdArg("title", $this->src);
+    // return StrHelper::getCmdArg("title", $this->src);
+    $title_options = StrHelper::getAllCmdArgsOptions("title", $this->src);
+
+    foreach ($title_options as $arg) {
+      if ($arg->type === 'arg') return $arg->value;
+    }
   }
 
   private function getArticleDate() : string

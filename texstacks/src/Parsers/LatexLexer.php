@@ -56,6 +56,7 @@ class LatexLexer
     'caption',
     'bibitem',
     'cite',
+    'title',
   ];
 
   const ONE_ARGS_CMDS = [
@@ -63,7 +64,6 @@ class LatexLexer
     'ref',
     'eqref',
     'tag',
-    'title',
     'author',
     'date',
   ];
@@ -919,8 +919,10 @@ class LatexLexer
       }
     }
 
+    $type = in_array($this->command_name, ['title']) ? 'ignore' : $this->command_name;
+
     return new Token([
-      'type' => $this->command_name,
+      'type' => $type,
       'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => $options,
@@ -1072,11 +1074,13 @@ class LatexLexer
       }
 
       if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'section-cmd') {
-        $this->tokens[$k]->body = rtrim($token->body, "\n");
+        // $this->tokens[$k]->body = rtrim($token->body, "\n");
+        $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
 
       if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'section-cmd') {
-        $this->tokens[$k]->body = ltrim($token->body, "\n");
+        // $this->tokens[$k]->body = ltrim($token->body, "\n");
+        $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
     }
   }
