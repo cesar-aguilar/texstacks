@@ -16,6 +16,12 @@ class CaptionRenderer
       $body = Renderer::render($node->commandContent());
     }
 
+    if ($node->commandRefNum()) {
+      $body = "Figure " . $node->commandRefNum() . ': ' . $body;
+    } else {
+      $body = "Figure: " . $body;
+    }
+
     return match ($node->parent()?->commandContent()) {
 
       'figure' => "<figcaption>$body</figcaption>",

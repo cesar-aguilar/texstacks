@@ -141,6 +141,16 @@ class Node
     return null;
   }
 
+  /**
+   * Find child with given type
+   */
+  public function findChild($type) {
+    foreach ($this->children as $child) {
+      if ($child->hasType($type)) return $child;
+    }
+    return null;
+  }
+
   public function addClass($name)
   {
 

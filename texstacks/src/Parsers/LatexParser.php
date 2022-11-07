@@ -405,6 +405,8 @@ class LatexParser
           'line_number' => $token->line_number
         ]
       ), parent: $this->current_node);
+    } else if ($caption = $this->current_node->findChild('caption')) {
+      $caption->setRefNum($this->current_node->commandRefNum());
     }
   }
 
