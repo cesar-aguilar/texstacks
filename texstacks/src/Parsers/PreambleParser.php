@@ -13,8 +13,8 @@ class PreambleParser
   {
     $this->src = $src;
   }
-  
-  public function getMathMacros() : string
+
+  public function getMathMacros(): string
   {
     /* Match macros should be contained within these delimiters in the preamble */
     $left_delim = "%\\begin{mathmacros}";
@@ -28,10 +28,9 @@ class PreambleParser
     $src = StrHelper::PluckExcludeDelimiters($left_delim, $right_delim, $this->src);
 
     return StrHelper::DeleteLatexComments($src, replace: '');
-
   }
 
-  private function getUsePackages() : array
+  private function getUsePackages(): array
   {
     $pattern = '/(\\\usepackage)/';
 
@@ -41,25 +40,22 @@ class PreambleParser
 
     $packages = [];
 
-    foreach ($matches[0] as $match)
-    {
+    foreach ($matches[0] as $match) {
       $offset = (int) $match[1];
-      
+
       $command = trim(str_replace("\\", '', $match[0]));
 
       $args = StrHelper::getAllCmdArgsOptions($command, substr($this->src, $offset));
 
       $packages[] = $args;
-
     }
- 
   }
 
   /**
    * Reads preamble of $latex_src and returns
    * array of \newtheorem declarations as objects
    */
-  public function getTheoremEnvs() : array
+  public function getTheoremEnvs(): array
   {
 
     $pattern = '/(\\\newtheoremstyle|\\\newtheorem[*]?|\\\theoremstyle)/';
@@ -69,7 +65,7 @@ class PreambleParser
     if (!isset($matches[1])) return [];
 
     $thm_envs = [];
-    
+
     $default_styles = ['plain', 'definition', 'remark'];
     $current_style = 'plain';
 
@@ -85,8 +81,7 @@ class PreambleParser
         continue;
       }
 
-      if ($command === 'newtheorem' || $command === 'newtheorem*')
-      {
+      if ($command === 'newtheorem' || $command === 'newtheorem*') {
 
         $num_args = count($args);
 
@@ -100,56 +95,49 @@ class PreambleParser
           $text = $args[1]->type === 'arg' ? $args[1]->value : '';
           $parent = null;
           $shared = null;
-
         }
         // Declaration of the form 
         // Parent: \newtheorem{env}{text}[parent-counter] or
         // Shared: \newtheorem{env}[shared]{text}
         else {
-        
+
           // Case Parent
           if ($args[1]->type === 'arg') {
             $text = $args[1]->value;
             $parent = $args[2]->value;
             $shared = null;
-          }
-          else
-          { // Case Shared
+          } else { // Case Shared
             $shared = $args[1]->value;
             $text = $args[2]->value;
             $parent = null;
           }
-
         }
 
         $starred = $command === 'newtheorem*';
 
-        $thm_envs[$env] = (object) [          
+        $thm_envs[$env] = (object) [
           'text' => $text,
           'parent' => $parent,
           'shared' => $shared,
           'style' => $current_style,
           'starred' => $starred,
         ];
-
       }
-
     }
 
     return $thm_envs;
-
   }
 
-  public function getFrontMatter() : array
+  public function getFrontMatter(): array
   {
     return [
-        'title' => $this->getArticleTitle(),
-        'authors' => $this->getArticleAuthors(),
-        'date' => $this->getArticleDate(),
+      'title' => $this->getArticleTitle(),
+      'authors' => $this->getArticleAuthors(),
+      'date' => $this->getArticleDate(),
     ];
   }
 
-  private function getArticleTitle() : string
+  private function getArticleTitle(): string
   {
     // return StrHelper::getCmdArg("title", $this->src);
     $title_options = StrHelper::getAllCmdArgsOptions("title", $this->src);
@@ -159,12 +147,12 @@ class PreambleParser
     }
   }
 
-  private function getArticleDate() : string
+  private function getArticleDate(): string
   {
     return StrHelper::getCmdArg("date", $this->src);
   }
 
-  private function getArticleAuthors() : array
+  private function getArticleAuthors(): array
   {
 
     $author_args = StrHelper::getAllCmdArgsOptions("author", $this->src);
@@ -175,8 +163,7 @@ class PreambleParser
 
     $authors_arr = $author_args[0]->type === 'arg' ? explode("\\and", $author_args[0]->value) : [];
 
-    foreach ($authors_arr as $author)
-    {
+    foreach ($authors_arr as $author) {
       $author = StrHelper::cleanUpText($author);
 
       $thanks_arg = StrHelper::getAllCmdArgsOptions("thanks", $author);
@@ -185,8 +172,7 @@ class PreambleParser
 
       $name = $author;
 
-      if (!empty($thanks_arg))
-      {
+      if (!empty($thanks_arg)) {
         $thanks = $thanks_arg[0]->value;
         $name = $thanks_arg[0]->type === 'arg' ? str_replace('\thanks{' . $thanks . '}', ' ', $author) : $author;
       }
@@ -197,6 +183,24 @@ class PreambleParser
     return $authors;
   }
 
+  public function getNumberWithin(): array
+  {
+    $pattern = '/(\\\numberwithin)/';
 
-  
+    preg_match_all($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE);
+
+    if (!isset($matches[1])) return [];
+
+    $number_within = [];
+
+    foreach ($matches[1] as $match) {
+      $offset = (int) $match[1];
+
+      $args = StrHelper::getAllCmdArgsOptions('numberwithin', substr($this->src, $offset));
+
+      $number_within[] = $args;
+    }
+
+    return $number_within;
+  }
 }

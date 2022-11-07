@@ -31,7 +31,6 @@ class LatexParser
     $this->called_internally = isset($args['called_internally']) ? $args['called_internally'] : false;
 
     $this->initTree();
-    $this->initCounters();
 
     $this->preamble_parser = new PreambleParser;
 
@@ -70,8 +69,20 @@ class LatexParser
     ];
 
     $this->counters = [
-      'footnote' => 0,
+      'footnote' => ['value' => 0, 'parent' => null],
+      'figure' => ['value' => 0, 'parent' => null],
+      'table' => ['value' => 0, 'parent' => null],
     ];
+
+    $number_within_cmds = $this->preamble_parser->getNumberWithin();
+
+    foreach ($number_within_cmds as $args) {
+      if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
+        $counter_name = $args[0]->value;
+        $parent_counter_name = $args[1]->value;
+        $this->counters[$counter_name]['parent'] = $parent_counter_name;
+      }
+    }
   }
 
   public function getRoot()
@@ -137,7 +148,6 @@ class LatexParser
         'symbol',
         'alpha-symbol',
         'includegraphics',
-        'caption',
         'cite',
         'font-cmd',
         'spacing-cmd',
@@ -146,6 +156,8 @@ class LatexParser
         'eqref' => 'handleCommandNode',
 
         'font-declaration' => 'handleFontDeclaration',
+
+        'caption' => 'handleCaptionNode',
 
         'two-args-cmd' => 'handleTwoArgCommandNode',
 
@@ -192,6 +204,8 @@ class LatexParser
     $this->resetTheoremCounters();
 
     $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
+
+    $this->initCounters();
   }
 
   private function preprocessRawSource()
@@ -239,7 +253,7 @@ class LatexParser
     $front_matter = $this->preamble_parser->getFrontMatter();
 
     $front_matter['title'] = self::parseText($front_matter['title']);
-    
+
     foreach ($front_matter['authors'] as $author) {
       $author->name = self::parseText($author->name);
     }
@@ -414,13 +428,36 @@ class LatexParser
   {
     $new_node = $this->createCommandNode($token);
 
-    if ($new_node->hasType(['font-cmd', 'caption']) && StrHelper::isNotAlpha($new_node->commandContent())) {
+    if ($new_node->hasType('font-cmd') && StrHelper::isNotAlpha($new_node->commandContent())) {
       $command_content = self::parseText($new_node->commandContent());
       $new_node->setCommandContent($command_content);
     }
 
     if ($new_node->hasType('font-cmd') && $new_node->commandName() === 'footnote')
       $new_node->setRefNum($this->getCounter('footnote'));
+
+    $this->tree->addNode($new_node, $this->current_node);
+  }
+
+  private function handleCaptionNode($token): void
+  {
+    $new_node = $this->createCommandNode($token);
+
+    if (StrHelper::isNotAlpha($new_node->commandContent())) {
+      $command_content = self::parseText($new_node->commandContent());
+      $new_node->setCommandContent($command_content);
+    }
+
+    // Get and set figure counter on parent element
+    if ($this->current_node->commandContent() === 'figure') {
+      $counter = $this->getCounter('figure');
+      $this->current_node->setRefNum($counter);
+      $new_node->setRefNum($counter);
+    } else if ($this->current_node->commandContent() === 'table') {
+      $counter = $this->getCounter('table');
+      $this->current_node->setRefNum($counter);
+      $new_node->setRefNum($counter);
+    }
 
     $this->tree->addNode($new_node, $this->current_node);
   }
@@ -543,12 +580,12 @@ class LatexParser
       if ($key == $section_name) break;
     }
 
-    if ($increment) $this->resetSectionCounters($section_name);
+    if ($increment) $this->resetChildrenSectionCounters($section_name);
 
     return implode('.', $section_numbers);
   }
 
-  private function resetSectionCounters($section_name = null): void
+  private function resetChildrenSectionCounters($section_name = null): void
   {
 
     $flag = false;
@@ -557,6 +594,10 @@ class LatexParser
       if ($flag) $this->section_counters[$key] = 0;
 
       if ($key === $section_name) $flag = true;
+    }
+
+    foreach ($this->counters as $key => $value) {
+      if ($this->counters[$key]['parent'] === $section_name) $this->counters[$key]['value'] = 0;
     }
   }
 
@@ -575,7 +616,18 @@ class LatexParser
 
   private function getCounter($counter)
   {
-    return ++$this->counters[$counter];
+
+    $parent_counter = $this->counters[$counter]['parent'];
+
+    $value = '';
+
+    if (key_exists($parent_counter, $this->section_counters)) {
+      $value = $this->getSectionNumber($parent_counter, increment: false);
+    }
+
+    $num = ++$this->counters[$counter]['value'];
+
+    return $value ? $value . '.' . $num : $num;
   }
 
   private function getNewCommands(): array

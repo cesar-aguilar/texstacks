@@ -16,10 +16,16 @@ class CaptionRenderer
       $body = Renderer::render($node->commandContent());
     }
 
+    $float_type = match ($node->parent()?->commandContent()) {
+      'figure' => 'Figure',
+      'table' => 'Table',
+      default => null
+    };
+
     if ($node->commandRefNum()) {
-      $body = "Figure " . $node->commandRefNum() . ': ' . $body;
+      $body = "$float_type " . $node->commandRefNum() . ': ' . $body;
     } else {
-      $body = "Figure: " . $body;
+      $body = "$float_type: " . $body;
     }
 
     return match ($node->parent()?->commandContent()) {
