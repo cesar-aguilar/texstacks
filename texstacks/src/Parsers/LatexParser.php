@@ -38,6 +38,7 @@ class LatexParser
 
     $lexer_data = [
       'thm_env' => array_keys($this->thm_envs),
+      'line_number_offset' => $args['line_number_offset'] ?? 0,
     ];
 
     $this->lexer = new LatexLexer($lexer_data);
@@ -182,9 +183,12 @@ class LatexParser
 
   }
 
-  private static function parseText($text): Node
+  private static function parseText($text, $line_number_offset = 0): Node
   {
-    $parser = new self(['called_internally' => true]);
+    $parser = new self([
+      'called_internally' => true,
+      'line_number_offset' => $line_number_offset,
+    ]);
     $parser->parse($text);
     return $parser->tree->root();
   }
@@ -301,7 +305,7 @@ class LatexParser
     $this->resetTheoremCounters($section_name);
 
     if ($new_node->commandContent() && StrHelper::isNotAlpha($new_node->commandContent())) {
-      $section_content = self::parseText($new_node->commandContent());
+      $section_content = self::parseText($new_node->commandContent(), $new_node->line_number);
       $new_node->setCommandContent($section_content);
     }
 
@@ -323,7 +327,7 @@ class LatexParser
       $new_node = $this->createCommandNode($token);
 
       if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '') {
-        $env_options = self::parseText($new_node->commandOptions());
+        $env_options = self::parseText($new_node->commandOptions(), $new_node->line_number);
         $new_node->setOptions($env_options);
       }
 
@@ -365,7 +369,7 @@ class LatexParser
     }
 
     if ($new_node->commandOptions() && StrHelper::isNotAlpha($new_node->commandOptions())) {
-      $thm_options = self::parseText($new_node->commandOptions());
+      $thm_options = self::parseText($new_node->commandOptions(), $new_node->line_number);
       $new_node->setOptions($thm_options);
     }
 
@@ -429,7 +433,7 @@ class LatexParser
     $new_node = $this->createCommandNode($token);
 
     if ($new_node->hasType('font-cmd') && StrHelper::isNotAlpha($new_node->commandContent())) {
-      $command_content = self::parseText($new_node->commandContent());
+      $command_content = self::parseText($new_node->commandContent(), $new_node->line_number);
       $new_node->setCommandContent($command_content);
     }
 
@@ -444,7 +448,7 @@ class LatexParser
     $new_node = $this->createCommandNode($token);
 
     if (StrHelper::isNotAlpha($new_node->commandContent())) {
-      $command_content = self::parseText($new_node->commandContent());
+      $command_content = self::parseText($new_node->commandContent(), $new_node->line_number);
       $new_node->setCommandContent($command_content);
     }
 
@@ -475,7 +479,7 @@ class LatexParser
       $new_node = $this->createCommandNode($token);
 
       if ($new_node->getArg('arg1')) {
-        $arg1 = self::parseText($new_node->getArg('arg1'));
+        $arg1 = self::parseText($new_node->getArg('arg1'), $new_node->line_number);
         $new_node->setCommandContent($arg1);
       }
 

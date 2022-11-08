@@ -176,6 +176,8 @@ class LatexLexer
   public function __construct($data = [])
   {
     if (isset($data['thm_env'])) self::setTheoremEnvs($data['thm_env']);
+
+    $this->line_number = $data['line_number_offset'] ?? 1;
   }
 
   public static function setRefLabels($labels)
@@ -529,8 +531,6 @@ class LatexLexer
 
   private function init()
   {
-    $this->line_number = 0;
-
     $this->num_chars = 0;
 
     $this->tokens = [];
@@ -546,7 +546,7 @@ class LatexLexer
 
     $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
 
-    $this->line_number = $n > -1 ? $n : 1;
+    $this->line_number = $n > -1 ? $n : $this->line_number;
 
     $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
 
