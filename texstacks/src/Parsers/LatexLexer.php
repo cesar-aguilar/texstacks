@@ -326,13 +326,10 @@ class LatexLexer
             $command_src .= "[" . $options . "]";
           }
 
-          $this->forward();
-
           try {
-            // $args = $this->getContentBetweenDelimiters('{', '}');
-            $args = $this->getCommandContent();
+            $args = $this->getCommandContent(move_forward: true);
           } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
 
           if ($args === '') {
@@ -351,16 +348,13 @@ class LatexLexer
             'line_number' => $this->line_number,
           ]));
         } else if ($this->getCommandType($this->command_name, $env) === 'bibliography-environment') {
+
           $command_src = "\\" . $this->command_name . "{" . $env . "}";
 
           try {
-            $args = $this->getContentBetweenDelimiters('{', '}');
+            $args = $this->getCommandContent(move_forward: true);
           } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
-          }
-
-          if ($args === '') {
-            throw new \Exception("Parse error: Missing arguments for tabular environment on line " . $this->line_number);
+            throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
 
           $command_src .= "{" . $args . "}";
@@ -1085,8 +1079,9 @@ class LatexLexer
     }
   }
 
-  private function getCommandContent()
+  private function getCommandContent($move_forward = false)
   {
+    if ($move_forward) $this->forward();
 
     try {
       $this->consumeSpaceUntilTarget('{');
@@ -1094,43 +1089,51 @@ class LatexLexer
       throw new \Exception($e->getMessage());
     }
 
-    $content = '';
-
-    $brace_count = 1;
-
-    $char = $this->getNextChar();
-
-    while (!is_null($char) && $brace_count > 0) {
-
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $so_far = '\\' . $this->command_name . '{' . $content;
-        throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
-      }
-
-      if ($char !== '}') {
-
-        $content .= $char;
-
-        if ($char === '{') $brace_count++;
-
-        $char = $this->getNextChar();
-      } else {
-
-        $brace_count--;
-
-        if ($brace_count > 0) {
-          $content .= '}';
-          $char = $this->getNextChar();
-        }
-      }
-    }
-
-    if ($this->cursor === $this->num_chars) {
-      $so_far = '\\' . $this->command_name . '{' . $content;
-      throw new \Exception("$so_far __ <--- Missing closing brace } on line {$this->line_number}");
+    try {
+      $content = $this->getContentUpToDelimiter('}', '{');
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
     }
 
     return $content;
+
+    // $content = '';
+
+    // $brace_count = 1;
+
+    // $char = $this->getNextChar();
+
+    // while (!is_null($char) && $brace_count > 0) {
+
+    //   if ($char === "\n" && $this->prev_char === "\n") {
+    //     $so_far = '\\' . $this->command_name . '{' . $content;
+    //     throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
+    //   }
+
+    //   if ($char !== '}') {
+
+    //     $content .= $char;
+
+    //     if ($char === '{') $brace_count++;
+
+    //     $char = $this->getNextChar();
+    //   } else {
+
+    //     $brace_count--;
+
+    //     if ($brace_count > 0) {
+    //       $content .= '}';
+    //       $char = $this->getNextChar();
+    //     }
+    //   }
+    // }
+
+    // if ($this->cursor === $this->num_chars) {
+    //   $so_far = '\\' . $this->command_name . '{' . $content;
+    //   throw new \Exception("$so_far __ <--- Missing closing brace } on line {$this->line_number}");
+    // }
+
+    // return $content;
   }
 
   public function prettyPrintTokens()
@@ -1144,11 +1147,12 @@ class LatexLexer
 
   /**
    * Get the content between two delimiters
-   * Nesting not allowed.
+   * Nesting is allowed.
    * 
    * The cursor should be just before $left delimiter
    * White space is ignored and is the only character allowed
    * before the $left delimiter, otherwise we break out of the loop
+   * which indicates that the $left delimiter is not found.
    */
   private function getContentBetweenDelimiters($left_delim, $right_delim)
   {
@@ -1180,12 +1184,13 @@ class LatexLexer
   }
 
   /**
-   * Get the content up to the next delimiter
+   * Returns the content up to the next matching delimiter
    * 
-   * 
-   * The cursor should be just before the delimiter
-   * The only character not allowed before the 
-   * delimiter is \n
+   * Call this function if the current char is $left_delimiter
+   * and you wish to consume (and return) the content
+   * up to the next $right_delimiter.  The content may
+   * contain nested $left_delimiter and $right_delimiter.  Upon
+   * success, the cursor will be at the $right_delimiter.
    */
   private function getContentUpToDelimiter($right_delimiter, $left_delimiter)
   {
@@ -1198,7 +1203,8 @@ class LatexLexer
     while (!is_null($char) && $delim_count > 0) {
 
       if ($char === "\n" && $this->prev_char === "\n") {
-        $message = "$content <--- Parse error on line {$this->line_number}: newline invalid syntax";
+        $so_far = $left_delimiter . $content;
+        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
         throw new \Exception($message);
       }
@@ -1223,7 +1229,8 @@ class LatexLexer
     }
 
     if ($this->cursor === $this->num_chars) {
-      $message = "$content <--- Parse error on line {$this->line_number}: missing $right_delimiter";
+      $so_far = $left_delimiter . $content;
+      $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
       $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter, $left_delimiter)";
       throw new \Exception($message);
     }
