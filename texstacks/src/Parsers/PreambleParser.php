@@ -145,6 +145,8 @@ class PreambleParser
     foreach ($title_options as $arg) {
       if ($arg->type === 'arg') return $arg->value;
     }
+
+    return '';
   }
 
   private function getArticleDate(): string

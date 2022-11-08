@@ -215,9 +215,12 @@ class LatexParser
   private function preprocessRawSource()
   {
 
-    return $this->raw_src;
+    $search_replace = [
+      '<' => '&lt;',
+      '>' => '&gt;',
+    ];
 
-    // return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
+    return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
   }
 
   public function generateMathJaxConfig(): string

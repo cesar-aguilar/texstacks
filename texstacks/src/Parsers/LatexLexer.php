@@ -829,7 +829,7 @@ class LatexLexer
         }
 
         try {
-          $options = $this->getContentUpToDelimiter(']');
+          $options = $this->getContentUpToDelimiter(']', '[');
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
@@ -893,7 +893,7 @@ class LatexLexer
         }
 
         try {
-          $options = $this->getContentUpToDelimiter(']');
+          $options = $this->getContentUpToDelimiter(']', '[');
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
@@ -965,7 +965,7 @@ class LatexLexer
         }
 
         try {
-          $options = $this->getContentUpToDelimiter(']');
+          $options = $this->getContentUpToDelimiter(']', '[');
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
@@ -1021,7 +1021,7 @@ class LatexLexer
       if ($char === '[') {
 
         try {
-          $options = $this->getContentUpToDelimiter(']');
+          $options = $this->getContentUpToDelimiter(']', '[');
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
@@ -1167,7 +1167,7 @@ class LatexLexer
       if ($char === $left_delim) {
 
         try {
-          $content = $this->getContentUpToDelimiter($right_delim);
+          $content = $this->getContentUpToDelimiter($right_delim, $left_delim);
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
@@ -1187,24 +1187,45 @@ class LatexLexer
    * The only character not allowed before the 
    * delimiter is \n
    */
-  private function getContentUpToDelimiter($delimiter)
+  private function getContentUpToDelimiter($right_delimiter, $left_delimiter)
   {
     $content = '';
 
+    $delim_count = 1;
+
     $char = $this->getNextChar();
 
-    while (!is_null($char) && $char !== $delimiter) {
+    while (!is_null($char) && $delim_count > 0) {
 
-      if ($char === "\n") {
-        throw new \Exception("$content <--- Parse error on line {$this->line_number}: newline invalid syntax");
+      if ($char === "\n" && $this->prev_char === "\n") {
+        $message = "$content <--- Parse error on line {$this->line_number}: newline invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
+        throw new \Exception($message);
       }
 
-      $content .= $char;
-      $char = $this->getNextChar();
+      if ($char !== $right_delimiter) {
+
+        $content .= $char;
+
+        if ($char === $left_delimiter) $delim_count++;
+
+        $char = $this->getNextChar();
+      } else {
+
+        $delim_count--;
+
+        if ($delim_count > 0) {
+          $content .= $right_delimiter;
+          $char = $this->getNextChar();
+        }
+      }
+
     }
 
     if ($this->cursor === $this->num_chars) {
-      throw new \Exception("$content <--- Parse error on line {$this->line_number}: missing $delimiter");
+      $message = "$content <--- Parse error on line {$this->line_number}: missing $right_delimiter";
+      $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter, $left_delimiter)";
+      throw new \Exception($message);
     }
 
     return $content;
