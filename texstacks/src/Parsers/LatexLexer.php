@@ -486,20 +486,13 @@ class LatexLexer
         try {
           $arg_1 = $this->getCommandContent();
         } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $this->forward();
-        $this->consumeWhiteSpace();
-
-        if ($this->getChar() !== '{') {
-          throw new \Exception("Parse error: Missing opening brace for second argument of command " . $this->command_name . " on line " . $this->line_number);
+          throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
         }
 
         try {
-          $arg_2 = $this->getCommandContent();
+          $arg_2 = $this->getCommandContent(move_forward: true);
         } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
+          throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
         }
 
         $this->addToken(new Token([
