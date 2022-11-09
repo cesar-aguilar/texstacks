@@ -133,6 +133,7 @@ class LatexParser
 
         'environment',
         'group-environment',
+        'inlinemath',
         'displaymath-environment',
         'verbatim-environment',
         'tabular-environment',
@@ -147,7 +148,6 @@ class LatexParser
 
         'label' => 'handleLabelNode',
 
-        'inlinemath',
         'symbol',
         'alpha-symbol',
         'includegraphics',

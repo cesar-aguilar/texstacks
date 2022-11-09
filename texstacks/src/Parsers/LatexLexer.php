@@ -177,6 +177,7 @@ class LatexLexer
   private int $cursor;
   private string|null $prev_char;
   private int $num_chars;
+  private bool $in_math;
 
   private string $command_name;
   private static array $thm_env = [];
@@ -239,14 +240,16 @@ class LatexLexer
 
         if ($this->getNextChar() === "$") {
           try {
-            $this->addDisplayMath('$$');
+            $this->in_math = !$this->in_math;
+            $this->addDisplayMathToken($this->in_math ? '[' : ']');
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
         } else {
           $this->backup();
           try {
-            $this->addInlineMath('$');
+            $this->in_math = !$this->in_math;
+            $this->addInlineMathToken($this->in_math ? '(' : ')');
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
@@ -265,13 +268,13 @@ class LatexLexer
       // If char is non-alphabetic then we have a control symbol
       if (!ctype_alpha($char ?? '')) {
 
-        if ($char === '(') {
-          $this->addInlineMath('(');
+        if ($char === '(' || $char === ')') {
+          $this->addInlineMathToken($char);
           continue;
         }
 
-        if ($char === '[') {
-          $this->addDisplayMath('[');
+        if ($char === '[' || $char === ']') {
+          $this->addDisplayMathToken($char);
           continue;
         }
 
