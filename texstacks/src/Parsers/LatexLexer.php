@@ -57,6 +57,9 @@ class LatexLexer
     'bibitem',
     'cite',
     'title',
+    'author',
+    'contrib',
+    'subjclass',
   ];
 
   const ONE_ARGS_CMDS = [
@@ -64,8 +67,15 @@ class LatexLexer
     'ref',
     'eqref',
     'tag',
-    'author',
     'date',
+    'address',
+    'curraddr',
+    'email',
+    'urladdr',
+    'dedicatory',
+    'thanks',
+    'translator',
+    'keywords',
   ];
 
   const TABULAR_ENVIRONMENTS = [
@@ -430,7 +440,7 @@ class LatexLexer
         if (in_array($this->command_name, ['ref', 'eqref', 'label']))
           $label = self::$ref_labels[$content] ?? '?';
 
-        $type = in_array($this->command_name, ['title', 'author', 'date']) ? 'ignore' : $this->command_name;
+        $type = in_array($this->command_name, ['date', 'address', 'curraddr', 'email', 'urladdr', 'dedicatory', 'thanks', 'translator', 'keywords']) ? 'ignore' : $this->command_name;
 
         $this->addToken(new Token([
           'type' => $type,
@@ -527,7 +537,6 @@ class LatexLexer
           'command_src' => "\\" . $this->command_name . "{" . $arg_1 . "}{" . $arg_2 . "}",
           'line_number' => $this->line_number,
         ]));
-
       } else {
         $this->buffer .= "\\" . $this->command_name;
         $this->backup();
@@ -592,8 +601,9 @@ class LatexLexer
     $this->tokens[] = $token;
   }
 
-  private function addInlineMath($delim) {
-    
+  private function addInlineMath($delim)
+  {
+
     try {
       if ($delim === '$') {
         $content = $this->getContentUpToDelimiterNoNesting('$', '$');
@@ -620,7 +630,8 @@ class LatexLexer
     // $this->addInlineMathToken(')');
   }
 
-  private function addDisplayMath($delim) {
+  private function addDisplayMath($delim)
+  {
 
     try {
       if ($delim === '$$') {
@@ -736,10 +747,6 @@ class LatexLexer
 
     $command_name = $char === '{' ? 'begin' : 'end';
 
-    // $last_token = $this->getLastToken();
-    // $options = $last_token->command_name;
-    // $src = $last_token->command_src;
-
     $command_content = 'unnamed';
 
     $this->tokens[] = new Token([
@@ -768,7 +775,6 @@ class LatexLexer
       $letter = $content[0];
       $tail = substr($content, 1);
       $command_src = "\\" . $char . "{" . $letter . "}";
-
     } else {
       $letter = $this->getChar();
       $tail = '';
@@ -800,14 +806,13 @@ class LatexLexer
         'line_number' => $this->line_number,
       ]));
     }
-
   }
 
   private function backup()
   {
     if ($this->getChar() === "\n") $this->line_number--;
     $this->cursor--;
-    if ($this->cursor -1 > -1) $this->prev_char = $this->stream[$this->cursor - 1];
+    if ($this->cursor - 1 > -1) $this->prev_char = $this->stream[$this->cursor - 1];
   }
 
   private function forward()
@@ -832,7 +837,8 @@ class LatexLexer
     return $char;
   }
 
-  private function peek() {
+  private function peek()
+  {
     return $this->cursor + 1 < $this->num_chars ? $this->stream[$this->cursor + 1] : null;
   }
 
@@ -1012,7 +1018,7 @@ class LatexLexer
       }
     }
 
-    $type = in_array($this->command_name, ['title']) ? 'ignore' : $this->command_name;
+    $type = in_array($this->command_name, ['title', 'author', 'contrib', 'subjclass']) ? 'ignore' : $this->command_name;
 
     return new Token([
       'type' => $type,
@@ -1195,44 +1201,6 @@ class LatexLexer
     }
 
     return $content;
-
-    // $content = '';
-
-    // $brace_count = 1;
-
-    // $char = $this->getNextChar();
-
-    // while (!is_null($char) && $brace_count > 0) {
-
-    //   if ($char === "\n" && $this->prev_char === "\n") {
-    //     $so_far = '\\' . $this->command_name . '{' . $content;
-    //     throw new \Exception("$so_far __ <--- Parse error on line {$this->line_number}: invalid syntax");
-    //   }
-
-    //   if ($char !== '}') {
-
-    //     $content .= $char;
-
-    //     if ($char === '{') $brace_count++;
-
-    //     $char = $this->getNextChar();
-    //   } else {
-
-    //     $brace_count--;
-
-    //     if ($brace_count > 0) {
-    //       $content .= '}';
-    //       $char = $this->getNextChar();
-    //     }
-    //   }
-    // }
-
-    // if ($this->cursor === $this->num_chars) {
-    //   $so_far = '\\' . $this->command_name . '{' . $content;
-    //   throw new \Exception("$so_far __ <--- Missing closing brace } on line {$this->line_number}");
-    // }
-
-    // return $content;
   }
 
   public function prettyPrintTokens()
@@ -1324,7 +1292,6 @@ class LatexLexer
           $char = $this->getNextChar();
         }
       }
-
     }
 
     if ($this->cursor === $this->num_chars) {
@@ -1367,7 +1334,8 @@ class LatexLexer
     return $content;
   }
 
-  private function getContentInDoubleDollarSign() {
+  private function getContentInDoubleDollarSign()
+  {
     $content = '';
 
     $char = $this->getNextChar();
@@ -1408,7 +1376,8 @@ class LatexLexer
    *
    * $delim is either ] or )
    */
-  private function getMathContent($delim) {
+  private function getMathContent($delim)
+  {
 
     $content = '';
 
@@ -1445,7 +1414,6 @@ class LatexLexer
     }
 
     return $content;
-
   }
 
   private function getEnvName()
