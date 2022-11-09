@@ -260,6 +260,11 @@ class LatexLexer
           continue;
         }
 
+        if ($char === '[' || $char === ']') {
+          $this->addDisplayMathToken($char);
+          continue;
+        }
+
         if (key_exists($char, self::ACCENT_CMDS)) {
           $this->addAccentToken($char);
           continue;
@@ -572,9 +577,9 @@ class LatexLexer
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
-    $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
-    $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
-    $html_src = str_replace('\]', '\end{equation*}', $html_src);
+    // $html_src = preg_replace('/([^\\\])(?:\\\)(?:\[)/', '$1\\begin{equation*} ', $html_src);
+    // $html_src = preg_replace('/^\s*(?:\\\)(?:\[)/m', '$1\\begin{equation*} ', $html_src);
+    // $html_src = str_replace('\]', '\end{equation*}', $html_src);
 
     return $html_src;
   }
@@ -692,6 +697,20 @@ class LatexLexer
       'command_content' => 'inlinemath',
       'command_options' => '',
       'command_src' => "\\" . $char,
+      'line_number' => $this->line_number,
+    ]));
+  }
+
+  private function addDisplayMathToken($char)
+  {
+    // Treat display math like a begin/end environment
+    $cmd = $char === '[' ? 'begin' : 'end';
+
+    $this->addToken(new Token([
+      'type' => 'displaymath-environment',
+      'command_name' => $cmd,
+      'command_content' => 'equation*',
+      'command_src' => "\\" . $cmd . "{equation*}",
       'line_number' => $this->line_number,
     ]));
   }

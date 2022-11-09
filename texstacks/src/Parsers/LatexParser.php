@@ -112,15 +112,16 @@ class LatexParser
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-    // if (!$this->called_internally) {
-    //   $arr = [];
-    //   foreach ($tokens as $token) {
-    //     if ($token->line_number > 140 && $token->line_number < 150) {
-    //       $arr[] = $token;
-    //     }
-    //   }
-    //   dd($arr);
-    // }
+    if (!$this->called_internally) {
+      // $arr = [];
+      // foreach ($tokens as $token) {
+      //   if ($token->line_number > 140 && $token->line_number < 150) {
+      //     $arr[] = $token;
+      //   }
+      // }
+      // dd($arr);
+      // $this->lexer->prettyPrintTokens();
+    }
     // $this->lexer->prettyPrintTokens();
     /* From token add node to syntax tree using depth-first traversal */
     foreach ($tokens as $token) {
