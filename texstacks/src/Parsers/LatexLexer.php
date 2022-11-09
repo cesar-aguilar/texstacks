@@ -604,13 +604,20 @@ class LatexLexer
       throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
     }
 
-    $this->addInlineMathToken('(');
     $this->addToken(new Token([
-      'type' => 'text',
+      'type' => 'inlinemath',
       'body' => $content,
+      'command_src' => '\(' . $content . '\)',
       'line_number' => $this->line_number,
     ]));
-    $this->addInlineMathToken(')');
+
+    // $this->addInlineMathToken('(');
+    // $this->addToken(new Token([
+    //   'type' => 'text',
+    //   'body' => $content,
+    //   'line_number' => $this->line_number,
+    // ]));
+    // $this->addInlineMathToken(')');
   }
 
   private function addDisplayMath($delim) {
@@ -1365,7 +1372,7 @@ class LatexLexer
 
     $char = $this->getNextChar();
 
-    while (!is_null($char) && $char !== '$') {
+    while (!is_null($char) && !($char === '$' && $this->peek() === '$')) {
 
       if ($char === "\n" && $this->prev_char === "\n") {
         $so_far = '\$\$' . $content;
