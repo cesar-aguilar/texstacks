@@ -121,6 +121,7 @@ class LatexParser
       // }
       // dd($arr);
       // $this->lexer->prettyPrintTokens();
+      // die();
     }
     // $this->lexer->prettyPrintTokens();
     /* From token add node to syntax tree using depth-first traversal */

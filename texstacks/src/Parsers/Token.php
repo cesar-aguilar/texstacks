@@ -36,6 +36,8 @@ class Token
         $array = [];
 
         foreach ($as_array as $key => $value) {
+            if (is_array($value)) $value = implode(', ', $value);
+
             $array[] = $key . ': ' . $value;
         }
 

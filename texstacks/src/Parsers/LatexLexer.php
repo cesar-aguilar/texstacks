@@ -229,14 +229,14 @@ class LatexLexer
 
         if ($this->getNextChar() === "$") {
           try {
-            $this->addDisplayMath();
+            $this->addDisplayMath('$$');
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
         } else {
           $this->backup();
           try {
-            $this->addInlineMath();
+            $this->addInlineMath('$');
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
@@ -255,13 +255,13 @@ class LatexLexer
       // If char is non-alphabetic then we have a control symbol
       if (!ctype_alpha($char ?? '')) {
 
-        if ($char === '(' || $char === ')') {
-          $this->addInlineMathToken($char);
+        if ($char === '(') {
+          $this->addInlineMath('(');
           continue;
         }
 
-        if ($char === '[' || $char === ']') {
-          $this->addDisplayMathToken($char);
+        if ($char === '[') {
+          $this->addDisplayMath('[');
           continue;
         }
 
@@ -592,10 +592,14 @@ class LatexLexer
     $this->tokens[] = $token;
   }
 
-  private function addInlineMath() {
+  private function addInlineMath($delim) {
     
     try {
-      $content = $this->getContentUpToDelimiterNoNesting('$', '$');
+      if ($delim === '$') {
+        $content = $this->getContentUpToDelimiterNoNesting('$', '$');
+      } else {
+        $content = $this->getMathContent(')');
+      }
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
     }
@@ -609,10 +613,14 @@ class LatexLexer
     $this->addInlineMathToken(')');
   }
 
-  private function addDisplayMath() {
+  private function addDisplayMath($delim) {
 
     try {
-      $content = $this->getContentInDoubleDollarSign();
+      if ($delim === '$$') {
+        $content = $this->getContentInDoubleDollarSign();
+      } else {
+        $content = $this->getMathContent(']');
+      }
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
     }
@@ -815,6 +823,10 @@ class LatexLexer
     if ($char === "\n") $this->line_number++;
 
     return $char;
+  }
+
+  private function peek() {
+    return $this->cursor + 1 < $this->num_chars ? $this->stream[$this->cursor + 1] : null;
   }
 
   private function getCommandType($name, $env = null)
@@ -1382,6 +1394,51 @@ class LatexLexer
     }
 
     return $content;
+  }
+
+  /**
+   * Get content upto \] or \)
+   *
+   * $delim is either ] or )
+   */
+  private function getMathContent($delim) {
+
+    $content = '';
+
+    $left = $delim === ']' ? '[' : '(';
+
+    $char = $this->getNextChar();
+
+    while (!is_null($char) && !($char === "\\" && $this->peek() === $delim)) {
+
+      if ($char === "\n" && $this->prev_char === "\n") {
+        $so_far = "&#92;$left" . $content;
+        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . "($delim)";
+        throw new \Exception($message);
+      }
+
+      $content .= $char;
+
+      $char = $this->getNextChar();
+    }
+
+    if (is_null($char)) {
+      $so_far = "&#92;$left" . $content;
+      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with &#92;$delim";
+      $message .= "<br>Function: " . __FUNCTION__ . "($delim)";
+      throw new \Exception($message);
+    }
+
+    if ($char === "\\" && $this->getNextChar() !== $delim) {
+      $so_far = "&#92;$left" . $content;
+      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with &#92;$delim";
+      $message .= "<br>Function: " . __FUNCTION__ . "($delim)";
+      throw new \Exception($message);
+    }
+
+    return $content;
+
   }
 
   private function getEnvName()
