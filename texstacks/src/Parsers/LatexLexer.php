@@ -167,6 +167,7 @@ class LatexLexer
   private int $cursor;
   private string|null $prev_char;
   private int $num_chars;
+  private bool $in_math;
 
   private string $command_name;
   private static array $thm_env = [];
@@ -222,6 +223,13 @@ class LatexLexer
 
       if ($char === '%') {
         $this->consumeUntilTarget("\n");
+        continue;
+      }
+
+      if ($char === "$") {
+        $this->in_math = !$this->in_math;
+        $char = $this->in_math ? '(' : ')';
+        $this->addInlineMathToken($char);
         continue;
       }
 
@@ -523,6 +531,8 @@ class LatexLexer
     $this->tokens = [];
 
     $this->buffer = '';
+
+    $this->in_math = false;
   }
 
   private function preprocessLatexSource(string $latex_src)
@@ -546,7 +556,7 @@ class LatexLexer
     // Then replace $...$ with \begin{math}...\end{math}
     // note space after \begin{math}
     // $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\begin{math} $1\\end{math}", $html_src);
-    $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\( $1 \\)", $html_src);
+    // $html_src = preg_replace('/(?<!\\\)\$(.*?)\$/s', "\\( $1 \\)", $html_src);
 
     // Replace \[...\] with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
