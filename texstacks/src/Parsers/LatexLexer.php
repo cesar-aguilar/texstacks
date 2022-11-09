@@ -167,7 +167,6 @@ class LatexLexer
   private int $cursor;
   private string|null $prev_char;
   private int $num_chars;
-  private bool $in_math;
 
   private string $command_name;
   private static array $thm_env = [];
@@ -227,9 +226,22 @@ class LatexLexer
       }
 
       if ($char === "$") {
-        $this->in_math = !$this->in_math;
-        $char = $this->in_math ? '(' : ')';
-        $this->addInlineMathToken($char);
+
+        if ($this->getNextChar() === "$") {
+          try {
+            $this->addDisplayMath();
+          } catch (\Exception $e) {
+            throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+          }
+        } else {
+          $this->backup();
+          try {
+            $this->addInlineMath();
+          } catch (\Exception $e) {
+            throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+          }
+        }
+
         continue;
       }
 
@@ -551,7 +563,7 @@ class LatexLexer
 
     // Replace $$...$$ with \begin{equation*}...\end{equation*}
     // note space after \begin{equation*}
-    $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1 \\end{equation*}', $html_src);
+    // $html_src = preg_replace('/\$\$(.*?)\$\$/s', '\\begin{equation*} $1 \\end{equation*}', $html_src);
 
     // Then replace $...$ with \begin{math}...\end{math}
     // note space after \begin{math}
@@ -573,6 +585,52 @@ class LatexLexer
     $this->addBufferAsToken();
 
     $this->tokens[] = $token;
+  }
+
+  private function addInlineMath() {
+    
+    try {
+      $content = $this->getContentUpToDelimiterNoNesting('$', '$');
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+    }
+
+    $this->addInlineMathToken('(');
+    $this->addToken(new Token([
+      'type' => 'text',
+      'body' => $content,
+      'line_number' => $this->line_number,
+    ]));
+    $this->addInlineMathToken(')');
+  }
+
+  private function addDisplayMath() {
+
+    try {
+      $content = $this->getContentInDoubleDollarSign();
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+    }
+
+    $this->addToken(new Token([
+      'type' => 'displaymath-environment',
+      'command_name' => 'begin',
+      'command_content' => 'equation*',
+      'command_src' => "\\begin{equation*}",
+      'line_number' => $this->line_number,
+    ]));
+    $this->addToken(new Token([
+      'type' => 'text',
+      'body' => $content,
+      'line_number' => $this->line_number,
+    ]));
+    $this->addToken(new Token([
+      'type' => 'displaymath-environment',
+      'command_name' => 'end',
+      'command_content' => 'equation*',
+      'command_src' => "\\end{equation*}",
+      'line_number' => $this->line_number,
+    ]));
   }
 
   private function addSymbolToken(string $char)
@@ -1235,6 +1293,72 @@ class LatexLexer
       $so_far = $left_delimiter . $content;
       $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
       $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter, $left_delimiter)";
+      throw new \Exception($message);
+    }
+
+    return $content;
+  }
+
+  private function getContentUpToDelimiterNoNesting($right_delimiter, $left_delimiter)
+  {
+    $content = '';
+
+    $char = $this->getNextChar();
+
+    while (!is_null($char) && $char !== $right_delimiter) {
+
+      if ($char === "\n" && $this->prev_char === "\n") {
+        $so_far = $left_delimiter . $content;
+        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
+        throw new \Exception($message);
+      }
+
+      $content .= $char;
+
+      $char = $this->getNextChar();
+    }
+
+    if ($this->cursor === $this->num_chars) {
+      $so_far = $left_delimiter . $content;
+      $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
+      $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
+      throw new \Exception($message);
+    }
+
+    return $content;
+  }
+
+  private function getContentInDoubleDollarSign() {
+    $content = '';
+
+    $char = $this->getNextChar();
+
+    while (!is_null($char) && $char !== '$') {
+
+      if ($char === "\n" && $this->prev_char === "\n") {
+        $so_far = '\$\$' . $content;
+        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . "()";
+        throw new \Exception($message);
+      }
+
+      $content .= $char;
+
+      $char = $this->getNextChar();
+    }
+
+    if (is_null($char)) {
+      $so_far = '\$\$' . $content;
+      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with \$\$";
+      $message .= "<br>Function: " . __FUNCTION__ . "()";
+      throw new \Exception($message);
+    }
+
+    if ($char === '$' && $this->getNextChar() !== '$') {
+      $so_far = '\$\$' . $content;
+      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with \$\$";
+      $message .= "<br>Function: " . __FUNCTION__ . "()";
       throw new \Exception($message);
     }
 
