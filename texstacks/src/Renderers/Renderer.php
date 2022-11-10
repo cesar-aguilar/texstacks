@@ -94,6 +94,8 @@ class Renderer
 
     // return preg_replace('/\n{2,}/', "<br><br>", $body);
 
+    if ($body === "\n") return '';
+
     return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
 
     // Replace two \n characters with <br>
@@ -105,6 +107,9 @@ class Renderer
 
   private static function renderRoot($node, $body)
   {
+
+    $body = preg_replace('/^(<br>)+|(<br>)+$/', '', $body);
+
     if ($node->hasClasses()) {
       $classes = $node->getClasses();
       return "<span class='$classes'>$body</span>";
