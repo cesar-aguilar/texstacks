@@ -23,6 +23,8 @@ class SectionCommandRenderer
 
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
 
+    $body = trim($body, "<br>");
+
     return match ($node->commandName()) {
 
       'chapter', 'chapter*' =>

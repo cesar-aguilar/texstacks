@@ -858,6 +858,8 @@ class LatexLexer
 
       if (in_array($env, self::$thm_env)) return 'thm-environment';
 
+      if ($env === 'math') return 'inlinemath';
+
       if ($env === 'verbatim') return 'verbatim-environment';
 
       if ($env === 'thebibliography') return 'bibliography-environment';
@@ -1176,13 +1178,13 @@ class LatexLexer
       }
 
       if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'section-cmd') {
-        // $this->tokens[$k]->body = rtrim($token->body, "\n");
-        $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
+        $this->tokens[$k]->body = rtrim($token->body);
+        // $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
 
       if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'section-cmd') {
-        // $this->tokens[$k]->body = ltrim($token->body, "\n");
-        $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
+        $this->tokens[$k]->body = ltrim($token->body);
+        // $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
     }
   }
