@@ -2,14 +2,15 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\Node;
+use TexStacks\Helpers\StrHelper;
+use TexStacks\Parsers\LatexLexer;
 use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\CommandNode;
 use TexStacks\Parsers\SectionNode;
-use TexStacks\Parsers\EnvironmentNode;
-use TexStacks\Parsers\LatexLexer;
+use TexStacks\Helpers\SectionCounter;
 use TexStacks\Parsers\PreambleParser;
+use TexStacks\Parsers\EnvironmentNode;
 
 class LatexParser
 {
@@ -18,7 +19,7 @@ class LatexParser
   protected SyntaxTree $tree;
   private $current_node;
   private $lexer;
-  private $section_counters;
+  private $sectionCounter;
   private $counters;
   private $thm_envs = [];
   private $raw_src;
@@ -42,6 +43,7 @@ class LatexParser
     ];
 
     $this->lexer = new LatexLexer($lexer_data);
+    $this->sectionCounter = new SectionCounter($args['doc_class'] ?? 'article');
   }
 
   private function initTree()
@@ -60,14 +62,6 @@ class LatexParser
 
   private function initCounters()
   {
-    $this->section_counters = [
-      'chapter' => 0,
-      'section' => 0,
-      'subsection' => 0,
-      'subsubsection' => 0,
-      'paragraph' => 0,
-      'subparagraph' => 0,
-    ];
 
     $this->counters = [
       'footnote' => ['value' => 0, 'parent' => null],
@@ -163,6 +157,8 @@ class LatexParser
         'caption' => 'handleCaptionNode',
 
         'two-args-cmd' => 'handleTwoArgCommandNode',
+
+        'action-cmd' => 'handleActionCommandNode',
 
         'tag',
         'ignore' => 'doNothing',
@@ -305,7 +301,9 @@ class LatexParser
 
     $section_name = $new_node->commandName();
 
-    $new_node->setRefNum($this->getSectionNumber($section_name));
+    $new_node->setRefNum($this->sectionCounter->get($section_name));
+
+    $this->resetChildrenCounters($section_name);
 
     $this->resetTheoremCounters($section_name);
 
@@ -494,6 +492,11 @@ class LatexParser
     }
   }
 
+  private function handleActionCommandNode($token): void
+  {
+    // if ($token->command_name === 'appendix') $this->appendixMode();
+  }
+
   private function createCommandNode($token): mixed
   {
 
@@ -534,8 +537,8 @@ class LatexParser
 
       $counter = $shared_env->counter;
 
-      if ($shared_env->parent) {
-        $parent_counter = $this->getSectionNumber($shared_env->parent, increment: false);
+      if ($shared_env->parent && $this->sectionCounter->isCounter($shared_env->parent)) {
+        $parent_counter = $this->sectionCounter->get($shared_env->parent, increment: false);
         $counter = $parent_counter . '.' . $counter;
       }
     } else if ($env->parent) {
@@ -544,7 +547,7 @@ class LatexParser
 
       $counter = $env->counter;
 
-      $parent_counter = $this->getSectionNumber($env->parent, increment: false);
+      $parent_counter = $this->sectionCounter->get($env->parent, increment: false);
 
       $counter = $parent_counter . '.' . $counter;
     } else {
@@ -569,42 +572,8 @@ class LatexParser
     $this->tree->prependNode($node);
   }
 
-  private function getSectionNumber($section_name, $increment = true): string
+  private function resetChildrenCounters($section_name = null): void
   {
-
-    if (str_contains($section_name, '*')) return '';
-
-    if (str_contains($section_name, 'paragraph')) return '';
-
-    if (!key_exists($section_name, $this->section_counters)) return '';
-
-    $this->section_counters[$section_name] += $increment ? 1 : 0;
-
-    $section_numbers = [];
-
-    foreach ($this->section_counters as $key => $value) {
-
-      if ($value) $section_numbers[] = $value;
-
-      if ($key == $section_name) break;
-    }
-
-    if ($increment) $this->resetChildrenSectionCounters($section_name);
-
-    return implode('.', $section_numbers);
-  }
-
-  private function resetChildrenSectionCounters($section_name = null): void
-  {
-
-    $flag = false;
-
-    foreach ($this->section_counters as $key => $value) {
-      if ($flag) $this->section_counters[$key] = 0;
-
-      if ($key === $section_name) $flag = true;
-    }
-
     foreach ($this->counters as $key => $value) {
       if ($this->counters[$key]['parent'] === $section_name) $this->counters[$key]['value'] = 0;
     }
@@ -628,12 +597,8 @@ class LatexParser
 
     $parent_counter = $this->counters[$counter]['parent'];
 
-    $value = '';
-
-    if (key_exists($parent_counter, $this->section_counters)) {
-      $value = $this->getSectionNumber($parent_counter, increment: false);
-    }
-
+    $value = $this->sectionCounter->get($parent_counter, increment: false);
+    
     $num = ++$this->counters[$counter]['value'];
 
     return $value ? $value . '.' . $num : $num;

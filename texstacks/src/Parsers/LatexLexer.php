@@ -172,6 +172,10 @@ class LatexLexer
     '"' => 'uml',
   ];
 
+  const ACTION_CMDS = [
+    'appendix',
+  ];
+
   private array $tokens;
   private string $buffer;
   private int $line_number;
@@ -542,6 +546,13 @@ class LatexLexer
           'command_src' => "\\" . $this->command_name . "{" . $arg_1 . "}{" . $arg_2 . "}",
           'line_number' => $this->line_number,
         ]));
+      } else if($this->getCommandType($this->command_name) === 'action-cmd') {
+        $this->addToken(new Token([
+          'type' => 'action-cmd',
+          'command_name' => $this->command_name,
+          'command_src' => "\\" . $this->command_name,
+          'line_number' => $this->line_number,
+        ]));
       } else {
         $this->buffer .= "\\" . $this->command_name;
         $this->backup();
@@ -886,6 +897,8 @@ class LatexLexer
     if (in_array($name, self::SPACING_CMDS)) return 'spacing-cmd';
 
     if (in_array($name, self::TWO_ARGS_CMDS)) return 'two-args-cmd';
+
+    if (in_array($name, self::ACTION_CMDS)) return 'action-cmd';
 
     return 'text';
   }
