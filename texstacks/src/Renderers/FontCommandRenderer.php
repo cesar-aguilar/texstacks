@@ -41,7 +41,7 @@ class FontCommandRenderer
 
             'textnormal' => "<span style=\"font-variant: normal\">$body</span>",
 
-            'text' => "<span style=\"font-variant: normal\">$body</span>",
+            'text' => "\\text\{$body\}",
 
             'textsuperscript' => "<sup>$body</sup>",
 

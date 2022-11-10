@@ -94,6 +94,7 @@ class LatexLexer
     'textit',
     'textsl',
     'textsc',
+    'text',
     'emph',
     'textnormal',
     'textsuperscript',
@@ -137,6 +138,7 @@ class LatexLexer
     'compactenum',
     'compactitem',
     'asparaenum',
+    'description',
   ];
 
   const ALPHA_SYMBOLS = [

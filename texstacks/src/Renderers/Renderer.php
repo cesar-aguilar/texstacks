@@ -116,6 +116,11 @@ class Renderer
   {
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
+    if ($node->parent()?->commandContent('description')) {
+      $label = $node->commandOptions();
+      return "<dt>$label</dt><dd>$body</dd>";
+    }
+
     return "<li>$body</li>";
   }
 

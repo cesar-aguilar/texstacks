@@ -29,6 +29,8 @@ class EnvironmentRenderer
 
             'abstract' => self::renderAbstract($node, $body),
 
+            'quote', 'quotation' => self::renderQuoteEnvironment($node, $body),
+
             default => self::renderUnknownEnvironment($node, $body)
         };
     }
@@ -42,6 +44,11 @@ class EnvironmentRenderer
         }
 
         return "<div class=\"proof-env\"><span class=\"proof-head\" id=\"{$node->commandLabel()}\">$head. </span> $body <span style=\"font-variant: small-caps\">QED</span></div>";
+    }
+
+    private static function renderQuoteEnvironment(EnvironmentNode $node, string $body = null): string
+    {
+        return "<blockquote>$body</blockquote>";
     }
 
     private static function renderExampleEnvironment(EnvironmentNode $node, string $body = null): string

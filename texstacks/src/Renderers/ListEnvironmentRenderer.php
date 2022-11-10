@@ -28,7 +28,9 @@ class ListEnvironmentRenderer
             }
 
             return "<ol>$body</ol>";
-        } 
+        } else if ($node->commandContent() === 'description') {
+            return "<dl>$body</dl>";
+        }
         else
         {
             return "<ul>$body</ul>";
