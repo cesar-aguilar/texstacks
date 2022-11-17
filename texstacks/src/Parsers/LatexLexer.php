@@ -2,10 +2,11 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\Token;
+use TexStacks\Helpers\StrHelper;
+use TexStacks\Parsers\Tokenizer;
 
-class LatexLexer
+class LatexLexer extends Tokenizer
 {
 
   const ENVS_POST_OPTIONS = [
@@ -139,6 +140,7 @@ class LatexLexer
     'compactitem',
     'asparaenum',
     'description',
+    'algorithmic',
   ];
 
   const ALPHA_SYMBOLS = [
@@ -175,41 +177,19 @@ class LatexLexer
   const ACTION_CMDS = [
     'appendix',
   ];
-
-  private array $tokens;
-  private string $buffer;
-  private int $line_number;
-  private string $stream;
-  private int $cursor;
-  private string|null $prev_char;
-  private int $num_chars;
-  private bool $in_math;
-
-  private string $command_name;
+   
   private static array $thm_env = [];
-  private static array $ref_labels;
-  private static array $citations;
-
+ 
   public function __construct($data = [])
   {
     if (isset($data['thm_env'])) self::setTheoremEnvs($data['thm_env']);
 
     $this->line_number = $data['line_number_offset'] ?? 1;
   }
-
-  public static function setRefLabels($labels)
-  {
-    self::$ref_labels = $labels;
-  }
-
+ 
   public static function setTheoremEnvs($thm_envs)
   {
     self::$thm_env = array_unique([...self::$thm_env, ...$thm_envs]);
-  }
-
-  public static function setCitations($citations)
-  {
-    self::$citations = $citations;
   }
 
   public function tokenize(string $latex_src)
@@ -428,15 +408,8 @@ class LatexLexer
           throw new \Exception($e->getMessage());
         }
 
-        $this->addToken(new Token([
-          'type' => 'font-cmd',
-          'command_name' => $this->command_name,
-          'command_content' => $content,
-          'command_options' => '',
-          'command_src' => "\\" . $this->command_name . "{" . $content . "}",
-          'body' => $content,
-          'line_number' => $this->line_number,
-        ]));
+        $this->addFontCommandToken($content);
+        
       } else if ($this->getCommandType($this->command_name) === 'one-arg-cmd') {
         try {
           $content = $this->getCommandContent();
@@ -449,7 +422,8 @@ class LatexLexer
         if (in_array($this->command_name, ['ref', 'eqref', 'label']))
           $label = self::$ref_labels[$content] ?? '?';
 
-        $type = in_array($this->command_name, ['date', 'address', 'curraddr', 'email', 'urladdr', 'dedicatory', 'thanks', 'translator', 'keywords']) ? 'ignore' : $this->command_name;
+        // $type = in_array($this->command_name, ['date', 'address', 'curraddr', 'email', 'urladdr', 'dedicatory', 'thanks', 'translator', 'keywords']) ? 'ignore' : $this->command_name;
+        $type = $this->command_name;
 
         $this->addToken(new Token([
           'type' => $type,
@@ -466,8 +440,6 @@ class LatexLexer
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage());
         }
-
-        if ($this->command_name === 'cite') $this->tokenizeCitation($token);
 
         $this->addToken($token);
       } else if ($this->getCommandType($this->command_name) === 'cmd-with-options') {
@@ -566,17 +538,6 @@ class LatexLexer
     return $this->tokens;
   }
 
-  private function init()
-  {
-    $this->num_chars = 0;
-
-    $this->tokens = [];
-
-    $this->buffer = '';
-
-    $this->in_math = false;
-  }
-
   private function preprocessLatexSource(string $latex_src)
   {
 
@@ -609,170 +570,28 @@ class LatexLexer
     return $html_src;
   }
 
-  private function addToken(Token $token)
+  private function addFontCommandToken($content)
   {
-
-    $this->addBufferAsToken();
-
-    $this->tokens[] = $token;
-  }
-
-  private function addInlineMath($delim)
-  {
-
-    try {
-      if ($delim === '$') {
-        $content = $this->getContentUpToDelimiterNoNesting('$', '$');
-      } else {
-        $content = $this->getMathContent(')');
-      }
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
-    }
-
     $this->addToken(new Token([
-      'type' => 'inlinemath',
-      'body' => $content,
-      'command_src' => '\(' . $content . '\)',
-      'line_number' => $this->line_number,
-    ]));
-
-    // $this->addInlineMathToken('(');
-    // $this->addToken(new Token([
-    //   'type' => 'text',
-    //   'body' => $content,
-    //   'line_number' => $this->line_number,
-    // ]));
-    // $this->addInlineMathToken(')');
-  }
-
-  private function addDisplayMath($delim)
-  {
-
-    try {
-      if ($delim === '$$') {
-        $content = $this->getContentInDoubleDollarSign();
-      } else {
-        $content = $this->getMathContent(']');
-      }
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
-    }
-
-    $this->addToken(new Token([
-      'type' => 'displaymath-environment',
-      'command_name' => 'begin',
-      'command_content' => 'equation*',
-      'command_src' => "\\begin{equation*}",
-      'line_number' => $this->line_number,
-    ]));
-    $this->addToken(new Token([
-      'type' => 'text',
+      'type' => 'font-cmd',
+      'command_name' => $this->command_name,
+      'command_content' => $content,
+      'command_options' => '',
+      'command_src' => "\\" . $this->command_name . "{" . $content . "}",
       'body' => $content,
       'line_number' => $this->line_number,
     ]));
-    $this->addToken(new Token([
-      'type' => 'displaymath-environment',
-      'command_name' => 'end',
-      'command_content' => 'equation*',
-      'command_src' => "\\end{equation*}",
-      'line_number' => $this->line_number,
-    ]));
-  }
-
-  private function addSymbolToken(string $char)
-  {
-
-    // Move one character forward and
-    // see if there are any options, this handles
-    // the commands like \\[1cm]
-    $this->getNextChar();
-
-    try {
-      $token = $this->tokenizeCmdWithOptions();
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    $token->type = 'symbol';
-    $token->body = $char;
-
-    $this->addToken($token);
   }
 
   private function addFontDeclarationToken()
   {
-    $this->addBufferAsToken();
-
-    $this->tokens[] = new Token([
+    $this->addToken(new Token([
       'type' => 'font-declaration',
       'body' => self::FONT_DECLARATIONS[$this->command_name],
       'line_number' => $this->line_number,
-    ]);
+    ]));
+
     if ($this->getChar() !== ' ') $this->backup();
-  }
-
-  private function addBufferAsToken()
-  {
-
-    if ($this->buffer === '') return;
-
-    // Replace more than two newlines with two newlines
-    // $text = preg_replace('/\n{3,}/', "\n\n", $this->buffer);
-    $text = $this->buffer;
-
-    $this->tokens[] = new Token([
-      'type' => 'text',
-      'body' => $text,
-      'line_number' => $this->line_number,
-    ]);
-
-    $this->buffer = '';
-  }
-
-  private function addInlineMathToken($char)
-  {
-    // Treat inline math like a begin/end environment
-    $this->addToken(new Token([
-      'type' => 'inlinemath',
-      'command_name' => $char === '(' ? 'begin' : 'end',
-      'command_content' => 'inlinemath',
-      'command_options' => '',
-      'command_src' => "\\" . $char,
-      'line_number' => $this->line_number,
-    ]));
-  }
-
-  private function addDisplayMathToken($char)
-  {
-    // Treat display math like a begin/end environment
-    $cmd = $char === '[' ? 'begin' : 'end';
-
-    $this->addToken(new Token([
-      'type' => 'displaymath-environment',
-      'command_name' => $cmd,
-      'command_content' => 'equation*',
-      'command_src' => "\\" . $cmd . "{equation*}",
-      'line_number' => $this->line_number,
-    ]));
-  }
-
-  private function addGroupEnvToken($char)
-  {
-    $this->addBufferAsToken();
-
-    $command_name = $char === '{' ? 'begin' : 'end';
-
-    $command_content = 'unnamed';
-
-    $this->tokens[] = new Token([
-      'type' => 'group-environment',
-      'command_name' => $command_name,
-      'command_content' => $command_content,
-      'command_src' => '',
-      'command_options' => '',
-      'line_number' => $this->line_number,
-    ]);
   }
 
   private function addAccentToken($char)
@@ -824,40 +643,6 @@ class LatexLexer
     }
   }
 
-  private function backup()
-  {
-    if ($this->getChar() === "\n") $this->line_number--;
-    $this->cursor--;
-    if ($this->cursor - 1 > -1) $this->prev_char = $this->stream[$this->cursor - 1];
-  }
-
-  private function forward()
-  {
-    $this->cursor++;
-    if ($this->getChar() === "\n") $this->line_number++;
-  }
-
-  private function getChar()
-  {
-    return $this->cursor < $this->num_chars ? $this->stream[$this->cursor] : null;
-  }
-
-  private function getNextChar()
-  {
-    $this->prev_char = $this->getChar();
-    $this->cursor++;
-    $char = $this->getChar();
-
-    if ($char === "\n") $this->line_number++;
-
-    return $char;
-  }
-
-  private function peek()
-  {
-    return $this->cursor + 1 < $this->num_chars ? $this->stream[$this->cursor + 1] : null;
-  }
-
   private function getCommandType($name, $env = null)
   {
 
@@ -903,281 +688,6 @@ class LatexLexer
     return 'text';
   }
 
-  private function tokenizeSection(): Token
-  {
-
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $STARRED = false;
-    $TOC_ENTRY = false;
-
-    $ALLOWED_CHARS = [' ', '*', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '*') {
-
-        if ($STARRED || $TOC_ENTRY) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        $this->cursor++;
-        $this->command_name .= '*';
-        $src .= '*';
-        $STARRED = true;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if ($TOC_ENTRY) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        $this->cursor++;
-        $TOC_ENTRY = true;
-        continue;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-        break;
-      }
-    }
-
-    return new Token([
-      'type' => 'section-cmd',
-      'command_name' => $this->command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number,
-    ]);
-  }
-
-  private function tokenizeCmdWithOptionsArg(string|null $type = null): Token
-  {
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $OPTIONS = false;
-
-    $ALLOWED_CHARS = [' ', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if ($OPTIONS) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        $this->cursor++;
-        $OPTIONS = true;
-        continue;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-
-        break;
-      }
-    }
-
-    $type = in_array($this->command_name, ['title', 'author', 'contrib', 'subjclass']) ? 'ignore' : $this->command_name;
-
-    return new Token([
-      'type' => $type,
-      'command_name' => $this->command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'body' => $content,
-      'line_number' => $this->line_number,
-    ]);
-  }
-
-  private function tokenizeCmdWithArgOptions(string|null $type = null): Token
-  {
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $ARGS_DONE = false;
-
-    $ALLOWED_CHARS = [' ', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        if (!$ARGS_DONE) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-        $this->backup();
-        break;
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if (!$ARGS_DONE) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        break;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-
-        $ARGS_DONE = true;
-      }
-    }
-
-    return new Token([
-      'type' => $type ?? $this->command_name,
-      'command_name' => $this->command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number,
-    ]);
-  }
-
-  private function tokenizeCmdWithOptions(string|null $type = null): Token
-  {
-    $options = '';
-    $src = '\\' . $this->command_name;
-
-    $ALLOWED_CHARS = [' ', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $this->backup();
-        break;
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        break;
-      }
-    }
-
-    return new Token([
-      'type' => $this->command_name,
-      'command_name' => $this->command_name,
-      'command_content' => '',
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number,
-    ]);
-  }
-
-  private function tokenizeCitation($token): void
-  {
-    $labels = array_map(trim(...), explode(',', $token->command_content));
-
-    $citation_numbers = [];
-
-    foreach ($labels as $label) {
-      if (isset(self::$citations[$label])) {
-        $citation_numbers[] = self::$citations[$label];
-      } else {
-        $citation_numbers[] = '?';
-      }
-    }
-
-    $token->body = implode(',', $citation_numbers);
-  }
-
   private function postProcessTokens(): void
   {
 
@@ -1204,352 +714,4 @@ class LatexLexer
     }
   }
 
-  private function getCommandContent($move_forward = false)
-  {
-    if ($move_forward) $this->forward();
-
-    try {
-      $this->consumeSpaceUntilTarget('{');
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    try {
-      $content = $this->getContentUpToDelimiter('}', '{');
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    return $content;
-  }
-
-  public function prettyPrintTokens()
-  {
-
-    foreach ($this->tokens as $token) {
-      echo $token;
-    }
-    die();
-  }
-
-  /**
-   * Get the content between two delimiters
-   * Nesting is allowed.
-   * 
-   * The cursor should be just before $left delimiter
-   * White space is ignored and is the only character allowed
-   * before the $left delimiter, otherwise we break out of the loop
-   * which indicates that the $left delimiter is not found.
-   */
-  private function getContentBetweenDelimiters($left_delim, $right_delim)
-  {
-    $content = '';
-    $ALLOWED_CHARS = [' ', $left_delim];
-
-    while (!is_null($char = $this->getNextChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $this->backup();
-        break;
-      }
-
-      if ($char === ' ') continue;
-
-      if ($char === $left_delim) {
-
-        try {
-          $content = $this->getContentUpToDelimiter($right_delim, $left_delim);
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        break;
-      }
-    }
-
-    return $content;
-  }
-
-  /**
-   * Returns the content up to the next matching delimiter
-   * 
-   * Call this function if the current char is $left_delimiter
-   * and you wish to consume (and return) the content
-   * up to the next $right_delimiter.  The content may
-   * contain nested $left_delimiter and $right_delimiter.  Upon
-   * success, the cursor will be at the $right_delimiter.
-   */
-  private function getContentUpToDelimiter($right_delimiter, $left_delimiter)
-  {
-    $content = '';
-
-    $delim_count = 1;
-
-    $char = $this->getNextChar();
-
-    while (!is_null($char) && $delim_count > 0) {
-
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $so_far = $left_delimiter . $content;
-        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
-        $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
-        throw new \Exception($message);
-      }
-
-      if ($char !== $right_delimiter) {
-
-        $content .= $char;
-
-        if ($char === $left_delimiter) $delim_count++;
-
-        $char = $this->getNextChar();
-      } else {
-
-        $delim_count--;
-
-        if ($delim_count > 0) {
-          $content .= $right_delimiter;
-          $char = $this->getNextChar();
-        }
-      }
-    }
-
-    if ($this->cursor === $this->num_chars) {
-      $so_far = $left_delimiter . $content;
-      $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
-      $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter, $left_delimiter)";
-      throw new \Exception($message);
-    }
-
-    return $content;
-  }
-
-  private function getContentUpToDelimiterNoNesting($right_delimiter, $left_delimiter)
-  {
-    $content = '';
-
-    $char = $this->getNextChar();
-
-    while (!is_null($char) && $char !== $right_delimiter) {
-
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $so_far = $left_delimiter . $content;
-        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
-        $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
-        throw new \Exception($message);
-      }
-
-      $content .= $char;
-
-      $char = $this->getNextChar();
-    }
-
-    if ($this->cursor === $this->num_chars) {
-      $so_far = $left_delimiter . $content;
-      $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
-      $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
-      throw new \Exception($message);
-    }
-
-    return $content;
-  }
-
-  private function getContentInDoubleDollarSign()
-  {
-    $content = '';
-
-    $char = $this->getNextChar();
-
-    while (!is_null($char) && !($char === '$' && $this->peek() === '$')) {
-
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $so_far = '\$\$' . $content;
-        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
-        $message .= "<br>Function: " . __FUNCTION__ . "()";
-        throw new \Exception($message);
-      }
-
-      $content .= $char;
-
-      $char = $this->getNextChar();
-    }
-
-    if (is_null($char)) {
-      $so_far = '\$\$' . $content;
-      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with \$\$";
-      $message .= "<br>Function: " . __FUNCTION__ . "()";
-      throw new \Exception($message);
-    }
-
-    if ($char === '$' && $this->getNextChar() !== '$') {
-      $so_far = '\$\$' . $content;
-      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with \$\$";
-      $message .= "<br>Function: " . __FUNCTION__ . "()";
-      throw new \Exception($message);
-    }
-
-    return $content;
-  }
-
-  /**
-   * Get content upto \] or \)
-   *
-   * $delim is either ] or )
-   */
-  private function getMathContent($delim)
-  {
-
-    $content = '';
-
-    $left = $delim === ']' ? '[' : '(';
-
-    $char = $this->getNextChar();
-
-    while (!is_null($char) && !($char === "\\" && $this->peek() === $delim)) {
-
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $so_far = "&#92;$left" . $content;
-        $message = "$so_far <--- Parse error on line {$this->line_number}: newline invalid syntax";
-        $message .= "<br>Function: " . __FUNCTION__ . "($delim)";
-        throw new \Exception($message);
-      }
-
-      $content .= $char;
-
-      $char = $this->getNextChar();
-    }
-
-    if (is_null($char)) {
-      $so_far = "&#92;$left" . $content;
-      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with &#92;$delim";
-      $message .= "<br>Function: " . __FUNCTION__ . "($delim)";
-      throw new \Exception($message);
-    }
-
-    if ($char === "\\" && $this->getNextChar() !== $delim) {
-      $so_far = "&#92;$left" . $content;
-      $message = "$so_far <--- Parse error on line {$this->line_number}: display math should end with &#92;$delim";
-      $message .= "<br>Function: " . __FUNCTION__ . "($delim)";
-      throw new \Exception($message);
-    }
-
-    return $content;
-  }
-
-  private function getEnvName()
-  {
-
-    try {
-      $this->consumeSpaceUntilTarget('{');
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    $env = '';
-
-    $char = $this->getNextChar();
-
-    while (!is_null($char) && $char !== '}') {
-
-      if (!(ctype_alpha($char) || $char === '*')) {
-        throw new \Exception($env . $char . " <--- Invalid environment name at line {$this->line_number}");
-      }
-
-      $env .= $char;
-      $char = $this->getNextChar();
-    }
-
-    if ($this->cursor === $this->num_chars) {
-      throw new \Exception("Expected } at line {$this->line_number}");
-    }
-
-    return $env;
-  }
-
-  private function consumeSpaceUntilTarget($target)
-  {
-
-    if ($this->cursor === $this->num_chars) {
-      throw new \Exception("Unexpected end of file on line {$this->line_number}");
-    }
-
-    $char = $this->getChar();
-
-    while (!is_null($char) && $char === ' ') {
-      $char = $this->getNextChar();
-    }
-
-    if ($char === $target) {
-      return;
-    }
-
-    throw new \Exception("Parse error: missing $target on line {$this->line_number}");
-  }
-
-  /**
-   * Consume white space from current cursor position
-   * 
-   * After this method is called, the cursor will be at the first
-   * non white space character
-   */
-  private function consumeWhiteSpace()
-  {
-
-    if ($this->cursor === $this->num_chars) {
-      return;
-    }
-
-    $char = $this->getChar();
-
-    while (!is_null($char) && $char === ' ') {
-      $char = $this->getNextChar();
-    }
-  }
-
-  /**
-   * Consumes and returns all alphabetic characters.
-   * After running the method, the cursor will be at
-   * a non-alphabetic character
-   */
-  private function consumeUntilNonAlpha($from_cursor = true)
-  {
-
-    $char = $from_cursor ? $this->getChar() : $this->getNextChar();
-
-    $alpha_text = '';
-
-    while (!is_null($char) && ctype_alpha($char)) {
-      $alpha_text .= $char;
-      $char = $this->getNextChar();
-    }
-
-    return $alpha_text;
-  }
-
-  private function consumeUntilTarget($target)
-  {
-
-    if ($this->cursor === $this->num_chars) {
-      throw new \Exception("Unexpected end of file on line {$this->line_number}");
-    }
-
-    $char = $this->getChar();
-
-    while (!is_null($char) && $char !== $target) {
-      $char = $this->getNextChar();
-    }
-
-    if ($char === $target) {
-      return;
-    }
-
-    throw new \Exception("Parse error: missing $target on line {$this->line_number}");
-  }
-
-  private function getLastToken()
-  {
-    $count = count($this->tokens);
-
-    return $count > 0 ? $this->tokens[$count - 1] : null;
-  }
 }
