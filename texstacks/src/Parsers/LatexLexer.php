@@ -167,13 +167,6 @@ class LatexLexer extends Tokenizer
     'texorpdfstring',
   ];
 
-  const ACCENT_CMDS = [
-    "'" => 'acute',
-    "`" => 'grave',
-    "^" => 'circ',
-    '"' => 'uml',
-  ];
-
   const ACTION_CMDS = [
     'appendix',
   ];
@@ -409,7 +402,7 @@ class LatexLexer extends Tokenizer
         }
 
         $this->addFontCommandToken($content);
-        
+
       } else if ($this->getCommandType($this->command_name) === 'one-arg-cmd') {
         try {
           $content = $this->getCommandContent();
@@ -592,55 +585,6 @@ class LatexLexer extends Tokenizer
     ]));
 
     if ($this->getChar() !== ' ') $this->backup();
-  }
-
-  private function addAccentToken($char)
-  {
-    $this->forward();
-    $this->consumeWhiteSpace();
-
-    if ($this->getChar() === '{') {
-
-      try {
-        $content = ltrim($this->getCommandContent());
-      } catch (\Exception $e) {
-        throw new \Exception($e->getMessage());
-      }
-
-      $letter = $content[0];
-      $tail = substr($content, 1);
-      $command_src = "\\" . $char . "{" . $letter . "}";
-    } else {
-      $letter = $this->getChar();
-      $tail = '';
-      $command_src = "\\" . $char . $letter;
-    }
-
-    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'])) {
-      $this->buffer .= $command_src . $tail;
-      return;
-    }
-
-    $accent = self::ACCENT_CMDS[$char];
-
-    $body = "&$letter$accent;";
-
-    $this->addToken(new Token([
-      'type' => 'accent-cmd',
-      'command_name' => $char,
-      'command_content' => $letter,
-      'command_src' => $command_src,
-      'body' => $body,
-      'line_number' => $this->line_number,
-    ]));
-
-    if ($tail) {
-      $this->addToken(new Token([
-        'type' => 'text',
-        'body' => $tail,
-        'line_number' => $this->line_number,
-      ]));
-    }
   }
 
   private function getCommandType($name, $env = null)

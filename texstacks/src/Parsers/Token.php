@@ -23,7 +23,7 @@ class Token
         $this->command_options = $args['command_options'] ?? '';
         $this->command_src = $args['command_src'] ?? '';
         $this->body = $args['body'] ?? '';
-        $this->line_number = $args['line_number'];
+        $this->line_number = $args['line_number'] ?? -1;
     }
 
     public function __toString(): string

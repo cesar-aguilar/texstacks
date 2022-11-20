@@ -7,6 +7,13 @@ use TexStacks\Parsers\TextScanner;
 
 class Tokenizer extends TextScanner {
 
+  const ACCENT_CMDS = [
+    "'" => 'acute',
+    "`" => 'grave',
+    "^" => 'circ',
+    '"' => 'uml',
+  ];
+
   protected array $tokens;  
   protected bool $in_math;
 
@@ -22,6 +29,14 @@ class Tokenizer extends TextScanner {
   public static function setCitations($citations)
   {
     self::$citations = $citations;
+  }
+
+  public function getCitations() {
+    return self::$citations;
+  }
+
+  public function getRefLabels() {
+    return self::$ref_labels;
   }
 
   protected function init()
@@ -70,6 +85,56 @@ class Tokenizer extends TextScanner {
       echo $token;
     }
     die();
+  }
+
+  protected function getTokenData($signature, $env = null)
+  {
+
+    try {
+
+      if ($signature === '{}' || $signature === '+{}') {
+        $content = $this->getCommandContent(move_forward: str_contains($signature, '+'));
+        if (!is_null($env)) $args = [$content];
+      }
+      else if ($signature === '+[]') {
+        $options = $this->getCmdWithOptions($signature);
+      }
+      else if ($signature === '*[]{}') {
+        list($content, $options) = $this->getCmdWithStarOptionsArg();
+      } else if ($signature === '{}[]') {
+        list($content, $options) = $this->getCmdWithArgOptions();
+      } else if ($signature === '[]{}' || $signature === '+[]{}') {
+        list($content, $options) = $this->getCmdWithOptionsArg($signature);
+        if (!is_null($env)) $args = [$content];
+      } else if ($signature === '*{}') {
+        $content = $this->getCmdWithStarArg();
+      } else if ($signature === '{}{}') {
+        $args = $this->getCmdWithArgArg();
+      }
+
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    return [
+      'command_name' => $this->command_name,
+      'command_content' => $env ?? $content ?? null,
+      'command_args' => $args ?? [],
+      'command_options' => $options ?? null,
+      'line_number' => $this->line_number,
+    ];
+
+  }
+
+  protected function getEndEnvTokenData($env)
+  {
+
+    return [
+      'command_name' => $this->command_name,
+      'command_content' => $env,
+      'line_number' => $this->line_number,
+    ];
+
   }
 
   protected function tokenizeCmdWithOptionsArg(string|null $type = null): Token
@@ -360,6 +425,303 @@ class Tokenizer extends TextScanner {
     ]);
   }
 
+  private function getCmdWithStarOptionsArg()
+  {
+
+    $content = '';
+    $options = '';
+    $src = '\\' . $this->command_name;
+    $STARRED = false;
+    $TOC_ENTRY = false;
+
+    $ALLOWED_CHARS = [' ', '*', '{', '['];
+
+    while (!is_null($char = $this->getChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $src .= $char;
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '*') {
+
+        if ($STARRED || $TOC_ENTRY) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        $this->cursor++;
+        $this->command_name .= '*';
+        $src .= '*';
+        $STARRED = true;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if ($TOC_ENTRY) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        $this->cursor++;
+        $TOC_ENTRY = true;
+        continue;
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+        break;
+      }
+    }
+
+    return [$content, $options];
+  }
+
+  private function getCmdWithStarArg()
+  {
+    $content = '';
+    $src = '\\' . $this->command_name;
+    $STARRED = false;
+
+    $ALLOWED_CHARS = [' ', '*', '{'];
+
+    while (!is_null($char = $this->getChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $src .= $char;
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '*') {
+
+        if ($STARRED) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        $this->cursor++;
+        $this->command_name .= '*';
+        $src .= '*';
+        $STARRED = true;
+        continue;
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+        break;
+      }
+    }
+
+    return $content;
+  }
+
+  private function getCmdWithArgOptions(string|null $type = null)
+  {
+    $content = '';
+    $options = '';
+    $src = '\\' . $this->command_name;
+    $ARGS_DONE = false;
+
+    $ALLOWED_CHARS = [' ', '{', '['];
+
+    while (!is_null($char = $this->getChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        if (!$ARGS_DONE) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+        $this->backup();
+        break;
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if (!$ARGS_DONE) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        break;
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+
+        $ARGS_DONE = true;
+      }
+    }
+
+    return [$content, $options];
+  }
+
+  private function getCmdWithOptionsArg($signature, string|null $type = null)
+  {
+
+    if (str_contains($signature, '+')) $this->forward();
+
+    $content = '';
+    $options = '';
+    $src = '\\' . $this->command_name;
+    $OPTIONS = false;
+
+    $ALLOWED_CHARS = [' ', '{', '['];
+
+    while (!is_null($char = $this->getChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $src .= $char;
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if ($OPTIONS) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        $this->cursor++;
+        $OPTIONS = true;
+        continue;
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getCommandContent();
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+
+        break;
+      }
+    }
+
+    return [$content, $options];
+
+  }
+
+  private function getCmdWithOptions($signature)
+  {
+    if (str_contains($signature, '+')) $this->forward();
+
+    $options = '';
+
+    $ALLOWED_CHARS = [' ', '['];
+
+    while (!is_null($char = $this->getChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $this->backup();
+        break;
+      }
+
+      if ($char === ' ') {
+        $this->cursor++;
+        continue;
+      }
+
+      if ($char === '[') {
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        break;
+      }
+    }
+
+    return $options;
+  }
+
+  private function getCmdWithArgArg()
+  {
+    try {
+      $arg_1 = $this->getCommandContent();
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+    }
+
+    try {
+      $arg_2 = $this->getCommandContent(move_forward: true);
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+    }
+
+    return [$arg_1, $arg_2];
+  }
+
   protected function addGroupEnvToken($char)
   {
     $this->addBufferAsToken();
@@ -396,6 +758,55 @@ class Tokenizer extends TextScanner {
     $token->body = $char;
 
     $this->addToken($token);
+  }
+
+  protected function addAccentToken($char)
+  {
+    $this->forward();
+    $this->consumeWhiteSpace();
+
+    if ($this->getChar() === '{') {
+
+      try {
+        $content = ltrim($this->getCommandContent());
+      } catch (\Exception $e) {
+        throw new \Exception($e->getMessage());
+      }
+
+      $letter = $content[0];
+      $tail = substr($content, 1);
+      $command_src = "\\" . $char . "{" . $letter . "}";
+    } else {
+      $letter = $this->getChar();
+      $tail = '';
+      $command_src = "\\" . $char . $letter;
+    }
+
+    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'])) {
+      $this->buffer .= $command_src . $tail;
+      return;
+    }
+
+    $accent = self::ACCENT_CMDS[$char];
+
+    $body = "&$letter$accent;";
+
+    $this->addToken(new Token([
+      'type' => 'accent-cmd',
+      'command_name' => $char,
+      'command_content' => $letter,
+      'command_src' => $command_src,
+      'body' => $body,
+      'line_number' => $this->line_number,
+    ]));
+
+    if ($tail) {
+      $this->addToken(new Token([
+        'type' => 'text',
+        'body' => $tail,
+        'line_number' => $this->line_number,
+      ]));
+    }
   }
 
   private function tokenizeCitation($token): void

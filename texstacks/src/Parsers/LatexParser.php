@@ -266,6 +266,21 @@ class LatexParser
     return $front_matter;
   }
 
+  public function getTheoremEnvs(): array
+  {
+    return $this->thm_envs;
+  }
+
+  public function getCitations(): array
+  {
+    return $this->lexer->getCitations();
+  }
+
+  public function getRefLabels(): array
+  {
+    return $this->lexer->getRefLabels();
+  }
+
   private function addToCurrentNode($token): void
   {
     if ($this->current_node->isLeaf()) {
