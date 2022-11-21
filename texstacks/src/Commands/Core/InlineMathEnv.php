@@ -5,15 +5,17 @@ namespace TexStacks\Commands\Core;
 use TexStacks\Parsers\Token;
 use TexStacks\Commands\Environment;
 
-class InlineMathEnv extends Environment {
+class InlineMathEnv extends Environment
+{
 
-  protected static $type = 'environment:inlinemath';
+  protected static $type = 'inlinemath';
 
   protected static $commands = [
     'math',
   ];
 
-  public static function signature() {
+  public static function signature()
+  {
     return '';
   }
 
@@ -25,5 +27,4 @@ class InlineMathEnv extends Environment {
 
     return new Token($args);
   }
-  
 }

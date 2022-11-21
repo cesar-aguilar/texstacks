@@ -60,6 +60,7 @@ class ArticleLexer extends BaseLexer
       return
         $token->type === \TexStacks\Commands\TheoremEnv::type() ||
         $token->type === \TexStacks\Commands\Core\SectionCommands::type() ||
+        $token->type === \TexStacks\Commands\Core\InlineMathEnv::type() ||
         $token->type === 'text';
     });
   }
