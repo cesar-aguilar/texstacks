@@ -57,7 +57,7 @@ class ArticleLexer extends BaseLexer
   {
 
     $this->tokens = array_filter($this->tokens, function ($token) {
-      return $token->type === \TexStacks\Commands\Core\FontEnv::type();
+      return $token->type === \TexStacks\Commands\Core\SectionCommands::type();
     });
   }
 }
