@@ -10,7 +10,6 @@ class LatexArticle
 {
 
   private $latex_src;
-  private $html_src;
   private $basename;
   private $dir;
   private $parser;
@@ -47,10 +46,8 @@ class LatexArticle
     $this->parser->setRefLabels($ref_labels);
     $this->parser->setCitations($citations);
 
-    $this->html_src = $this->latex_src;
-
     try {
-      $this->parser->parse($this->html_src);
+      $this->parser->parse($this->latex_src);
     } catch (\Exception $e) {
       $this->parser->terminateWithError("<div>Message: {$e->getMessage()}</div><div>File: {$e->getFile()}</div><div>Line: {$e->getLine()}</div>");
     }
@@ -59,11 +56,6 @@ class LatexArticle
   public function getLatex()
   {
     return $this->latex_src;
-  }
-
-  public function getHtml()
-  {
-    return $this->html_src;
   }
 
   public function convert()
