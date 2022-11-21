@@ -71,7 +71,7 @@ class LatexParser
         'environment:list',
         'bibliography-environment' => 'handleEnvironmentNode',
 
-        'thm-environment' => 'handleTheoremEnvironment',
+        'environment:theorem' => 'handleTheoremEnvironment',
 
         'item' => 'handleListItemNode',
 
@@ -403,7 +403,7 @@ class LatexParser
   {
     $this->current_node->setLabel($token->command_content);
 
-    if (!$this->current_node->hasType(['cmd:section', 'thm-environment'])) {
+    if (!$this->current_node->hasType(['cmd:section', 'environment:theorem'])) {
       $this->current_node->setRefNum($token->command_options);
     }
 
@@ -499,7 +499,7 @@ class LatexParser
 
     if ($token->type === 'cmd:section') {
       return new SectionNode($args);
-    } else if ($token->type === 'thm-environment') {
+    } else if ($token->type === 'environment:theorem') {
       return $this->createTheoremNode($token, $args);
     } else if (preg_match('/environment/', $token->type)) {
       return new EnvironmentNode($args);

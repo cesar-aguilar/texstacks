@@ -57,7 +57,10 @@ class ArticleLexer extends BaseLexer
   {
 
     $this->tokens = array_filter($this->tokens, function ($token) {
-      return $token->type === \TexStacks\Commands\Core\SectionCommands::type();
+      return
+        $token->type === \TexStacks\Commands\TheoremEnv::type() ||
+        $token->type === \TexStacks\Commands\Core\SectionCommands::type() ||
+        $token->type === 'text';
     });
   }
 }

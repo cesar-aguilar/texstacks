@@ -595,7 +595,7 @@ class LatexLexer extends Tokenizer
 
       if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'environment:tabular';
 
-      if (in_array($env, self::$thm_env)) return 'thm-environment';
+      if (in_array($env, self::$thm_env)) return 'environment:theorem';
 
       if ($env === 'math') return 'inlinemath';
 

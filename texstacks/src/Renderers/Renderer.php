@@ -43,7 +43,7 @@ class Renderer
 
     if ($node->hasType('inlinemath')) return "\\(" . $body . "\\)";
 
-    if ($node->hasType('thm-environment')) return ThmEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:theorem')) return ThmEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('group-environment')) return GroupEnvironmentRenderer::renderNode($node, $body);
 
@@ -185,7 +185,7 @@ class Renderer
   {
     if ($node->ancestorOfType(['verbatim-environment', 'environment:displaymath', 'inlinemath'])) return $node->commandSource() . ' ';
 
-    return match($node->commandName()) {
+    return match ($node->commandName()) {
       'smallskip' => '<div style="height: 1em;"></div>',
       'medskip' => '<div style="height: 2em;"></div>',
       'bigskip' => '<div style="height: 3em;"></div>',
