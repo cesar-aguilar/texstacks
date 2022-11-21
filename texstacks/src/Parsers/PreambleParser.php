@@ -9,7 +9,7 @@ class PreambleParser
 
   protected string $src;
 
-  public function setSrc(string $src)
+  public function __construct(string $src)
   {
     $this->src = $src;
   }

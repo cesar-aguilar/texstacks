@@ -4,17 +4,18 @@ namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\BaseLexer;
 
-class ArticleLexer extends BaseLexer {
+class ArticleLexer extends BaseLexer
+{
 
   public function __construct($data = [])
   {
     parent::__construct($data);
 
     if (isset($data['thm_env'])) {
-      \TexStacks\Commands\TheoremEnv::add(array_keys($data['thm_env']));
+      \TexStacks\Commands\TheoremEnv::add($data['thm_env']);
     }
 
-    if (isset($data['citations'])) {      
+    if (isset($data['citations'])) {
       \TexStacks\Commands\Core\Citations::add($data['citations']);
     }
 
@@ -50,15 +51,13 @@ class ArticleLexer extends BaseLexer {
     $this->registerDefaultEnvironment(
       \TexStacks\Commands\Environment::class
     );
-
   }
 
-  protected function postProcessTokens(): void {
+  protected function postProcessTokens(): void
+  {
 
-    $this->tokens = array_filter($this->tokens, function($token) {
+    $this->tokens = array_filter($this->tokens, function ($token) {
       return $token->type === \TexStacks\Commands\Core\FontEnv::type();
     });
-
   }
-
 }

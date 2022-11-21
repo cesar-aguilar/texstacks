@@ -170,16 +170,16 @@ class LatexLexer extends Tokenizer
   const ACTION_CMDS = [
     'appendix',
   ];
-   
+
   private static array $thm_env = [];
- 
+
   public function __construct($data = [])
   {
     if (isset($data['thm_env'])) self::setTheoremEnvs($data['thm_env']);
 
     $this->line_number = $data['line_number_offset'] ?? 1;
   }
- 
+
   public static function setTheoremEnvs($thm_envs)
   {
     self::$thm_env = array_unique([...self::$thm_env, ...$thm_envs]);
@@ -188,9 +188,7 @@ class LatexLexer extends Tokenizer
   public function tokenize(string $latex_src)
   {
 
-    $this->init();
-
-    $this->stream = $this->preprocessLatexSource($latex_src);
+    $this->stream = $this->preProcessLatexSource($latex_src);
 
     $this->num_chars = strlen($this->stream);
 
@@ -402,7 +400,6 @@ class LatexLexer extends Tokenizer
         }
 
         $this->addFontCommandToken($content);
-
       } else if ($this->getCommandType($this->command_name) === 'one-arg-cmd') {
         try {
           $content = $this->getCommandContent();
@@ -511,7 +508,7 @@ class LatexLexer extends Tokenizer
           'command_src' => "\\" . $this->command_name . "{" . $arg_1 . "}{" . $arg_2 . "}",
           'line_number' => $this->line_number,
         ]));
-      } else if($this->getCommandType($this->command_name) === 'action-cmd') {
+      } else if ($this->getCommandType($this->command_name) === 'action-cmd') {
         $this->addToken(new Token([
           'type' => 'action-cmd',
           'command_name' => $this->command_name,
@@ -531,7 +528,7 @@ class LatexLexer extends Tokenizer
     return $this->tokens;
   }
 
-  private function preprocessLatexSource(string $latex_src)
+  private function preProcessLatexSource(string $latex_src)
   {
 
     // Remove any spaces at the right end of lines and reconstruct the source
@@ -657,5 +654,4 @@ class LatexLexer extends Tokenizer
       }
     }
   }
-
 }

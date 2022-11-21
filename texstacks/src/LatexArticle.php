@@ -4,6 +4,7 @@ namespace TexStacks;
 
 use TexStacks\Parsers\LatexParser;
 use TexStacks\Parsers\AuxParser;
+use TexStacks\Parsers\LatexLexer;
 use TexStacks\Renderers\Renderer;
 
 class LatexArticle
@@ -41,13 +42,21 @@ class LatexArticle
     $ref_labels = $aux_parser->getLabelsAsArray();
     $citations = $aux_parser->getCitationsAsArray();
 
-    $this->parser = new LatexParser();
+    $this->parser = new LatexParser(['latex_src' => $this->latex_src]);
 
-    $this->parser->setRefLabels($ref_labels);
-    $this->parser->setCitations($citations);
+    $this->lexer = new LatexLexer();
+    $this->lexer->setRefLabels($ref_labels);
+    $this->lexer->setCitations($citations);
+    $this->lexer->setTheoremEnvs($this->parser->getTheoremEnvs());
 
     try {
-      $this->parser->parse($this->latex_src);
+      $tokens = $this->lexer->tokenize($this->parser->getSrc());
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    try {
+      $this->parser->parse($tokens);
     } catch (\Exception $e) {
       $this->parser->terminateWithError("<div>Message: {$e->getMessage()}</div><div>File: {$e->getFile()}</div><div>Line: {$e->getLine()}</div>");
     }

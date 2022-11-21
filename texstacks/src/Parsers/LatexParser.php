@@ -18,7 +18,6 @@ class LatexParser
   private $called_internally = false;
   protected SyntaxTree $tree;
   private $current_node;
-  private $lexer;
   private $sectionCounter;
   private $counters;
   private $thm_envs = [];
@@ -28,56 +27,19 @@ class LatexParser
 
   public function __construct($args = [])
   {
-
     $this->called_internally = isset($args['called_internally']) ? $args['called_internally'] : false;
-
-    $this->initTree();
-
-    $this->preamble_parser = new PreambleParser;
 
     $this->thm_envs = $args['thm_env'] ?? [];
 
-    $lexer_data = [
-      'thm_env' => array_keys($this->thm_envs),
-      'line_number_offset' => $args['line_number_offset'] ?? 0,
-    ];
-
-    $this->lexer = new LatexLexer($lexer_data);
     $this->sectionCounter = new SectionCounter($args['doc_class'] ?? 'article');
-  }
 
-  private function initTree()
-  {
-    $this->tree = new SyntaxTree();
+    $this->raw_src = $args['latex_src'] ?? '';
 
-    $root = new Node([
-      'id' => 0,
-      'type' => 'root',
-    ]);
+    $this->src = $this->preProcessRawSource();
 
-    $this->tree->setRoot($root);
+    $this->preamble_parser = new PreambleParser($this->src);
 
-    $this->current_node = $root;
-  }
-
-  private function initCounters()
-  {
-
-    $this->counters = [
-      'footnote' => ['value' => 0, 'parent' => null],
-      'figure' => ['value' => 0, 'parent' => null],
-      'table' => ['value' => 0, 'parent' => null],
-    ];
-
-    $number_within_cmds = $this->preamble_parser->getNumberWithin();
-
-    foreach ($number_within_cmds as $args) {
-      if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
-        $counter_name = $args[0]->value;
-        $parent_counter_name = $args[1]->value;
-        $this->counters[$counter_name]['parent'] = $parent_counter_name;
-      }
-    }
+    $this->init();
   }
 
   public function getRoot()
@@ -85,39 +47,14 @@ class LatexParser
     return $this->tree->root();
   }
 
-  public function setRefLabels($labels): void
+  public function getSrc()
   {
-    $this->lexer->setRefLabels($labels);
+    return $this->src;
   }
 
-  public function setCitations($citations): void
-  {
-    $this->lexer->setCitations($citations);
-  }
-
-  public function parse($latex_src_raw): void
+  public function parse($tokens): void
   {
 
-    /* pre-process raw latex and setup values needed by the lexer before tokenizing */
-    $this->init($latex_src_raw);
-
-    try {
-      $tokens = $this->lexer->tokenize($this->src);
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-    if (!$this->called_internally) {
-      // $arr = [];
-      // foreach ($tokens as $token) {
-      //   if ($token->line_number > 140 && $token->line_number < 150) {
-      //     $arr[] = $token;
-      //   }
-      // }
-      // dd($arr);
-      // $this->lexer->prettyPrintTokens();
-      // die();
-    }
-    // $this->lexer->prettyPrintTokens();
     /* From token add node to syntax tree using depth-first traversal */
     foreach ($tokens as $token) {
 
@@ -181,46 +118,6 @@ class LatexParser
 
   }
 
-  private static function parseText($text, $line_number_offset = 0): Node
-  {
-    $parser = new self([
-      'called_internally' => true,
-      'line_number_offset' => $line_number_offset,
-    ]);
-    $parser->parse($text);
-    return $parser->tree->root();
-  }
-
-  private function init($latex_src_raw): void
-  {
-    $this->raw_src = $latex_src_raw;
-
-    $this->src = $this->preprocessRawSource();
-
-    $this->preamble_parser->setSrc($this->src);
-
-    $thm_envs = $this->preamble_parser->getTheoremEnvs();
-
-    $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
-
-    $this->resetTheoremCounters();
-
-    $this->lexer->setTheoremEnvs(array_keys($this->thm_envs));
-
-    $this->initCounters();
-  }
-
-  private function preprocessRawSource()
-  {
-
-    $search_replace = [
-      '<' => '&lt;',
-      '>' => '&gt;',
-    ];
-
-    return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
-  }
-
   public function generateMathJaxConfig(): string
   {
 
@@ -268,17 +165,100 @@ class LatexParser
 
   public function getTheoremEnvs(): array
   {
-    return $this->thm_envs;
+    return array_keys($this->thm_envs);
   }
 
-  public function getCitations(): array
+  public function terminateWithError($message): void
   {
-    return $this->lexer->getCitations();
+
+    $node = new Node(
+      [
+        'id' => $this->tree->nodeCount(),
+        'type' => 'text',
+        'body' => "<div class=\"parse-error\">" . $message . "</div>",
+      ]
+    );
+
+    $this->tree->addNode($node, parent: $this->current_node);
+    $this->tree->prependNode($node);
   }
 
-  public function getRefLabels(): array
+  private static function parseText($text, $line_number_offset = 0): Node
   {
-    return $this->lexer->getRefLabels();
+
+    $parser = new self([
+      'called_internally' => true,
+      'latex_src' => $text,
+    ]);
+
+    $lexer = new LatexLexer(['line_number_offset' => $line_number_offset]);
+
+    try {
+      $tokens = $lexer->tokenize($parser->getSrc());
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    $parser->parse($tokens);
+
+    return $parser->tree->root();
+  }
+
+  private function preProcessRawSource()
+  {
+    $search_replace = [
+      '<' => '&lt;',
+      '>' => '&gt;',
+    ];
+
+    return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
+  }
+
+  private function init(): void
+  {
+    $thm_envs = $this->preamble_parser->getTheoremEnvs();
+
+    $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
+
+    $this->resetTheoremCounters();
+
+    $this->initTree();
+
+    $this->initCounters();
+  }
+
+  private function initTree()
+  {
+    $this->tree = new SyntaxTree();
+
+    $root = new Node([
+      'id' => 0,
+      'type' => 'root',
+    ]);
+
+    $this->tree->setRoot($root);
+
+    $this->current_node = $root;
+  }
+
+  private function initCounters()
+  {
+
+    $this->counters = [
+      'footnote' => ['value' => 0, 'parent' => null],
+      'figure' => ['value' => 0, 'parent' => null],
+      'table' => ['value' => 0, 'parent' => null],
+    ];
+
+    $number_within_cmds = $this->preamble_parser->getNumberWithin();
+
+    foreach ($number_within_cmds as $args) {
+      if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
+        $counter_name = $args[0]->value;
+        $parent_counter_name = $args[1]->value;
+        $this->counters[$counter_name]['parent'] = $parent_counter_name;
+      }
+    }
   }
 
   private function addToCurrentNode($token): void
@@ -572,21 +552,6 @@ class LatexParser
     return $counter;
   }
 
-  public function terminateWithError($message): void
-  {
-
-    $node = new Node(
-      [
-        'id' => $this->tree->nodeCount(),
-        'type' => 'text',
-        'body' => "<div class=\"parse-error\">" . $message . "</div>",
-      ]
-    );
-
-    $this->tree->addNode($node, parent: $this->current_node);
-    $this->tree->prependNode($node);
-  }
-
   private function resetChildrenCounters($section_name = null): void
   {
     foreach ($this->counters as $key => $value) {
@@ -613,7 +578,7 @@ class LatexParser
     $parent_counter = $this->counters[$counter]['parent'];
 
     $value = $this->sectionCounter->get($parent_counter, increment: false);
-    
+
     $num = ++$this->counters[$counter]['value'];
 
     return $value ? $value . '.' . $num : $num;

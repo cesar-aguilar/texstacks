@@ -15,13 +15,11 @@ class BaseLexer extends Tokenizer
   {
     $this->line_number = $data['line_number_offset'] ?? 1;
   }
- 
+
   public function tokenize(string $latex_src)
   {
 
-    $this->init();
-
-    $this->stream = $this->preprocessLatexSource($latex_src);
+    $this->stream = $this->preProcessLatexSource($latex_src);
 
     $this->num_chars = strlen($this->stream);
 
@@ -139,7 +137,6 @@ class BaseLexer extends Tokenizer
 
         $this->addToken($token);
         continue 2;
-
       }
 
       if (is_null($env)) {
@@ -149,11 +146,10 @@ class BaseLexer extends Tokenizer
       }
 
       $token = $this->command_name === 'end'
-      ? $this->default_env::end($this->getEndEnvTokenData($env))
-      : $this->default_env::make($this->getTokenData('', $env));
+        ? $this->default_env::end($this->getEndEnvTokenData($env))
+        : $this->default_env::make($this->getTokenData('', $env));
 
       $this->addToken($token);
-
     }
 
     $this->addBufferAsToken();
@@ -175,7 +171,8 @@ class BaseLexer extends Tokenizer
     $this->command_groups[] = $class_name;
   }
 
-  public function registerDefaultEnvironment($class_name) {
+  public function registerDefaultEnvironment($class_name)
+  {
     $this->default_env = $class_name;
   }
 
@@ -215,7 +212,7 @@ class BaseLexer extends Tokenizer
     }
   }
 
-  private function preprocessLatexSource(string $latex_src)
+  private function preProcessLatexSource(string $latex_src)
   {
 
     $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
@@ -226,5 +223,4 @@ class BaseLexer extends Tokenizer
 
     return $html_src;
   }
-
 }

@@ -5,7 +5,8 @@ namespace TexStacks\Parsers;
 use TexStacks\Parsers\Token;
 use TexStacks\Parsers\TextScanner;
 
-class Tokenizer extends TextScanner {
+class Tokenizer extends TextScanner
+{
 
   const ACCENT_CMDS = [
     "'" => 'acute',
@@ -14,10 +15,10 @@ class Tokenizer extends TextScanner {
     '"' => 'uml',
   ];
 
-  protected array $tokens;  
-  protected bool $in_math;
+  protected array $tokens = [];
+  protected bool $in_math = false;
 
-  protected string $command_name;  
+  protected string $command_name;
   protected static array $ref_labels;
   protected static array $citations;
 
@@ -31,18 +32,14 @@ class Tokenizer extends TextScanner {
     self::$citations = $citations;
   }
 
-  public function getCitations() {
+  public function getCitations()
+  {
     return self::$citations;
   }
 
-  public function getRefLabels() {
-    return self::$ref_labels;
-  }
-
-  protected function init()
+  public function getRefLabels()
   {
-    $this->tokens = [];    
-    $this->in_math = false;
+    return self::$ref_labels;
   }
 
   protected function addBufferAsToken()
@@ -70,7 +67,7 @@ class Tokenizer extends TextScanner {
 
     $this->tokens[] = $token;
   }
- 
+
   protected function getLastToken()
   {
     $count = count($this->tokens);
@@ -95,11 +92,9 @@ class Tokenizer extends TextScanner {
       if ($signature === '{}' || $signature === '+{}') {
         $content = $this->getCommandContent(move_forward: str_contains($signature, '+'));
         if (!is_null($env)) $args = [$content];
-      }
-      else if ($signature === '+[]') {
+      } else if ($signature === '+[]') {
         $options = $this->getCmdWithOptions($signature);
-      }
-      else if ($signature === '*[]{}') {
+      } else if ($signature === '*[]{}') {
         list($content, $options) = $this->getCmdWithStarOptionsArg();
       } else if ($signature === '{}[]') {
         list($content, $options) = $this->getCmdWithArgOptions();
@@ -111,7 +106,6 @@ class Tokenizer extends TextScanner {
       } else if ($signature === '{}{}') {
         $args = $this->getCmdWithArgArg();
       }
-
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
@@ -123,7 +117,6 @@ class Tokenizer extends TextScanner {
       'command_options' => $options ?? null,
       'line_number' => $this->line_number,
     ];
-
   }
 
   protected function getEndEnvTokenData($env)
@@ -134,7 +127,6 @@ class Tokenizer extends TextScanner {
       'command_content' => $env,
       'line_number' => $this->line_number,
     ];
-
   }
 
   protected function tokenizeCmdWithOptionsArg(string|null $type = null): Token
@@ -205,7 +197,6 @@ class Tokenizer extends TextScanner {
     if ($this->command_name === 'cite') $this->tokenizeCitation($token);
 
     return $token;
-
   }
 
   protected function tokenizeCmdWithOptions(string|null $type = null): Token
@@ -667,7 +658,6 @@ class Tokenizer extends TextScanner {
     }
 
     return [$content, $options];
-
   }
 
   private function getCmdWithOptions($signature)
