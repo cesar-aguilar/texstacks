@@ -10,7 +10,7 @@ class GroupEnvironmentRenderer
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'verbatim-environment'])) {
+        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'verbatim-environment'])) {
             return " {" . $body . "} ";
         }
 

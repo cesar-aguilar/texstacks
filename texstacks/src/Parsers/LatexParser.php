@@ -128,9 +128,9 @@ class LatexParser
         'environment',
         'group-environment',
         'inlinemath',
-        'displaymath-environment',
+        'environment:displaymath',
         'verbatim-environment',
-        'tabular-environment',
+        'environment:tabular',
         'environment:list',
         'bibliography-environment' => 'handleEnvironmentNode',
 
@@ -427,7 +427,7 @@ class LatexParser
       $this->current_node->setRefNum($token->command_options);
     }
 
-    if ($this->current_node->hasType('displaymath-environment')) {
+    if ($this->current_node->hasType('environment:displaymath')) {
       $new_node = $this->createCommandNode($token);
       $this->tree->addNode($new_node, $this->current_node);
 

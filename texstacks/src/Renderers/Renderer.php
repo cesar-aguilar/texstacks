@@ -39,7 +39,7 @@ class Renderer
 
     if ($node->hasType('cmd:section')) return SectionCommandRenderer::renderNode($node, $body);
 
-    if ($node->hasType('displaymath-environment')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:displaymath')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('inlinemath')) return "\\(" . $body . "\\)";
 
@@ -49,7 +49,7 @@ class Renderer
 
     if ($node->hasType('environment')) return EnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('tabular-environment')) return TabularEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:tabular')) return TabularEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('environment:list')) return ListEnvironmentRenderer::renderNode($node, $body);
 
@@ -87,7 +87,7 @@ class Renderer
 
     if ($node->hasType('accent-cmd')) return $node->body;
 
-    if ($node->ancestorOfType(['displaymath-environment', 'inlinemath', 'tabular-environment', 'verbatim-environment'])) return $body;
+    if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:tabular', 'verbatim-environment'])) return $body;
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     // $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
@@ -183,7 +183,7 @@ class Renderer
 
   private static function renderSpacingCommand($node, string $body = null): string
   {
-    if ($node->ancestorOfType(['verbatim-environment', 'displaymath-environment', 'inlinemath'])) return $node->commandSource() . ' ';
+    if ($node->ancestorOfType(['verbatim-environment', 'environment:displaymath', 'inlinemath'])) return $node->commandSource() . ' ';
 
     return match($node->commandName()) {
       'smallskip' => '<div style="height: 1em;"></div>',
@@ -195,7 +195,7 @@ class Renderer
 
   private static function renderTwoArgsCommand($node, string $body = null): string
   {
-    if ($node->ancestorOfType(['verbatim-environment', 'displaymath-environment', 'inlinemath'])) return $node->commandSource();
+    if ($node->ancestorOfType(['verbatim-environment', 'environment:displaymath', 'inlinemath'])) return $node->commandSource();
 
     if ($node->commandName() === 'texorpdfstring') {
       return Renderer::render($node->commandContent());

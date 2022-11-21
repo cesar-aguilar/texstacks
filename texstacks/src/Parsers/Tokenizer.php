@@ -337,7 +337,7 @@ class Tokenizer extends TextScanner {
     $cmd = $char === '[' ? 'begin' : 'end';
 
     $this->addToken(new Token([
-      'type' => 'displaymath-environment',
+      'type' => 'environment:displaymath',
       'command_name' => $cmd,
       'command_content' => 'equation*',
       'command_src' => "\\" . $cmd . "{equation*}",
@@ -869,7 +869,7 @@ class Tokenizer extends TextScanner {
   //   }
 
   //   $this->addToken(new Token([
-  //     'type' => 'displaymath-environment',
+  //     'type' => 'environment:displaymath',
   //     'command_name' => 'begin',
   //     'command_content' => 'equation*',
   //     'command_src' => "\\begin{equation*}",
@@ -881,7 +881,7 @@ class Tokenizer extends TextScanner {
   //     'line_number' => $this->line_number,
   //   ]));
   //   $this->addToken(new Token([
-  //     'type' => 'displaymath-environment',
+  //     'type' => 'environment:displaymath',
   //     'command_name' => 'end',
   //     'command_content' => 'equation*',
   //     'command_src' => "\\end{equation*}",

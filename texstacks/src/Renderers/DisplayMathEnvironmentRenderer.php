@@ -17,7 +17,7 @@ class DisplayMathEnvironmentRenderer
     }
 
     // If $node is a nested displaymath-env, then we need to render it as text
-    // if ($node->ancestorOfType('displaymath-environment')) return $latex;
+    // if ($node->ancestorOfType('environment:displaymath')) return $latex;
 
     $div = $node->commandLabel() ? "<div id=\"{$node->commandLabel()}\">" : "<div>";
 

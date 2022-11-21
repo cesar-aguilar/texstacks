@@ -299,7 +299,7 @@ class LatexLexer extends Tokenizer
             'command_src' => "\\end{" . $env . "}",
             'line_number' => $this->line_number,
           ]));
-        } else if ($this->getCommandType($this->command_name, $env) === 'displaymath-environment') {
+        } else if ($this->getCommandType($this->command_name, $env) === 'environment:displaymath') {
           $this->addToken(new Token([
             'type' => $this->getCommandType($this->command_name, $env),
             'command_name' => $this->command_name,
@@ -329,7 +329,7 @@ class LatexLexer extends Tokenizer
             'command_src' => $command_src,
             'line_number' => $this->line_number,
           ]));
-        } else if ($this->getCommandType($this->command_name, $env) === 'tabular-environment') {
+        } else if ($this->getCommandType($this->command_name, $env) === 'environment:tabular') {
 
           try {
             $options = $this->getContentBetweenDelimiters('[', ']');
@@ -592,11 +592,11 @@ class LatexLexer extends Tokenizer
 
     if ($name == 'begin' || $name == 'end') {
 
-      if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) return 'displaymath-environment';
+      if (in_array($env, self::DISPLAY_MATH_ENVIRONMENTS)) return 'environment:displaymath';
 
       if (in_array($env, self::LIST_ENVIRONMENTS))     return 'environment:list';
 
-      if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'tabular-environment';
+      if (in_array($env, self::TABULAR_ENVIRONMENTS))  return 'environment:tabular';
 
       if (in_array($env, self::$thm_env)) return 'thm-environment';
 

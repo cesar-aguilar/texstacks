@@ -8,7 +8,7 @@ class SymbolCommandRenderer
 {
     public static function renderNode(Node $node, string $body = null): string
     {
-        if ($node->ancestorOfType(['displaymath-environment', 'verbatim-environment', 'inlinemath'])) {
+        if ($node->ancestorOfType(['environment:displaymath', 'verbatim-environment', 'inlinemath'])) {
             if ($node instanceof Node) return "\\" . $node->body;
             return $node->commandSource();
         }
