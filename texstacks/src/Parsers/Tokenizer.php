@@ -416,7 +416,7 @@ class Tokenizer extends TextScanner {
     }
 
     return new Token([
-      'type' => 'section-cmd',
+      'type' => 'cmd:section',
       'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => $options,

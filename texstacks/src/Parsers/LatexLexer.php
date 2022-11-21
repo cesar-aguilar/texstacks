@@ -274,7 +274,7 @@ class LatexLexer extends Tokenizer
       $this->command_name = $this->consumeUntilNonAlpha();
 
       // Make token
-      if ($this->getCommandType($this->command_name) === 'section-cmd') {
+      if ($this->getCommandType($this->command_name) === 'cmd:section') {
         try {
           $token = $this->tokenizeSection();
         } catch (\Exception $e) {
@@ -393,7 +393,7 @@ class LatexLexer extends Tokenizer
             'line_number' => $this->line_number,
           ]));
         }
-      } else if ($this->getCommandType($this->command_name) === 'font-cmd') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:font') {
 
         try {
           $content = $this->getCommandContent();
@@ -443,7 +443,7 @@ class LatexLexer extends Tokenizer
         }
 
         $this->addToken($token);
-      } else if ($this->getCommandType($this->command_name) === 'font-declaration') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:font_declaration') {
         $this->addFontDeclarationToken();
       } else if ($this->getCommandType($this->command_name) === 'alpha-symbol') {
         $this->addToken(new Token([
@@ -566,7 +566,7 @@ class LatexLexer extends Tokenizer
   private function addFontCommandToken($content)
   {
     $this->addToken(new Token([
-      'type' => 'font-cmd',
+      'type' => 'cmd:font',
       'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => '',
@@ -579,7 +579,7 @@ class LatexLexer extends Tokenizer
   private function addFontDeclarationToken()
   {
     $this->addToken(new Token([
-      'type' => 'font-declaration',
+      'type' => 'cmd:font_declaration',
       'body' => self::FONT_DECLARATIONS[$this->command_name],
       'line_number' => $this->line_number,
     ]));
@@ -609,11 +609,11 @@ class LatexLexer extends Tokenizer
       return 'environment';
     }
 
-    if (in_array($name, self::SECTION_COMMANDS)) return 'section-cmd';
+    if (in_array($name, self::SECTION_COMMANDS)) return 'cmd:section';
 
-    if (in_array($name, self::FONT_COMMANDS))    return 'font-cmd';
+    if (in_array($name, self::FONT_COMMANDS))    return 'cmd:font';
 
-    if (in_array($name, array_keys(self::FONT_DECLARATIONS))) return 'font-declaration';
+    if (in_array($name, array_keys(self::FONT_DECLARATIONS))) return 'cmd:font_declaration';
 
     if (in_array($name, self::ONE_ARGS_CMDS)) return 'one-arg-cmd';
 
@@ -646,12 +646,12 @@ class LatexLexer extends Tokenizer
         continue;
       }
 
-      if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'section-cmd') {
+      if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'cmd:section') {
         $this->tokens[$k]->body = rtrim($token->body);
         // $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
 
-      if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'section-cmd') {
+      if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'cmd:section') {
         $this->tokens[$k]->body = ltrim($token->body);
         // $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }

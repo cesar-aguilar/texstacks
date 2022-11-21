@@ -123,7 +123,7 @@ class LatexParser
 
       $handler = match ($token->type) {
 
-        'section-cmd' => 'handleSectionNode',
+        'cmd:section' => 'handleSectionNode',
 
         'environment',
         'group-environment',
@@ -146,13 +146,13 @@ class LatexParser
         'alpha-symbol',
         'includegraphics',
         'cite',
-        'font-cmd',
+        'cmd:font',
         'spacing-cmd',
         'accent-cmd',
         'ref',
         'eqref' => 'handleCommandNode',
 
-        'font-declaration' => 'handleFontDeclaration',
+        'cmd:font_declaration' => 'handleFontDeclaration',
 
         'caption' => 'handleCaptionNode',
 
@@ -423,7 +423,7 @@ class LatexParser
   {
     $this->current_node->setLabel($token->command_content);
 
-    if (!$this->current_node->hasType(['section-cmd', 'thm-environment'])) {
+    if (!$this->current_node->hasType(['cmd:section', 'thm-environment'])) {
       $this->current_node->setRefNum($token->command_options);
     }
 
@@ -450,12 +450,12 @@ class LatexParser
   {
     $new_node = $this->createCommandNode($token);
 
-    if ($new_node->hasType('font-cmd') && StrHelper::isNotAlpha($new_node->commandContent())) {
+    if ($new_node->hasType('cmd:font') && StrHelper::isNotAlpha($new_node->commandContent())) {
       $command_content = self::parseText($new_node->commandContent(), $new_node->line_number);
       $new_node->setCommandContent($command_content);
     }
 
-    if ($new_node->hasType('font-cmd') && $new_node->commandName() === 'footnote')
+    if ($new_node->hasType('cmd:font') && $new_node->commandName() === 'footnote')
       $new_node->setRefNum($this->getCounter('footnote'));
 
     $this->tree->addNode($new_node, $this->current_node);
@@ -517,7 +517,7 @@ class LatexParser
 
     $args = ['id' => $this->tree->nodeCount(), ...(array) $token];
 
-    if ($token->type === 'section-cmd') {
+    if ($token->type === 'cmd:section') {
       return new SectionNode($args);
     } else if ($token->type === 'thm-environment') {
       return $this->createTheoremNode($token, $args);

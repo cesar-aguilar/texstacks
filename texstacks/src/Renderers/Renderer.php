@@ -37,7 +37,7 @@ class Renderer
 
     if ($node->hasType('root')) return self::renderRoot($node, $body);
 
-    if ($node->hasType('section-cmd')) return SectionCommandRenderer::renderNode($node, $body);
+    if ($node->hasType('cmd:section')) return SectionCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType('displaymath-environment')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
@@ -55,7 +55,7 @@ class Renderer
 
     if ($node->hasType('bibliography-environment')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('font-cmd')) return FontCommandRenderer::renderNode($node, $body);
+    if ($node->hasType('cmd:font')) return FontCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType(['symbol', 'alpha-symbol'])) return SymbolCommandRenderer::renderNode($node, $body);
 
@@ -83,7 +83,7 @@ class Renderer
 
     if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 
-    if ($node->hasType('font-declaration')) return self::renderFontDeclaration($node);
+    if ($node->hasType('cmd:font_declaration')) return self::renderFontDeclaration($node);
 
     if ($node->hasType('accent-cmd')) return $node->body;
 
