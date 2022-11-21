@@ -13,15 +13,14 @@ class LatexArticle
   private $html_src;
   private $basename;
   private $dir;
+  private $parser;
 
   public $section_names = [];
   public $section_ids = [];
   public $section_labels = [];
 
-  public function __construct(
-    private $absolute_path,
-    public LatexParser $parser
-  ) {
+  public function __construct(private $absolute_path)
+  {
 
     if (!file_exists($absolute_path)) {
       throw new \Exception("File not found: $absolute_path");
@@ -42,6 +41,8 @@ class LatexArticle
 
     $ref_labels = $aux_parser->getLabelsAsArray();
     $citations = $aux_parser->getCitationsAsArray();
+
+    $this->parser = new LatexParser();
 
     $this->parser->setRefLabels($ref_labels);
     $this->parser->setCitations($citations);
@@ -73,7 +74,7 @@ class LatexArticle
   public function getFrontMatter()
   {
     $front_matter = $this->parser->getFrontMatter();
-    
+
     $front_matter['title'] = Renderer::render($front_matter['title']);
 
     foreach ($front_matter['authors'] as $author) {
@@ -81,7 +82,11 @@ class LatexArticle
     }
 
     return $front_matter;
+  }
 
+  public function getMathMacros()
+  {
+    return $this->parser->getMathMacros();
   }
 
   public function getRoot()
