@@ -25,6 +25,8 @@ class ArticleLexer extends BaseLexer {
     $this->registerCommandGroup([
       \TexStacks\Commands\Core\SectionCommands::class,
       \TexStacks\Commands\Core\FontCommands::class,
+      \TexStacks\Commands\Core\FontEnv::class,
+      // FontDeclarations must come after FontEnv
       \TexStacks\Commands\Core\FontDeclarations::class,
       \TexStacks\Commands\Core\Citations::class,
       \TexStacks\Commands\Core\ReferenceCommands::class,
@@ -54,7 +56,7 @@ class ArticleLexer extends BaseLexer {
   protected function postProcessTokens(): void {
 
     $this->tokens = array_filter($this->tokens, function($token) {
-      return $token->type === \TexStacks\Commands\Core\ActionCommands::type();
+      return $token->type === \TexStacks\Commands\Core\FontEnv::type();
     });
 
   }

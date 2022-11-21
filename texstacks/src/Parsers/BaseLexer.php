@@ -130,7 +130,11 @@ class BaseLexer extends Tokenizer
         try {
           $token = $ClassName::make($this->getTokenData($signature, $env));
         } catch (\Exception $e) {
-          throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
+          $message = $e->getMessage();
+          $message .= "<br>$ClassName";
+          $message .= "<br>Line Number: " . $this->line_number;
+          $message .= "<br>Code line: " . __LINE__;
+          throw new \Exception($message);
         }
 
         $this->addToken($token);
