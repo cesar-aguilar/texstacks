@@ -51,7 +51,7 @@ class Renderer
 
     if ($node->hasType('tabular-environment')) return TabularEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('list-environment')) return ListEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:list')) return ListEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('bibliography-environment')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
 
@@ -121,7 +121,7 @@ class Renderer
   {
     if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
 
-    if ($node->parent()?->commandContent('description')) {
+    if ($node->parent()?->commandContent() === 'description') {
       $label = $node->commandOptions();
       return "<dt>$label</dt><dd>$body</dd>";
     }

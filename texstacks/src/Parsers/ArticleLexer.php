@@ -2,6 +2,8 @@
 
 namespace TexStacks\Parsers;
 
+use TexStacks\Parsers\BaseLexer;
+
 class ArticleLexer extends BaseLexer {
 
   public function __construct($data = [])
