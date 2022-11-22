@@ -487,7 +487,7 @@ class LatexLexer extends Tokenizer
           'command_src' => "\\" . $this->command_name . "{" . $content . "}",
           'line_number' => $this->line_number,
         ]));
-      } else if ($this->getCommandType($this->command_name) === 'two-args-cmd') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:two-args') {
 
         try {
           $arg_1 = $this->getCommandContent();
@@ -502,15 +502,15 @@ class LatexLexer extends Tokenizer
         }
 
         $this->addToken(new Token([
-          'type' => 'two-args-cmd',
+          'type' => 'cmd:two-args',
           'command_name' => $this->command_name,
           'command_args' => ['arg1' => $arg_1, 'arg2' => $arg_2],
           'command_src' => "\\" . $this->command_name . "{" . $arg_1 . "}{" . $arg_2 . "}",
           'line_number' => $this->line_number,
         ]));
-      } else if ($this->getCommandType($this->command_name) === 'action-cmd') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:action') {
         $this->addToken(new Token([
-          'type' => 'action-cmd',
+          'type' => 'cmd:action',
           'command_name' => $this->command_name,
           'command_src' => "\\" . $this->command_name,
           'line_number' => $this->line_number,
@@ -622,9 +622,9 @@ class LatexLexer extends Tokenizer
 
     if (in_array($name, self::SPACING_CMDS)) return 'cmd:spacing';
 
-    if (in_array($name, self::TWO_ARGS_CMDS)) return 'two-args-cmd';
+    if (in_array($name, self::TWO_ARGS_CMDS)) return 'cmd:two-args';
 
-    if (in_array($name, self::ACTION_CMDS)) return 'action-cmd';
+    if (in_array($name, self::ACTION_CMDS)) return 'cmd:action';
 
     return 'text';
   }

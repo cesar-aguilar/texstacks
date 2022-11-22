@@ -4,15 +4,17 @@ namespace TexStacks\Commands;
 
 use TexStacks\Parsers\Token;
 
-class TwoArgs extends CommandGroup {
+class TwoArgs extends CommandGroup
+{
 
-  protected static $type = 'cmd:two_args';
-  
+  protected static $type = 'cmd:two-args';
+
   protected static $commands = [
     'texorpdfstring',
   ];
 
-  public static function signature() {
+  public static function signature()
+  {
     return '{}{}';
   }
 
@@ -23,5 +25,4 @@ class TwoArgs extends CommandGroup {
     $args['command_src'] = "\\" . $args['command_name'] . "{" . $arg_1 . "}" . "{" . $arg_2 . "}";
     return new Token($args);
   }
-
 }

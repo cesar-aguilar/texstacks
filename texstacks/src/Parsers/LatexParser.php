@@ -8,6 +8,7 @@ use TexStacks\Parsers\LatexLexer;
 use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\CommandNode;
 use TexStacks\Parsers\SectionNode;
+use TexStacks\Parsers\ArticleLexer;
 use TexStacks\Helpers\SectionCounter;
 use TexStacks\Parsers\PreambleParser;
 use TexStacks\Parsers\EnvironmentNode;
@@ -94,9 +95,9 @@ class LatexParser
 
         'cmd:caption' => 'handleCaptionNode',
 
-        'two-args-cmd' => 'handleTwoArgCommandNode',
+        'cmd:two-args' => 'handleTwoArgCommandNode',
 
-        'action-cmd' => 'handleActionCommandNode',
+        'cmd:action' => 'handleActionCommandNode',
 
         'tag',
         'ignore' => 'doNothing',

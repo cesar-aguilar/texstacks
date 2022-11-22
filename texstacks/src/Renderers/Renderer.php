@@ -61,7 +61,7 @@ class Renderer
 
     if ($node->hasType('cmd:caption')) return CaptionRenderer::renderNode($node, $body);
 
-    if ($node->hasType('two-args-cmd')) return self::renderTwoArgsCommand($node, $body);
+    if ($node->hasType('cmd:two-args')) return self::renderTwoArgsCommand($node, $body);
 
     if ($node->hasType('environment:verbatim')) return "<pre>$body</pre>";
 

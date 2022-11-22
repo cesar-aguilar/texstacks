@@ -14,6 +14,7 @@ class LatexArticleController
   private $basename;
   private $dir;
   private $parser;
+  private $lexer;
 
   public $section_names = [];
   public $section_ids = [];
