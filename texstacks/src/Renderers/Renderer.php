@@ -73,11 +73,9 @@ class Renderer
 
     if ($node->hasType('cmd:includegraphics')) return self::renderIncludeGraphics($node, $body);
 
-    if ($node->hasType('label')) return $node->commandSource();
+    if ($node->hasType('cmd:label')) return $node->commandSource();
 
-    if ($node->hasType('ref')) return self::renderRef($node, $body);
-
-    if ($node->hasType('eqref')) return self::renderEqref($node, $body);
+    if ($node->hasType('cmd:ref')) return self::renderRef($node, $body);
 
     if ($node->hasType('cmd:cite')) return self::renderCitations($node, $body);
 
@@ -173,11 +171,10 @@ class Renderer
 
   private static function renderRef($node, string $body = null): string
   {
-    return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
-  }
+    if ($node->commandName() === 'ref') {
+      return "<a href='#{$node->commandContent()}'>{$node->commandOptions()}</a>";
+    }
 
-  private static function renderEqref($node, string $body = null): string
-  {
     return "(<a style=\"margin:0 0.1rem;\" href='#{$node->commandContent()}'>{$node->commandOptions()}</a>)";
   }
 

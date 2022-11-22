@@ -77,7 +77,7 @@ class LatexParser
 
         'cmd:bibitem' => 'handleBibItemNode',
 
-        'label' => 'handleLabelNode',
+        'cmd:label' => 'handleLabelNode',
 
         'symbol',
         'alpha-symbol',
@@ -86,8 +86,7 @@ class LatexParser
         'cmd:font',
         'spacing-cmd',
         'accent-cmd',
-        'ref',
-        'eqref' => 'handleCommandNode',
+        'cmd:ref', => 'handleCommandNode',
 
         'cmd:font_declaration' => 'handleFontDeclaration',
 

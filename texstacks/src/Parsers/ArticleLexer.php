@@ -29,6 +29,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\FontEnv::class,
       // FontDeclarations must come after FontEnv
       \TexStacks\Commands\Core\FontDeclarations::class,
+      \TexStacks\Commands\Core\LabelCommand::class,
       \TexStacks\Commands\Core\Citations::class,
       \TexStacks\Commands\Core\ReferenceCommands::class,
       \TexStacks\Commands\Core\AlphaSymbol::class,
@@ -62,19 +63,26 @@ class ArticleLexer extends BaseLexer
   {
 
     $this->tokens = array_filter($this->tokens, function ($token) {
-      return
-        $token->type === \TexStacks\Commands\TheoremEnv::type() ||
-        $token->type === \TexStacks\Commands\Core\SectionCommands::type() ||
-        $token->type === \TexStacks\Commands\Core\InlineMathEnv::type() ||
-        $token->type === \TexStacks\Commands\Core\DisplayMathEnv::type() ||
-        $token->type === \TexStacks\Commands\Core\BibliographyEnv::type() ||
-        $token->type === \TexStacks\Commands\Core\ListEnv::type() ||
-        $token->type === \TexStacks\Commands\Core\ItemCommand::type() ||
-        $token->type === \TexStacks\Commands\Core\BibItemCommand::type() ||
-        $token->type === \TexStacks\Commands\Core\CaptionCommand::type() ||
-        $token->type === \TexStacks\Commands\Core\IncludeGraphicsCommand::type() ||
-        $token->type === 'environment:group' ||
-        $token->type === 'text';
+      return in_array(
+        $token->type,
+        [
+          // \TexStacks\Commands\TheoremEnv::type(),
+          // \TexStacks\Commands\Core\LabelCommand::type(),
+          // \TexStacks\Commands\Core\ReferenceCommands::type(),
+          \TexStacks\Commands\Core\SectionCommands::type(),
+          // \TexStacks\Commands\Core\InlineMathEnv::type(),
+          // \TexStacks\Commands\Core\DisplayMathEnv::type(),
+          // \TexStacks\Commands\Core\BibliographyEnv::type(),
+          // \TexStacks\Commands\Core\ListEnv::type(),
+          // \TexStacks\Commands\Core\ItemCommand::type(),
+          // \TexStacks\Commands\Core\BibItemCommand::type(),
+          // \TexStacks\Commands\Core\CaptionCommand::type(),
+          // \TexStacks\Commands\Core\IncludeGraphicsCommand::type(),
+          // \TexStacks\Commands\OneArg::type(),
+          // 'environment:group',
+          // 'text',
+        ]
+      );
     });
   }
 }

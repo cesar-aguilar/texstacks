@@ -413,7 +413,7 @@ class LatexLexer extends Tokenizer
           $label = self::$ref_labels[$content] ?? '?';
 
         // $type = in_array($this->command_name, ['date', 'address', 'curraddr', 'email', 'urladdr', 'dedicatory', 'thanks', 'translator', 'keywords']) ? 'ignore' : $this->command_name;
-        $type = $this->command_name;
+        $type = $this->command_name === 'label' ? 'cmd:label' : (str_contains($this->command_name, 'ref') ? 'cmd:ref' : $this->command_name);
 
         $this->addToken(new Token([
           'type' => $type,
