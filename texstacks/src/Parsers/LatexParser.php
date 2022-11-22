@@ -4,7 +4,7 @@ namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Node;
 use TexStacks\Helpers\StrHelper;
-use TexStacks\Parsers\LatexLexer;
+// use TexStacks\Parsers\LatexLexer;
 use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\CommandNode;
 use TexStacks\Parsers\SectionNode;
@@ -88,7 +88,7 @@ class LatexParser
         'cmd:font',
         'cmd:spacing',
         'cmd:space',
-        'accent-cmd',
+        'cmd:accent',
         'cmd:ref', => 'handleCommandNode',
 
         'cmd:font-declaration' => 'handleFontDeclaration',

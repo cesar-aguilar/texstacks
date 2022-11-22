@@ -783,7 +783,7 @@ class Tokenizer extends TextScanner
     $body = "&$letter$accent;";
 
     $this->addToken(new Token([
-      'type' => 'accent-cmd',
+      'type' => 'cmd:accent',
       'command_name' => $char,
       'command_content' => $letter,
       'command_src' => $command_src,

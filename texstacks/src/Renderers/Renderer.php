@@ -83,7 +83,7 @@ class Renderer
 
     if ($node->hasType('cmd:font-declaration')) return self::renderFontDeclaration($node);
 
-    if ($node->hasType('accent-cmd')) return $node->body;
+    if ($node->hasType('cmd:accent')) return $node->body;
 
     if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:tabular', 'environment:verbatim'])) return $body;
 
