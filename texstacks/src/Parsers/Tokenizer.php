@@ -721,7 +721,7 @@ class Tokenizer extends TextScanner
     $command_content = 'unnamed';
 
     $this->tokens[] = new Token([
-      'type' => 'group-environment',
+      'type' => 'environment:group',
       'command_name' => $command_name,
       'command_content' => $command_content,
       'command_src' => '',

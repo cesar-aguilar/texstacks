@@ -63,10 +63,10 @@ class LatexParser
         'cmd:section' => 'handleSectionNode',
 
         'environment',
-        'group-environment',
+        'environment:group',
         'inlinemath',
         'environment:displaymath',
-        'verbatim-environment',
+        'environment:verbatim',
         'environment:tabular',
         'environment:list',
         'bibliography-environment' => 'handleEnvironmentNode',
@@ -289,7 +289,7 @@ class LatexParser
     /* If new_node is part of verbatim environment 
      * then just add new_node to tree */
 
-    if ($this->current_node->pathToRootHasType('verbatim-environment')) {
+    if ($this->current_node->pathToRootHasType('environment:verbatim')) {
       $this->tree->addNode($new_node, $this->current_node);
       return;
     }
@@ -360,7 +360,7 @@ class LatexParser
 
     $new_node = $this->createCommandNode($token);
 
-    if (!$this->current_node->pathToRootHasType('verbatim-environment') && !$new_node->getArg('starred')) {
+    if (!$this->current_node->pathToRootHasType('environment:verbatim') && !$new_node->getArg('starred')) {
       $env_name = $new_node->commandContent();
 
       $new_node->setRefNum($this->getTheoremNumber($env_name));

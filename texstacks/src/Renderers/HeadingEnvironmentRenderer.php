@@ -11,7 +11,7 @@ class HeadingEnvironmentRenderer
   {
     $body = $body ?? '';
 
-    if ($node->ancestorOfType('verbatim-environment')) return "\{$body\}";
+    if ($node->ancestorOfType('environment:verbatim')) return "\{$body\}";
 
     $title = $node->commandRefNum() ? $node->commandRefNum() . '&nbsp;&nbsp;&nbsp;' : '';
 

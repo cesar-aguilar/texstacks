@@ -10,7 +10,7 @@ class ThmEnvironmentRenderer
 {
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
-        if ($node->ancestorOfType('verbatim-environment')) {
+        if ($node->ancestorOfType('environment:verbatim')) {
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
         }
 
@@ -27,5 +27,4 @@ class ThmEnvironmentRenderer
 
         return "<div class=\"thm-env thm-style-{$style}\" id=\"{$node->commandLabel()}\"><div class=\"thm-env-head\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
     }
-
 }

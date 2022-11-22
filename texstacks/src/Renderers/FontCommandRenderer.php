@@ -11,14 +11,14 @@ class FontCommandRenderer
     public static function renderNode(CommandNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'verbatim-environment'])) return $node->commandSource();
+        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) return $node->commandSource();
 
         if ($node->commandContent() instanceof Node) {
             $body = Renderer::render($node->commandContent());
         }
 
         if ($node->commandName() === 'footnote') return self::renderFootnote($node, $body);
-        
+
         return match ($node->commandName()) {
 
             'emph' => "<em>$body</em>",
@@ -47,18 +47,17 @@ class FontCommandRenderer
 
             'textsubscript' => "<sub>$body</sub>",
 
-            default => "\\" . $node->commandName(). "{" . $body . "}"
-
+            default => "\\" . $node->commandName() . "{" . $body . "}"
         };
     }
-    
-    private static function renderFootnote($node, $body) {
+
+    private static function renderFootnote($node, $body)
+    {
 
         $num = $node->commandRefNum();
 
         $html = "<details class=\"footnote\"><summary class=\"footnote\">$num</summary><p class=\"footnote-content\">$body</p></details>";
 
         return $html;
-
     }
 }

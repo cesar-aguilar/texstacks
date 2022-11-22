@@ -10,7 +10,7 @@ class CaptionRenderer
 
   public static function renderNode(CommandNode $node, string $body = null): string
   {
-    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
+    if ($node->ancestorOfType('environment:verbatim')) return $node->commandSource();
 
     if ($node->commandContent() instanceof Node) {
       $body = Renderer::render($node->commandContent());

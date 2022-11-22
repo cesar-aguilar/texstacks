@@ -6,11 +6,11 @@ use TexStacks\Parsers\EnvironmentNode;
 
 class GroupEnvironmentRenderer
 {
- 
+
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'verbatim-environment'])) {
+        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) {
             return " {" . $body . "} ";
         }
 
@@ -23,7 +23,5 @@ class GroupEnvironmentRenderer
         $html .= ">$body</span>";
 
         return $html;
-
     }
-
 }

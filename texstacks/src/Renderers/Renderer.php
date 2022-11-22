@@ -45,7 +45,7 @@ class Renderer
 
     if ($node->hasType('environment:theorem')) return ThmEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('group-environment')) return GroupEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:group')) return GroupEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('environment')) return EnvironmentRenderer::renderNode($node, $body);
 
@@ -63,7 +63,7 @@ class Renderer
 
     if ($node->hasType('two-args-cmd')) return self::renderTwoArgsCommand($node, $body);
 
-    if ($node->hasType('verbatim-environment')) return "<pre>$body</pre>";
+    if ($node->hasType('environment:verbatim')) return "<pre>$body</pre>";
 
     if ($node->hasType('spacing-cmd')) return self::renderSpacingCommand($node, $body);
 
@@ -87,7 +87,7 @@ class Renderer
 
     if ($node->hasType('accent-cmd')) return $node->body;
 
-    if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:tabular', 'verbatim-environment'])) return $body;
+    if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:tabular', 'environment:verbatim'])) return $body;
 
     // Remove vertical spacing of the type \\[1em] since not in tabular-like environment
     // $output = preg_replace('/(\\\)(\\\)\[(.*?)\]/', '<br>', $body);
@@ -119,7 +119,7 @@ class Renderer
 
   private static function renderItemNode($node, $body)
   {
-    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
+    if ($node->ancestorOfType('environment:verbatim')) return $node->commandSource() . ' ' . $body;
 
     if ($node->parent()?->commandContent() === 'description') {
       $label = $node->commandOptions();
@@ -131,7 +131,7 @@ class Renderer
 
   private static function renderBibItemNode($node, $body)
   {
-    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource() . ' ' . $body;
+    if ($node->ancestorOfType('environment:verbatim')) return $node->commandSource() . ' ' . $body;
 
     $body = str_replace(['<br>', '\newblock'], '', $body);
 
@@ -140,7 +140,7 @@ class Renderer
 
   private static function renderFontDeclaration($node)
   {
-    if ($node->ancestorOfType('verbatim-environment')) return "\\" . $node->body;
+    if ($node->ancestorOfType('environment:verbatim')) return "\\" . $node->body;
 
     return '';
   }
@@ -148,7 +148,7 @@ class Renderer
   private static function renderIncludeGraphics($node, string $body = null): string
   {
 
-    if ($node->ancestorOfType('verbatim-environment')) return $node->commandSource();
+    if ($node->ancestorOfType('environment:verbatim')) return $node->commandSource();
 
     return "<img src=\"{$node->commandContent()}\" alt=\"{$node->commandContent()}\" />";
   }
@@ -183,7 +183,7 @@ class Renderer
 
   private static function renderSpacingCommand($node, string $body = null): string
   {
-    if ($node->ancestorOfType(['verbatim-environment', 'environment:displaymath', 'inlinemath'])) return $node->commandSource() . ' ';
+    if ($node->ancestorOfType(['environment:verbatim', 'environment:displaymath', 'inlinemath'])) return $node->commandSource() . ' ';
 
     return match ($node->commandName()) {
       'smallskip' => '<div style="height: 1em;"></div>',
@@ -195,7 +195,7 @@ class Renderer
 
   private static function renderTwoArgsCommand($node, string $body = null): string
   {
-    if ($node->ancestorOfType(['verbatim-environment', 'environment:displaymath', 'inlinemath'])) return $node->commandSource();
+    if ($node->ancestorOfType(['environment:verbatim', 'environment:displaymath', 'inlinemath'])) return $node->commandSource();
 
     if ($node->commandName() === 'texorpdfstring') {
       return Renderer::render($node->commandContent());

@@ -12,7 +12,7 @@ class EnvironmentRenderer
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'verbatim-environment']))
+        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim']))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         return match ($node->commandContent()) {

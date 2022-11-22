@@ -18,7 +18,7 @@ class LatexLexer extends Tokenizer
     'figure',
     'table',
     'center',
-    'verbatim-environment',
+    'environment:verbatim',
     'proof',
   ];
 
@@ -599,7 +599,7 @@ class LatexLexer extends Tokenizer
 
       if ($env === 'math') return 'inlinemath';
 
-      if ($env === 'verbatim') return 'verbatim-environment';
+      if ($env === 'verbatim') return 'environment:verbatim';
 
       if ($env === 'thebibliography') return 'bibliography-environment';
 

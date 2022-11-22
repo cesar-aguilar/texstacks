@@ -10,7 +10,7 @@ class DisplayMathEnvironmentRenderer
 
     $latex =  $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
-    if (($node->ancestorOfType('verbatim-environment'))) return $latex;
+    if (($node->ancestorOfType('environment:verbatim'))) return $latex;
 
     if ($node->commandContent() === 'displaymath') {
       $latex = "\\begin{equation*}" . $body . "\\end{equation*}";
