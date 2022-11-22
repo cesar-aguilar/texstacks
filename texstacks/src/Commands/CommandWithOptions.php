@@ -4,15 +4,13 @@ namespace TexStacks\Commands;
 
 use TexStacks\Parsers\Token;
 
-class CommandWithOptions extends CommandGroup {
+class CommandWithOptions extends CommandGroup
+{
 
   protected static $type = 'cmd:options';
 
-  protected static $commands = [
-    'item',
-  ];
-
-  public static function signature() {
+  public static function signature()
+  {
     return '[]';
   }
 
@@ -26,5 +24,4 @@ class CommandWithOptions extends CommandGroup {
 
     return new Token($args);
   }
-
 }

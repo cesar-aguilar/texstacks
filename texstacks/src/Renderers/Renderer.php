@@ -59,7 +59,7 @@ class Renderer
 
     if ($node->hasType(['symbol', 'alpha-symbol'])) return SymbolCommandRenderer::renderNode($node, $body);
 
-    if ($node->hasType('caption')) return CaptionRenderer::renderNode($node, $body);
+    if ($node->hasType('cmd:caption')) return CaptionRenderer::renderNode($node, $body);
 
     if ($node->hasType('two-args-cmd')) return self::renderTwoArgsCommand($node, $body);
 
@@ -67,11 +67,11 @@ class Renderer
 
     if ($node->hasType('spacing-cmd')) return self::renderSpacingCommand($node, $body);
 
-    if ($node->hasType('item')) return self::renderItemNode($node, $body);
+    if ($node->hasType('cmd:item')) return self::renderItemNode($node, $body);
 
-    if ($node->hasType('bibitem')) return self::renderBibItemNode($node, $body);
+    if ($node->hasType('cmd:bibitem')) return self::renderBibItemNode($node, $body);
 
-    if ($node->hasType('includegraphics')) return self::renderIncludeGraphics($node, $body);
+    if ($node->hasType('cmd:includegraphics')) return self::renderIncludeGraphics($node, $body);
 
     if ($node->hasType('label')) return $node->commandSource();
 
@@ -79,7 +79,7 @@ class Renderer
 
     if ($node->hasType('eqref')) return self::renderEqref($node, $body);
 
-    if ($node->hasType('cite')) return self::renderCitations($node, $body);
+    if ($node->hasType('cmd:cite')) return self::renderCitations($node, $body);
 
     if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 

@@ -35,11 +35,15 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\DisplayMathEnv::class,
       \TexStacks\Commands\Core\InlineMathEnv::class,
       \TexStacks\Commands\Core\ListEnv::class,
+      \TexStacks\Commands\Core\ItemCommand::class,
       \TexStacks\Commands\Core\TabularEnv::class,
       \TexStacks\Commands\Core\SpacingCommands::class,
       \TexStacks\Commands\Core\SpaceCommands::class,
       \TexStacks\Commands\Core\ActionCommands::class,
       \TexStacks\Commands\Core\BibliographyEnv::class,
+      \TexStacks\Commands\Core\BibItemCommand::class,
+      \TexStacks\Commands\Core\CaptionCommand::class,
+      \TexStacks\Commands\Core\IncludeGraphicsCommand::class,
       \TexStacks\Commands\TheoremEnv::class,
       \TexStacks\Commands\GenericEnv::class,
       \TexStacks\Commands\CommandWithOptions::class,
@@ -64,6 +68,11 @@ class ArticleLexer extends BaseLexer
         $token->type === \TexStacks\Commands\Core\InlineMathEnv::type() ||
         $token->type === \TexStacks\Commands\Core\DisplayMathEnv::type() ||
         $token->type === \TexStacks\Commands\Core\BibliographyEnv::type() ||
+        $token->type === \TexStacks\Commands\Core\ListEnv::type() ||
+        $token->type === \TexStacks\Commands\Core\ItemCommand::type() ||
+        $token->type === \TexStacks\Commands\Core\BibItemCommand::type() ||
+        $token->type === \TexStacks\Commands\Core\CaptionCommand::type() ||
+        $token->type === \TexStacks\Commands\Core\IncludeGraphicsCommand::type() ||
         $token->type === 'environment:group' ||
         $token->type === 'text';
     });

@@ -4,17 +4,13 @@ namespace TexStacks\Commands;
 
 use TexStacks\Parsers\Token;
 
-class OneArgPreOptions extends CommandGroup {
+class OneArgPreOptions extends CommandGroup
+{
 
   protected static $type = 'cmd:options-arg';
 
-  protected static $commands = [
-    'includegraphics',
-    'caption',
-    'bibitem',    
-  ];
-
-  public static function signature() {
+  public static function signature()
+  {
     return '[]{}';
   }
 
@@ -30,5 +26,4 @@ class OneArgPreOptions extends CommandGroup {
 
     return new Token($args);
   }
-
 }

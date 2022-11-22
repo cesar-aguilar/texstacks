@@ -73,16 +73,16 @@ class LatexParser
 
         'environment:theorem' => 'handleTheoremEnvironment',
 
-        'item' => 'handleListItemNode',
+        'cmd:item' => 'handleListItemNode',
 
-        'bibitem' => 'handleBibItemNode',
+        'cmd:bibitem' => 'handleBibItemNode',
 
         'label' => 'handleLabelNode',
 
         'symbol',
         'alpha-symbol',
-        'includegraphics',
-        'cite',
+        'cmd:includegraphics',
+        'cmd:cite',
         'cmd:font',
         'spacing-cmd',
         'accent-cmd',
@@ -91,7 +91,7 @@ class LatexParser
 
         'cmd:font_declaration' => 'handleFontDeclaration',
 
-        'caption' => 'handleCaptionNode',
+        'cmd:caption' => 'handleCaptionNode',
 
         'two-args-cmd' => 'handleTwoArgCommandNode',
 
@@ -421,7 +421,7 @@ class LatexParser
           'line_number' => $token->line_number
         ]
       ), parent: $this->current_node);
-    } else if ($caption = $this->current_node->findChild('caption')) {
+    } else if ($caption = $this->current_node->findChild('cmd:caption')) {
       $caption->setRefNum($this->current_node->commandRefNum());
     }
   }

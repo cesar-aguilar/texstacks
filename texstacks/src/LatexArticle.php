@@ -54,7 +54,7 @@ class LatexArticle
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-
+    // dd($tokens);
     try {
       $this->parser->parse($tokens);
     } catch (\Exception $e) {

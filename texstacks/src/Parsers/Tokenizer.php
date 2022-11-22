@@ -185,7 +185,7 @@ class Tokenizer extends TextScanner
     }
 
     $token = new Token([
-      'type' => $this->command_name,
+      'type' => 'cmd:' . $this->command_name,
       'command_name' => $this->command_name,
       'command_content' => $content,
       'command_options' => $options,
@@ -233,7 +233,7 @@ class Tokenizer extends TextScanner
     }
 
     return new Token([
-      'type' => $this->command_name,
+      'type' => 'cmd:' . $this->command_name,
       'command_name' => $this->command_name,
       'command_content' => '',
       'command_options' => $options,
