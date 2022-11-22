@@ -451,12 +451,12 @@ class LatexLexer extends Tokenizer
           'line_number' => $this->line_number,
         ]));
         $this->backup();
-      } else if ($this->getCommandType($this->command_name) === 'spacing-cmd') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:spacing') {
 
         if (!str_contains($this->command_name, 'space')) {
 
           $this->addToken(new Token([
-            'type' => 'spacing-cmd',
+            'type' => 'cmd:spacing',
             'command_name' => $this->command_name,
             'command_src' => "\\" . $this->command_name,
             'line_number' => $this->line_number,
@@ -481,7 +481,7 @@ class LatexLexer extends Tokenizer
         }
 
         $this->addToken(new Token([
-          'type' => 'spacing-cmd',
+          'type' => 'cmd:spacing',
           'command_name' => $this->command_name,
           'command_content' => $content,
           'command_src' => "\\" . $this->command_name . "{" . $content . "}",
@@ -620,7 +620,7 @@ class LatexLexer extends Tokenizer
 
     if (in_array($name, self::ALPHA_SYMBOLS)) return 'cmd:alpha-symbol';
 
-    if (in_array($name, self::SPACING_CMDS)) return 'spacing-cmd';
+    if (in_array($name, self::SPACING_CMDS)) return 'cmd:spacing';
 
     if (in_array($name, self::TWO_ARGS_CMDS)) return 'two-args-cmd';
 

@@ -65,7 +65,7 @@ class Renderer
 
     if ($node->hasType('environment:verbatim')) return "<pre>$body</pre>";
 
-    if ($node->hasType('spacing-cmd')) return self::renderSpacingCommand($node, $body);
+    if ($node->hasType('cmd:spacing')) return self::renderSpacingCommand($node, $body);
 
     if ($node->hasType('cmd:item')) return self::renderItemNode($node, $body);
 

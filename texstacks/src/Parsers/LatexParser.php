@@ -85,7 +85,8 @@ class LatexParser
         'cmd:includegraphics',
         'cmd:cite',
         'cmd:font',
-        'spacing-cmd',
+        'cmd:spacing',
+        'cmd:space',
         'accent-cmd',
         'cmd:ref', => 'handleCommandNode',
 

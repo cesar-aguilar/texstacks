@@ -110,6 +110,7 @@ class Tokenizer extends TextScanner
       throw new \Exception($e->getMessage());
     }
 
+
     return [
       'command_name' => $this->command_name,
       'command_content' => $env ?? $content ?? null,

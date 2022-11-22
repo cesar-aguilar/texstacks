@@ -117,6 +117,8 @@ class BaseLexer extends Tokenizer
 
         if (!$ClassName::contains($env ?? $this->command_name)) continue;
 
+        if ($ClassName::is_env() && is_null($env)) continue;
+
         if (!is_null($env) && $this->command_name === 'end') {
           $token = $ClassName::end($this->getEndEnvTokenData($env));
           $this->addToken($token);
@@ -136,6 +138,11 @@ class BaseLexer extends Tokenizer
         }
 
         $this->addToken($token);
+
+        if ($signature === '' && $this->getChar() !== ' ' && is_null($env)) {
+          $this->backup();
+        }
+
         continue 2;
       }
 
