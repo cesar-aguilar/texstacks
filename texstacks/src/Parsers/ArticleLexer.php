@@ -39,6 +39,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\SpacingCommands::class,
       \TexStacks\Commands\Core\SpaceCommands::class,
       \TexStacks\Commands\Core\ActionCommands::class,
+      \TexStacks\Commands\Core\BibliographyEnv::class,
       \TexStacks\Commands\TheoremEnv::class,
       \TexStacks\Commands\GenericEnv::class,
       \TexStacks\Commands\CommandWithOptions::class,
@@ -62,6 +63,7 @@ class ArticleLexer extends BaseLexer
         $token->type === \TexStacks\Commands\Core\SectionCommands::type() ||
         $token->type === \TexStacks\Commands\Core\InlineMathEnv::type() ||
         $token->type === \TexStacks\Commands\Core\DisplayMathEnv::type() ||
+        $token->type === \TexStacks\Commands\Core\BibliographyEnv::type() ||
         $token->type === 'environment:group' ||
         $token->type === 'text';
     });

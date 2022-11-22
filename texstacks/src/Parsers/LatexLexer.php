@@ -362,7 +362,7 @@ class LatexLexer extends Tokenizer
             'command_src' => $command_src,
             'line_number' => $this->line_number,
           ]));
-        } else if ($this->getCommandType($this->command_name, $env) === 'bibliography-environment') {
+        } else if ($this->getCommandType($this->command_name, $env) === 'environment:bibliography') {
 
           $command_src = "\\" . $this->command_name . "{" . $env . "}";
 
@@ -601,7 +601,7 @@ class LatexLexer extends Tokenizer
 
       if ($env === 'verbatim') return 'environment:verbatim';
 
-      if ($env === 'thebibliography') return 'bibliography-environment';
+      if ($env === 'thebibliography') return 'environment:bibliography';
 
       return 'environment';
     }

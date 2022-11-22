@@ -53,7 +53,7 @@ class Renderer
 
     if ($node->hasType('environment:list')) return ListEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('bibliography-environment')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:bibliography')) return BibliographyEnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('cmd:font')) return FontCommandRenderer::renderNode($node, $body);
 

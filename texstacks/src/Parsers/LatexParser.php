@@ -69,7 +69,7 @@ class LatexParser
         'environment:verbatim',
         'environment:tabular',
         'environment:list',
-        'bibliography-environment' => 'handleEnvironmentNode',
+        'environment:bibliography' => 'handleEnvironmentNode',
 
         'environment:theorem' => 'handleTheoremEnvironment',
 
@@ -335,7 +335,7 @@ class LatexParser
     }
 
     /* End environment if not a list-environment and update current_node */
-    if ($token->type !== 'environment:list' && $token->type !== 'bibliography-environment') {
+    if ($token->type !== 'environment:list' && $token->type !== 'environment:bibliography') {
       $this->current_node = $this->current_node->parent();
       return;
     }
@@ -345,7 +345,7 @@ class LatexParser
 
     $parent = $this->current_node->parent()->closest($token->type);
 
-    $this->current_node = $parent->parent() ?? $this->tree->root();
+    $this->current_node = $parent?->parent() ?? $this->tree->root();
 
     return;
   }
@@ -392,7 +392,7 @@ class LatexParser
   {
     $new_node = $this->createCommandNode($token);
 
-    $parent = $this->current_node->closest('bibliography-environment');
+    $parent = $this->current_node->closest('environment:bibliography');
 
     $this->tree->addNode($new_node, $parent);
 
