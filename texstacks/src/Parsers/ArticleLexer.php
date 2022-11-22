@@ -72,7 +72,7 @@ class ArticleLexer extends BaseLexer
     //       // \TexStacks\Commands\TheoremEnv::type(),
     //       // \TexStacks\Commands\Core\LabelCommand::type(),
     //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
-    //       \TexStacks\Commands\Core\SectionCommands::type(),
+    //       // \TexStacks\Commands\Core\SectionCommands::type(),
     //       // \TexStacks\Commands\Core\InlineMathEnv::type(),
     //       // \TexStacks\Commands\Core\DisplayMathEnv::type(),
     //       // \TexStacks\Commands\Core\BibliographyEnv::type(),
@@ -82,6 +82,7 @@ class ArticleLexer extends BaseLexer
     //       // \TexStacks\Commands\Core\CaptionCommand::type(),
     //       // \TexStacks\Commands\Core\IncludeGraphicsCommand::type(),
     //       // \TexStacks\Commands\OneArg::type(),
+    //       // \TexStacks\Commands\TwoArgs::type(),
     //       // 'environment:group',
     //       // 'text',
     //     ]

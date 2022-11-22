@@ -193,15 +193,19 @@ class LatexParser
       'latex_src' => $text,
     ]);
 
-    $lexer = new LatexLexer(['line_number_offset' => $line_number_offset]);
+    $lexer = new ArticleLexer(['line_number_offset' => $line_number_offset]);
 
     try {
       $tokens = $lexer->tokenize($parser->getSrc());
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-
-    $parser->parse($tokens);
+    try {
+      $parser->parse($tokens);
+    } catch (\Exception $e) {
+      // dd($tokens);
+      $parser->terminateWithError("<div>Message: {$e->getMessage()}</div><div>File: {$e->getFile()}</div><div>Line: {$e->getLine()}</div>");
+    }
 
     return $parser->tree->root();
   }
