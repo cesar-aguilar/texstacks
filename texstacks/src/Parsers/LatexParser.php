@@ -63,6 +63,7 @@ class LatexParser
         'cmd:section' => 'handleSectionNode',
 
         'environment',
+        'environment:generic',
         'environment:group',
         'inlinemath',
         'environment:displaymath',

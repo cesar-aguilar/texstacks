@@ -38,6 +38,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\ListEnv::class,
       \TexStacks\Commands\Core\ItemCommand::class,
       \TexStacks\Commands\Core\TabularEnv::class,
+      \TexStacks\Commands\Core\VerbatimEnv::class,
       \TexStacks\Commands\Core\SpacingCommands::class,
       \TexStacks\Commands\Core\SpaceCommands::class,
       \TexStacks\Commands\Core\ActionCommands::class,
@@ -62,27 +63,29 @@ class ArticleLexer extends BaseLexer
   protected function postProcessTokens(): void
   {
 
-    $this->tokens = array_filter($this->tokens, function ($token) {
-      return in_array(
-        $token->type,
-        [
-          // \TexStacks\Commands\TheoremEnv::type(),
-          // \TexStacks\Commands\Core\LabelCommand::type(),
-          // \TexStacks\Commands\Core\ReferenceCommands::type(),
-          \TexStacks\Commands\Core\SectionCommands::type(),
-          // \TexStacks\Commands\Core\InlineMathEnv::type(),
-          // \TexStacks\Commands\Core\DisplayMathEnv::type(),
-          // \TexStacks\Commands\Core\BibliographyEnv::type(),
-          // \TexStacks\Commands\Core\ListEnv::type(),
-          // \TexStacks\Commands\Core\ItemCommand::type(),
-          // \TexStacks\Commands\Core\BibItemCommand::type(),
-          // \TexStacks\Commands\Core\CaptionCommand::type(),
-          // \TexStacks\Commands\Core\IncludeGraphicsCommand::type(),
-          // \TexStacks\Commands\OneArg::type(),
-          // 'environment:group',
-          // 'text',
-        ]
-      );
-    });
+    parent::postProcessTokens();
+
+    // $this->tokens = array_filter($this->tokens, function ($token) {
+    //   return in_array(
+    //     $token->type,
+    //     [
+    //       // \TexStacks\Commands\TheoremEnv::type(),
+    //       // \TexStacks\Commands\Core\LabelCommand::type(),
+    //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
+    //       \TexStacks\Commands\Core\SectionCommands::type(),
+    //       // \TexStacks\Commands\Core\InlineMathEnv::type(),
+    //       // \TexStacks\Commands\Core\DisplayMathEnv::type(),
+    //       // \TexStacks\Commands\Core\BibliographyEnv::type(),
+    //       // \TexStacks\Commands\Core\ListEnv::type(),
+    //       // \TexStacks\Commands\Core\ItemCommand::type(),
+    //       // \TexStacks\Commands\Core\BibItemCommand::type(),
+    //       // \TexStacks\Commands\Core\CaptionCommand::type(),
+    //       // \TexStacks\Commands\Core\IncludeGraphicsCommand::type(),
+    //       // \TexStacks\Commands\OneArg::type(),
+    //       // 'environment:group',
+    //       // 'text',
+    //     ]
+    //   );
+    // });
   }
 }

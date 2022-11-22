@@ -47,7 +47,7 @@ class Renderer
 
     if ($node->hasType('environment:group')) return GroupEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType('environment')) return EnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType(['environment', 'environment:generic'])) return EnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('environment:tabular')) return TabularEnvironmentRenderer::renderNode($node, $body);
 
