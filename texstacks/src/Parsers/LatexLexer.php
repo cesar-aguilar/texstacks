@@ -440,11 +440,11 @@ class LatexLexer extends Tokenizer
         }
 
         $this->addToken($token);
-      } else if ($this->getCommandType($this->command_name) === 'cmd:font_declaration') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:font-declaration') {
         $this->addFontDeclarationToken();
-      } else if ($this->getCommandType($this->command_name) === 'alpha-symbol') {
+      } else if ($this->getCommandType($this->command_name) === 'cmd:alpha-symbol') {
         $this->addToken(new Token([
-          'type' => 'alpha-symbol',
+          'type' => 'cmd:alpha-symbol',
           'command_name' => $this->command_name,
           'command_src' => "\\" . $this->command_name,
           'body' => $this->command_name,
@@ -576,7 +576,7 @@ class LatexLexer extends Tokenizer
   private function addFontDeclarationToken()
   {
     $this->addToken(new Token([
-      'type' => 'cmd:font_declaration',
+      'type' => 'cmd:font-declaration',
       'body' => self::FONT_DECLARATIONS[$this->command_name],
       'line_number' => $this->line_number,
     ]));
@@ -610,7 +610,7 @@ class LatexLexer extends Tokenizer
 
     if (in_array($name, self::FONT_COMMANDS))    return 'cmd:font';
 
-    if (in_array($name, array_keys(self::FONT_DECLARATIONS))) return 'cmd:font_declaration';
+    if (in_array($name, array_keys(self::FONT_DECLARATIONS))) return 'cmd:font-declaration';
 
     if (in_array($name, self::ONE_ARGS_CMDS)) return 'one-arg-cmd';
 
@@ -618,7 +618,7 @@ class LatexLexer extends Tokenizer
 
     if (in_array($name, self::CMD_WITH_OPTIONS)) return 'cmd-with-options';
 
-    if (in_array($name, self::ALPHA_SYMBOLS)) return 'alpha-symbol';
+    if (in_array($name, self::ALPHA_SYMBOLS)) return 'cmd:alpha-symbol';
 
     if (in_array($name, self::SPACING_CMDS)) return 'spacing-cmd';
 

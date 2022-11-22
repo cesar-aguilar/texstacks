@@ -5,9 +5,10 @@ namespace TexStacks\Commands\Core;
 use TexStacks\Parsers\Token;
 use TexStacks\Commands\CommandGroup;
 
-class FontDeclarations extends CommandGroup {
+class FontDeclarations extends CommandGroup
+{
 
-  protected static $type = 'cmd:font_declaration';
+  protected static $type = 'cmd:font-declaration';
 
   protected static $commands = [
     'rm' => 'font-serif',
@@ -39,7 +40,8 @@ class FontDeclarations extends CommandGroup {
     'Huge' => 'text-4xl',
   ];
 
-  public static function contains($command) {
+  public static function contains($command)
+  {
     return array_key_exists($command, self::$commands);
   }
 
@@ -53,5 +55,4 @@ class FontDeclarations extends CommandGroup {
 
     return new Token($args);
   }
-
 }

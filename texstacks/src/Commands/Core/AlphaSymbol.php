@@ -5,9 +5,10 @@ namespace TexStacks\Commands\Core;
 use TexStacks\Parsers\Token;
 use TexStacks\Commands\CommandGroup;
 
-class AlphaSymbol extends CommandGroup {
+class AlphaSymbol extends CommandGroup
+{
 
-  protected static $type = 'cmd:alpha_symbol';
+  protected static $type = 'cmd:alpha-symbol';
 
   protected static $commands = [
     'S',
@@ -28,5 +29,4 @@ class AlphaSymbol extends CommandGroup {
 
     return new Token($args);
   }
-
 }

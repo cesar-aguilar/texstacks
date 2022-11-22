@@ -79,8 +79,8 @@ class LatexParser
 
         'cmd:label' => 'handleLabelNode',
 
-        'symbol',
-        'alpha-symbol',
+        'cmd:symbol',
+        'cmd:alpha-symbol',
         'cmd:includegraphics',
         'cmd:cite',
         'cmd:font',
@@ -88,7 +88,7 @@ class LatexParser
         'accent-cmd',
         'cmd:ref', => 'handleCommandNode',
 
-        'cmd:font_declaration' => 'handleFontDeclaration',
+        'cmd:font-declaration' => 'handleFontDeclaration',
 
         'cmd:caption' => 'handleCaptionNode',
 
@@ -502,7 +502,7 @@ class LatexParser
       return $this->createTheoremNode($token, $args);
     } else if (preg_match('/environment/', $token->type)) {
       return new EnvironmentNode($args);
-    } else if ($token->type === 'symbol') {
+    } else if ($token->type === 'cmd:symbol') {
       return new Node($args);
     } else {
       return new CommandNode($args);

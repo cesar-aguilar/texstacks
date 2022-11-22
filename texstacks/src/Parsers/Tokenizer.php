@@ -744,7 +744,7 @@ class Tokenizer extends TextScanner
       throw new \Exception($e->getMessage());
     }
 
-    $token->type = 'symbol';
+    $token->type = 'cmd:symbol';
     $token->body = $char;
 
     $this->addToken($token);

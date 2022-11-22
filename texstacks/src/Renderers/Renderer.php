@@ -57,7 +57,7 @@ class Renderer
 
     if ($node->hasType('cmd:font')) return FontCommandRenderer::renderNode($node, $body);
 
-    if ($node->hasType(['symbol', 'alpha-symbol'])) return SymbolCommandRenderer::renderNode($node, $body);
+    if ($node->hasType(['cmd:symbol', 'cmd:alpha-symbol'])) return SymbolCommandRenderer::renderNode($node, $body);
 
     if ($node->hasType('cmd:caption')) return CaptionRenderer::renderNode($node, $body);
 
@@ -81,7 +81,7 @@ class Renderer
 
     if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 
-    if ($node->hasType('cmd:font_declaration')) return self::renderFontDeclaration($node);
+    if ($node->hasType('cmd:font-declaration')) return self::renderFontDeclaration($node);
 
     if ($node->hasType('accent-cmd')) return $node->body;
 
