@@ -481,7 +481,6 @@ class LatexParser
   {
     if ($token->command_name === 'texorpdfstring') {
       $new_node = $this->createCommandNode($token);
-
       if ($new_node->getArg('arg1')) {
         $arg1 = self::parseText($new_node->getArg('arg1'), $new_node->line_number);
         $new_node->setCommandContent($arg1);

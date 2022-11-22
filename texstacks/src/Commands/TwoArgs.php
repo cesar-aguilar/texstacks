@@ -23,6 +23,7 @@ class TwoArgs extends CommandGroup
     $args['type'] = static::$type;
     list($arg_1, $arg_2) = $args['command_args'];
     $args['command_src'] = "\\" . $args['command_name'] . "{" . $arg_1 . "}" . "{" . $arg_2 . "}";
+    $args['command_args'] = ['arg1' => $arg_1, 'arg2' => $arg_2];
     return new Token($args);
   }
 }
