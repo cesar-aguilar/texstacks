@@ -2,6 +2,7 @@
 
 namespace TexStacks\Parsers;
 
+use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\BaseLexer;
 
 class ArticleLexer extends BaseLexer
@@ -24,6 +25,7 @@ class ArticleLexer extends BaseLexer
     }
 
     $this->registerCommandGroup([
+      \TexStacks\Commands\Core\PreambleCommands::class,
       \TexStacks\Commands\Core\SectionCommands::class,
       \TexStacks\Commands\Core\FontCommands::class,
       \TexStacks\Commands\Core\FontEnv::class,
@@ -55,9 +57,19 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\TwoArgs::class,
     ]);
 
-    $this->registerDefaultEnvironment(
-      \TexStacks\Commands\Environment::class
-    );
+  }
+
+  protected function preProcessLatexSource(string $latex_src)
+  {
+
+    // $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
+
+    // $this->line_number = $n > -1 ? $n : $this->line_number;
+
+    // $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
+
+    // return $html_src;
+    return $latex_src;
   }
 
   protected function postProcessTokens(): void

@@ -2,7 +2,6 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\Tokenizer;
 
 class BaseLexer extends Tokenizer
@@ -14,6 +13,8 @@ class BaseLexer extends Tokenizer
   public function __construct($data = [])
   {
     $this->line_number = $data['line_number_offset'] ?? 1;
+
+    $this->default_env = \TexStacks\Commands\Environment::class;
   }
 
   public function tokenize(string $latex_src)
@@ -219,15 +220,8 @@ class BaseLexer extends Tokenizer
     }
   }
 
-  private function preProcessLatexSource(string $latex_src)
-  {
-
-    $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
-
-    $this->line_number = $n > -1 ? $n : $this->line_number;
-
-    $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
-
-    return $html_src;
+  protected function preProcessLatexSource(string $latex_src) {
+    return $latex_src;
   }
+
 }

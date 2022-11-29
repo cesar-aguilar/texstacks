@@ -17,6 +17,8 @@ class EnvironmentRenderer
 
         return match ($node->commandContent()) {
 
+            'document' => $body,
+
             'center' => "<div style=\"text-align: center\">$body</div>",
 
             'proof' => self::renderProofEnvironment($node, $body),

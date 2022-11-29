@@ -71,7 +71,7 @@ class LatexArticleController
 
   public function convert()
   {
-    return Renderer::render($this->getRoot());
+    return Renderer::render($this->parser->getRoot());
   }
 
   public function getFrontMatter()
