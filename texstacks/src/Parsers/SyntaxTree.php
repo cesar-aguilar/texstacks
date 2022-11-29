@@ -9,6 +9,7 @@ class SyntaxTree
 
   protected array $nodes = [];
   protected Node $root;
+  protected Node $document;
   private int $node_count = 0;
 
   public function addNode($node, $parent = null)
@@ -24,8 +25,11 @@ class SyntaxTree
 
   public function prependNode($node)
   {
-    
-    $this->root->prependChild($node);
+    if ($this->document) {
+      $this->document->prependChild($node);
+    } else {
+      $this->root->prependChild($node);
+    }
 
   }
 
@@ -51,8 +55,18 @@ class SyntaxTree
     $this->node_count++;
   }
 
+  public function setDocument($document)
+  {
+    $this->document = $document;
+  }
+
   public function root()
   {
     return $this->root;
+  }
+
+  public function document()
+  {
+    return $this->document ?? $this->root;
   }
 }

@@ -4,7 +4,6 @@ namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Node;
 use TexStacks\Helpers\StrHelper;
-// use TexStacks\Parsers\LatexLexer;
 use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\CommandNode;
 use TexStacks\Parsers\SectionNode;
@@ -45,7 +44,7 @@ class LatexParser
 
   public function getRoot()
   {
-    return $this->tree->root();
+    return $this->tree->document();
   }
 
   public function getSrc()
@@ -207,7 +206,7 @@ class LatexParser
       $parser->terminateWithError("<div>Message: {$e->getMessage()}</div><div>File: {$e->getFile()}</div><div>Line: {$e->getLine()}</div>");
     }
 
-    return $parser->tree->root();
+    return $parser->tree->document();
   }
 
   private function preProcessRawSource()
@@ -317,7 +316,7 @@ class LatexParser
      * until we find the first sectioning command
      * with a lower numbered depth level */
 
-    $parent = $new_node->closestParentSection($this->current_node) ?? $this->tree->root();
+    $parent = $new_node->closestParentSection($this->current_node) ?? $this->tree->document();
 
     $this->tree->addNode($new_node, $parent);
     $this->current_node = $new_node;
@@ -333,6 +332,10 @@ class LatexParser
       if ($new_node->commandContent() === 'proof' && $new_node->commandOptions() != '') {
         $env_options = self::parseText($new_node->commandOptions(), $new_node->line_number);
         $new_node->setOptions($env_options);
+      }
+
+      if ($new_node->commandContent() === 'document') {
+        $this->tree->setDocument($new_node);
       }
 
       $this->tree->addNode($new_node, $this->current_node);
@@ -351,7 +354,7 @@ class LatexParser
 
     $parent = $this->current_node->parent()->closest($token->type);
 
-    $this->current_node = $parent?->parent() ?? $this->tree->root();
+    $this->current_node = $parent?->parent() ?? $this->tree->document();
 
     return;
   }
