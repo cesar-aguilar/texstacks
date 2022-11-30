@@ -2,36 +2,20 @@
 
 namespace TexStacks\Commands\Core;
 
-use TexStacks\Parsers\Token;
-use TexStacks\Commands\CommandGroup;
+use TexStacks\Commands\OneArgPreOptions;
 
-class SectionCommands extends CommandGroup {
+class SectionCommands extends OneArgPreOptions {
 
   protected static $type = 'cmd:section';
 
   protected static $commands = [
     'part',
-    'chapter', 'chapter\*',
-    'section', 'section\*',
-    'subsection', 'subsection\*',
-    'subsubsection', 'subsubsection\*',
-    'paragraph', 'paragraph\*',
-    'subparagraph', 'subparagraph\*',
+    'chapter', 'chapter*',
+    'section', 'section*',
+    'subsection', 'subsection*',
+    'subsubsection', 'subsubsection*',
+    'paragraph', 'paragraph*',
+    'subparagraph', 'subparagraph*',
   ];
-  
-  public static function signature() {
-    return '*[]{}';
-  }
-
-  public static function make($args)
-  {
-    $args['type'] = self::$type;
-    
-    $options = $args['command_options'] ? "[" . $args['command_options'] . "]" : '';
-    
-    $args['command_src'] = "\\" . $options . $args['command_name'] . "{" . $args['command_content'] . "}";
-    
-    return new Token($args);
-  }
 
 }

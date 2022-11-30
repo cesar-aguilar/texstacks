@@ -94,15 +94,11 @@ class Tokenizer extends TextScanner
         if (!is_null($env)) $args = [$content];
       } else if ($signature === '+[]') {
         $options = $this->getCmdWithOptions($signature);
-      } else if ($signature === '*[]{}') {
-        list($content, $options) = $this->getCmdWithStarOptionsArg();
       } else if ($signature === '{}[]') {
         list($content, $options) = $this->getCmdWithArgOptions();
       } else if ($signature === '[]{}' || $signature === '+[]{}') {
         list($content, $options) = $this->getCmdWithOptionsArg($signature);
         if (!is_null($env)) $args = [$content];
-      } else if ($signature === '*{}') {
-        $content = $this->getCmdWithStarArg();
       } else if ($signature === '{}{}') {
         $args = $this->getCmdWithArgArg();
       } else if ($signature === '{}[][]{}') {
@@ -345,10 +341,9 @@ class Tokenizer extends TextScanner
     $content = '';
     $options = '';
     $src = '\\' . $this->command_name;
-    $STARRED = false;
     $TOC_ENTRY = false;
 
-    $ALLOWED_CHARS = [' ', '*', '{', '['];
+    $ALLOWED_CHARS = [' ', '{', '['];
 
     while (!is_null($char = $this->getChar())) {
 
@@ -359,20 +354,6 @@ class Tokenizer extends TextScanner
 
       if ($char === ' ') {
         $this->cursor++;
-        continue;
-      }
-
-      if ($char === '*') {
-
-        if ($STARRED || $TOC_ENTRY) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        $this->cursor++;
-        $this->command_name .= '*';
-        $src .= '*';
-        $STARRED = true;
         continue;
       }
 
@@ -417,129 +398,6 @@ class Tokenizer extends TextScanner
       'command_src' => $src,
       'line_number' => $this->line_number,
     ]);
-  }
-
-  private function getCmdWithStarOptionsArg()
-  {
-
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $STARRED = false;
-    $TOC_ENTRY = false;
-
-    $ALLOWED_CHARS = [' ', '*', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '*') {
-
-        if ($STARRED || $TOC_ENTRY) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        $this->cursor++;
-        $this->command_name .= '*';
-        $src .= '*';
-        $STARRED = true;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if ($TOC_ENTRY) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        $this->cursor++;
-        $TOC_ENTRY = true;
-        continue;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-        break;
-      }
-    }
-
-    return [$content, $options];
-  }
-
-  private function getCmdWithStarArg()
-  {
-    $content = '';
-    $src = '\\' . $this->command_name;
-    $STARRED = false;
-
-    $ALLOWED_CHARS = [' ', '*', '{'];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '*') {
-
-        if ($STARRED) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        $this->cursor++;
-        $this->command_name .= '*';
-        $src .= '*';
-        $STARRED = true;
-        continue;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-        break;
-      }
-    }
-
-    return $content;
   }
 
   private function getCmdWithArgOptions(string|null $type = null)

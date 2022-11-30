@@ -303,7 +303,7 @@ class TextScanner {
 
     $alpha_text = '';
 
-    while (!is_null($char) && ctype_alpha($char)) {
+    while (!is_null($char) && (ctype_alpha($char) || $char === '*')) {
       $alpha_text .= $char;
       $char = $this->getNextChar();
     }
