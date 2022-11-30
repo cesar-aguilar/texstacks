@@ -105,11 +105,13 @@ class Tokenizer extends TextScanner
         $content = $this->getCmdWithStarArg();
       } else if ($signature === '{}{}') {
         $args = $this->getCmdWithArgArg();
+      } else if ($signature === '{}[][]{}') {
+        list($content, $params, $default_param, $defn) = $this->getNewCommandData();
+        $args = [$params, $default_param, $defn];
       }
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-
 
     return [
       'command_name' => $this->command_name,
@@ -711,6 +713,104 @@ class Tokenizer extends TextScanner
     }
 
     return [$arg_1, $arg_2];
+  }
+
+  private function getNewCommandData()
+  {
+    $command = '';
+    $params = null;
+    $default_param = null;
+    $definition = '';
+    $src = '\\' . $this->command_name;
+    $HAS_PARAMS = false;
+    $GOT_COMMAND = false;
+
+    $ALLOWED_CHARS = [' ', '{', '[', "\n", '%', "\\"];
+
+    $this->backup();
+
+    while (!is_null($char = $this->getNextChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $src .= $char;
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      if ($char === "\n" && $this->prev_char === "\n") {
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      if ($char === '%') {
+        $this->consumeUntilTarget("\n");
+        continue;
+      }
+
+      if ($char === ' ') continue;
+
+      if ($char === "\\" && $GOT_COMMAND) {
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+      }
+
+      if ($char === "\\" && !$GOT_COMMAND) {
+        try {
+          $command = $this->consumeUntilNonAlpha(from_cursor: false);
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+        $command = '\\' . $command;
+        $src .= $command;
+        $GOT_COMMAND = true;
+        $this->backup();
+        continue;
+      }
+
+      if ($char === '[') {
+
+        if (!$GOT_COMMAND) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        if (!$HAS_PARAMS) {
+          $HAS_PARAMS = true;
+          $params = $options;
+        } else {
+          $default_param = $options;
+        }
+        continue;
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getContentUpToDelimiter('}', '{');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+
+        if ($GOT_COMMAND) {
+          $definition = $content;
+          break;
+        }
+
+        $GOT_COMMAND = true;
+        $command = $content;
+
+      }
+    }
+
+    return [$command, $params, $default_param, $definition];
+
   }
 
   protected function addGroupEnvToken($char)

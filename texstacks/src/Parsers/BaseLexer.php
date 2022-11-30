@@ -74,6 +74,11 @@ class BaseLexer extends Tokenizer
 
       $char = $this->getNextChar();
 
+      if (is_null($char)) {
+        $this->buffer .= "\\";
+        break;
+      }
+
       // If char is non-alphabetic then we have a control symbol
       if (!ctype_alpha($char ?? '')) {
 

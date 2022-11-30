@@ -150,12 +150,12 @@ class TextScanner {
 
         $content .= $char;
 
-        if ($char === $left_delimiter) $delim_count++;
+        if ($char === $left_delimiter && $this->prev_char !== "\\") $delim_count++;
 
         $char = $this->getNextChar();
       } else {
 
-        $delim_count--;
+        if ($this->prev_char !== "\\") $delim_count--;
 
         if ($delim_count > 0) {
           $content .= $right_delimiter;
@@ -256,7 +256,7 @@ class TextScanner {
       $char = $this->getNextChar();
     }
 
-    if ($char === $target) {
+    if ($char === $target || is_null($char)) {
       return;
     }
 
@@ -269,7 +269,7 @@ class TextScanner {
    * After this method is called, the cursor will be at the first
    * non white space character
    */
-  protected function consumeWhiteSpace()
+  protected function consumeWhiteSpace($backup = false)
   {
 
     if ($this->cursor === $this->num_chars) {
@@ -278,9 +278,17 @@ class TextScanner {
 
     $char = $this->getChar();
 
+    $consumed = false;
+
     while (!is_null($char) && $char === ' ') {
       $char = $this->getNextChar();
+      $consumed = true;
     }
+
+    if ($consumed && $backup) {
+      $this->backup();
+    }
+
   }
 
   /**
@@ -319,7 +327,7 @@ class TextScanner {
       $char = $this->getNextChar();
     }
 
-    if ($char === $target) {
+    if ($char === $target || is_null($char)) {
       return;
     }
 

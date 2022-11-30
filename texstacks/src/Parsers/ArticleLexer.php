@@ -26,6 +26,7 @@ class ArticleLexer extends BaseLexer
 
     $this->registerCommandGroup([
       \TexStacks\Commands\Core\PreambleCommands::class,
+      \TexStacks\Commands\Core\NewCommands::class,
       \TexStacks\Commands\Core\SectionCommands::class,
       \TexStacks\Commands\Core\FontCommands::class,
       \TexStacks\Commands\Core\FontEnv::class,
@@ -81,7 +82,7 @@ class ArticleLexer extends BaseLexer
     //   return in_array(
     //     $token->type,
     //     [
-    //       // \TexStacks\Commands\TheoremEnv::type(),
+    //       // \TexStacks\Commands\Core\NewCommands::type(),
     //       // \TexStacks\Commands\Core\LabelCommand::type(),
     //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
     //       // \TexStacks\Commands\Core\SectionCommands::type(),
