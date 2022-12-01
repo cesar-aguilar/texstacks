@@ -14,5 +14,6 @@ class AmsArtOneArgPreOptions extends OneArgPreOptions
     'author',
     'contrib',
     'subjclass',
+    'address',
   ];
 }

@@ -23,6 +23,7 @@ class FontCommands extends OneArg {
     'textnormal',
     'textsuperscript',
     'textsubscript',
+    'centerline',
   ];
  
 }

@@ -82,6 +82,8 @@ class Renderer
 
     if ($node->hasType('cmd:footnote')) return self::renderFootnote($node, $body);
 
+    if ($node->hasType('cmd:frontmatter')) return self::renderFrontMatter($node, $body);
+
     if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 
     if ($node->hasType('cmd:font-declaration')) return self::renderFontDeclaration($node);
@@ -185,17 +187,40 @@ class Renderer
   {
     if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) return $node->commandSource();
 
+    $body = $node->commandContent();
+
     if ($node->commandContent() instanceof Node) {
       $body = trim(Renderer::render($node->commandContent()));
     }
 
-    $num = $node->commandRefNum();
+    $num = chr((int)$node->commandRefNum() + 96);
 
-    $html = "<details class=\"footnote\"><summary class=\"footnote\">$num</summary><p class=\"footnote-content\">$body</p></details>";
+    $html = "<details class=\"footnote\"><summary class=\"footnote\">[$num]</summary><p class=\"footnote-content\">$body</p></details>";
 
     return $html;
 
   }
+
+  // private static function renderFrontMatter($node, string $body = null): string
+  // {
+  //   if ($node->ancestorOfType('environment:verbatim'))
+  //     return $node->commandSource();
+
+  //   $body = $node->commandContent();
+
+  //   if ($node->commandContent() instanceof Node) {
+  //     $body = trim(Renderer::render($node->commandContent()));
+  //   }
+
+  //   $html = $node->commandSource();
+
+  //   if ($node->commandName() === 'thanks') {
+  //     $html = "<details class=\"footnote\"><summary class=\"footnote\">&#x2731;</summary><p class=\"footnote-content\">$body</p></details>";
+  //   }
+
+  //   return $html;
+
+  // }
 
   private static function renderRef($node, string $body = null): string
   {

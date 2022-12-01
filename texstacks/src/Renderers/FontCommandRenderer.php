@@ -47,6 +47,8 @@ class FontCommandRenderer
 
             'textsubscript' => "<sub>$body</sub>",
 
+            'centerline' => "<div style=\"text-align: center\">$body</div>",
+
             default => "\\" . $node->commandName() . "{" . $body . "}"
         };
     }

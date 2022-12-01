@@ -24,7 +24,7 @@ class LatexParser
   private $raw_src;
   private $src;
   private $preamble_parser;
-  private $front_matter = [];
+  private static $front_matter = [];
 
   public function __construct($args = [])
   {
@@ -158,7 +158,7 @@ class LatexParser
 
   public function getFrontMatter(): array
   {
-    return $this->front_matter;
+    return self::$front_matter;
   }
 
   public function getTheoremEnvs(): array
@@ -287,15 +287,27 @@ class LatexParser
   private function handleFrontMatter($token)
   {
     if ($token->command_name === 'title') {
-      $this->front_matter['title'] = self::parseText($token->command_content);
+      self::$front_matter['title'] = self::parseText($token->command_content, $token->line_number);
     }
 
-    if ($token->command_name === 'author') {
-      $this->front_matter['authors'][] = (object) ['name' => self::parseText($token->command_content)];
+    else if ($token->command_name === 'author') {
+
+      $authors = explode("\\and", $token->command_content);
+
+      foreach ($authors as $author) {
+        self::$front_matter['authors'][] = (object) ['name' => self::parseText($author)];
+      }
+
     }
 
-    if ($token->command_name === 'date') {
-      $this->front_matter['date'] = $token->command_content;
+    else if ($token->command_name === 'date') {
+      self::$front_matter['date'] = $token->command_content;
+    }
+
+    else if ($token->command_name === 'thanks') {
+
+      self::$front_matter['thanks'][] = self::parseText($token->command_content, $token->line_number);
+
     }
 
   }

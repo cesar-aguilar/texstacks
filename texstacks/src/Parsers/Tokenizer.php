@@ -13,6 +13,7 @@ class Tokenizer extends TextScanner
     "`" => 'grave',
     "^" => 'circ',
     '"' => 'uml',
+    '~' => 'tilde',
   ];
 
   protected array $tokens = [];
@@ -731,7 +732,7 @@ class Tokenizer extends TextScanner
       $command_src = "\\" . $char . $letter;
     }
 
-    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'])) {
+    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'n', 'A', 'E', 'I', 'O', 'U', 'Y', 'N'])) {
       $this->buffer .= $command_src . $tail;
       return;
     }

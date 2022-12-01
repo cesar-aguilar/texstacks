@@ -85,6 +85,10 @@ class LatexArticleController
       $author->name = Renderer::render($author->name);
     }
 
+    foreach ($front_matter['thanks'] ?? [] as $k => $thanks) {
+      $front_matter['thanks'][$k] = Renderer::render($thanks);
+    }
+
     return $front_matter;
   }
 

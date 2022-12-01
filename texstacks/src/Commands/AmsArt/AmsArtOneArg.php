@@ -10,7 +10,6 @@ class AmsArtOneArg extends OneArg
   protected static $type = 'cmd:frontmatter';
 
   public static $commands = [
-    'address',
     'curraddr',
     'email',
     'urladdr',

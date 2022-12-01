@@ -107,7 +107,7 @@ class ArticleLexer extends BaseLexer
     // });
 
     // $this->tokens = array_filter($this->tokens, function ($token) {
-    //     return $token->line_number < 110;
+    //     return $token->line_number > 1220 and $token->line_number < 1260;
     //   });
   }
 }
