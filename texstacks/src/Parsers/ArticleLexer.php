@@ -56,6 +56,8 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\OneArg::class,
       \TexStacks\Commands\EnvWithArg::class,
       \TexStacks\Commands\TwoArgs::class,
+      \TexStacks\Commands\AmsArt\AmsArtOneArg::class,
+      \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::class,
     ]);
 
   }
@@ -82,7 +84,8 @@ class ArticleLexer extends BaseLexer
     //   return in_array(
     //     $token->type,
     //     [
-    //       // \TexStacks\Commands\Core\NewCommands::type(),
+    //       // \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
+    //       // \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::type(),
     //       // \TexStacks\Commands\Core\LabelCommand::type(),
     //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
     //       // \TexStacks\Commands\Core\SectionCommands::type(),
@@ -101,5 +104,9 @@ class ArticleLexer extends BaseLexer
     //     ]
     //   );
     // });
+
+    // $this->tokens = array_filter($this->tokens, function ($token) {
+    //     return $token->line_number < 110;
+    //   });
   }
 }

@@ -25,6 +25,8 @@ class ThmEnvironmentRenderer
 
         $style = $node->getArg('style');
 
+        $body = trim($body);
+
         return "<div class=\"thm-env thm-style-{$style}\" id=\"{$node->commandLabel()}\"><div class=\"thm-env-head\">$heading</div><div class=\"thm-env-body\">$body</div></div>";
     }
 }

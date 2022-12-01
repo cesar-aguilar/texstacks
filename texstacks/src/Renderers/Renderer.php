@@ -2,6 +2,7 @@
 
 namespace TexStacks\Renderers;
 
+use TexStacks\Parsers\Node;
 use TexStacks\Renderers\CaptionRenderer;
 use TexStacks\Renderers\EnvironmentRenderer;
 use TexStacks\Renderers\SectionCommandRenderer;
@@ -94,7 +95,8 @@ class Renderer
 
     if ($body === "\n") return '';
 
-    return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
+    // return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
+    return $body;
 
     // Replace two \n characters with <br>
     // return str_replace("\n\n", '<br><br>', $output);
@@ -124,6 +126,8 @@ class Renderer
       return "<dt>$label</dt><dd>$body</dd>";
     }
 
+    $body = trim($body);
+
     return "<li>$body</li>";
   }
 
@@ -132,6 +136,8 @@ class Renderer
     if ($node->ancestorOfType('environment:verbatim')) return $node->commandSource() . ' ' . $body;
 
     $body = str_replace(['<br>', '\newblock'], '', $body);
+
+    $body = trim($body);
 
     return "<li id=\"{$node->commandContent()}\">$body</li>";
   }
@@ -153,6 +159,10 @@ class Renderer
 
   private static function renderCitations($node, string $body = null): string
   {
+
+    if ($node->commandOptions() instanceof Node) {
+      $node->setOptions(Renderer::render($node->commandOptions()));
+    }
 
     $options = $node->commandOptions() != '' ? ", " . $node->commandOptions() : null;
 

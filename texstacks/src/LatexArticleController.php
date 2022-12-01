@@ -71,7 +71,8 @@ class LatexArticleController
 
   public function convert()
   {
-    return Renderer::render($this->parser->getRoot());
+    $body = trim(Renderer::render($this->parser->getRoot()));
+    return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
   }
 
   public function getFrontMatter()

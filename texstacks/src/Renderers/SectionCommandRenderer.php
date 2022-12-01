@@ -23,7 +23,7 @@ class SectionCommandRenderer
 
     if ($node->ancestorOfType('environment:verbatim')) return $node->commandSource();
 
-    $body = preg_replace('/^(<br>)+|(<br>)+$/', '', $body);
+    $body = trim(preg_replace('/^(<br>)+|(<br>)+$/', '', $body));
 
     return match ($node->commandName()) {
 

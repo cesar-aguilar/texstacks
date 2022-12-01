@@ -60,6 +60,8 @@ class LatexParser
 
       $handler = match ($token->type) {
 
+        'cmd:frontmatter' => 'handleFrontmatter',
+
         'cmd:section' => 'handleSectionNode',
 
         'environment',
@@ -287,6 +289,11 @@ class LatexParser
     return;
   }
 
+  private function handleFrontMatter($token)
+  {
+    return;
+  }
+
   private function handleSectionNode($token): void
   {
     $new_node = $this->createCommandNode($token);
@@ -442,6 +449,11 @@ class LatexParser
     if ($new_node->hasType('cmd:font') && StrHelper::isNotAlpha($new_node->commandContent())) {
       $command_content = self::parseText($new_node->commandContent(), $new_node->line_number);
       $new_node->setCommandContent($command_content);
+    }
+
+    if ($new_node->hasType('cmd:cite') && StrHelper::isNotAlpha($new_node->commandOptions())) {
+      $command_options = self::parseText($new_node->commandOptions(), $new_node->line_number);
+      $new_node->setOptions($command_options);
     }
 
     if ($new_node->hasType('cmd:font') && $new_node->commandName() === 'footnote')
