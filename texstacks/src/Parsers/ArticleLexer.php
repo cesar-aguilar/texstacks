@@ -34,6 +34,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\FontDeclarations::class,
       \TexStacks\Commands\Core\LabelCommand::class,
       \TexStacks\Commands\Core\Citations::class,
+      \TexStacks\Commands\Core\Footnote::class,
       \TexStacks\Commands\Core\ReferenceCommands::class,
       \TexStacks\Commands\Core\AlphaSymbol::class,
       \TexStacks\Commands\Core\DisplayMathEnv::class,

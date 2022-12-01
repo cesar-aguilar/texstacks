@@ -2,10 +2,9 @@
 
 namespace TexStacks\Commands\Core;
 
-use TexStacks\Parsers\Token;
-use TexStacks\Commands\CommandGroup;
+use TexStacks\Commands\OneArg;
 
-class FontCommands extends CommandGroup {
+class FontCommands extends OneArg {
 
   protected static $type = 'cmd:font';
 
@@ -24,20 +23,6 @@ class FontCommands extends CommandGroup {
     'textnormal',
     'textsuperscript',
     'textsubscript',
-    'footnote',
   ];
  
-  public static function signature() {
-    return '{}';
-  }
-
-  public static function make($args)
-  {
-    $args['type'] = self::$type;
-
-    $args['command_src'] = "\\" . $args['command_name'] . "{" . $args['command_content'] . "}";
-
-    return new Token($args);
-  }
-
 }

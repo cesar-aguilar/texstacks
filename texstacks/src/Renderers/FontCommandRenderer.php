@@ -13,11 +13,11 @@ class FontCommandRenderer
 
         if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) return $node->commandSource();
 
+        $body = $node->commandContent();
+
         if ($node->commandContent() instanceof Node) {
             $body = Renderer::render($node->commandContent());
         }
-
-        if ($node->commandName() === 'footnote') return self::renderFootnote($node, $body);
 
         return match ($node->commandName()) {
 
@@ -51,13 +51,4 @@ class FontCommandRenderer
         };
     }
 
-    private static function renderFootnote($node, $body)
-    {
-
-        $num = $node->commandRefNum();
-
-        $html = "<details class=\"footnote\"><summary class=\"footnote\">$num</summary><p class=\"footnote-content\">$body</p></details>";
-
-        return $html;
-    }
 }

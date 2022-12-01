@@ -80,6 +80,8 @@ class Renderer
 
     if ($node->hasType('cmd:cite')) return self::renderCitations($node, $body);
 
+    if ($node->hasType('cmd:footnote')) return self::renderFootnote($node, $body);
+
     if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 
     if ($node->hasType('cmd:font-declaration')) return self::renderFontDeclaration($node);
@@ -177,6 +179,22 @@ class Renderer
     $value = implode(', ', $a);
 
     return " [$value$options]";
+  }
+
+  private static function renderFootnote($node, string $body = null): string
+  {
+    if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) return $node->commandSource();
+
+    if ($node->commandContent() instanceof Node) {
+      $body = trim(Renderer::render($node->commandContent()));
+    }
+
+    $num = $node->commandRefNum();
+
+    $html = "<details class=\"footnote\"><summary class=\"footnote\">$num</summary><p class=\"footnote-content\">$body</p></details>";
+
+    return $html;
+
   }
 
   private static function renderRef($node, string $body = null): string

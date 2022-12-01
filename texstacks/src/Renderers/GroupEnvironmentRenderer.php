@@ -11,7 +11,7 @@ class GroupEnvironmentRenderer
     {
 
         if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) {
-            return " {" . $body . "} ";
+            return "{" . $body . "}";
         }
 
         $html = "<span";

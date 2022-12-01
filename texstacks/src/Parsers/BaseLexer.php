@@ -213,14 +213,16 @@ class BaseLexer extends Tokenizer
         continue;
       }
 
-      if (str_contains($this->tokens[$k + 1]->type, 'environment') || $this->tokens[$k + 1]->type == 'cmd:section') {
+      $next_type = $this->tokens[$k + 1]->type;
+
+      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group') {
         $this->tokens[$k]->body = rtrim($token->body);
-        // $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
 
-      if (str_contains($this->tokens[$k - 1]->type, 'environment') || $this->tokens[$k - 1]->type == 'cmd:section') {
+      $prev_type = $this->tokens[$k - 1]->type;
+
+      if ((str_contains($prev_type, 'environment') || $prev_type == 'cmd:section') && $prev_type !== 'environment:group') {
         $this->tokens[$k]->body = ltrim($token->body);
-        // $this->tokens[$k]->body = preg_replace('/(\n[\s\t]*){2,}/', '', $token->body);
       }
     }
   }

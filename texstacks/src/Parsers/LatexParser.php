@@ -24,6 +24,7 @@ class LatexParser
   private $raw_src;
   private $src;
   private $preamble_parser;
+  private $front_matter = [];
 
   public function __construct($args = [])
   {
@@ -81,6 +82,8 @@ class LatexParser
         'cmd:bibitem' => 'handleBibItemNode',
 
         'cmd:label' => 'handleLabelNode',
+
+        'cmd:footnote' => 'handleFootnoteNode',
 
         'cmd:symbol',
         'cmd:alpha-symbol',
@@ -155,15 +158,7 @@ class LatexParser
 
   public function getFrontMatter(): array
   {
-    $front_matter = $this->preamble_parser->getFrontMatter();
-
-    $front_matter['title'] = self::parseText($front_matter['title']);
-
-    foreach ($front_matter['authors'] as $author) {
-      $author->name = self::parseText($author->name);
-    }
-
-    return $front_matter;
+    return $this->front_matter;
   }
 
   public function getTheoremEnvs(): array
@@ -291,7 +286,18 @@ class LatexParser
 
   private function handleFrontMatter($token)
   {
-    return;
+    if ($token->command_name === 'title') {
+      $this->front_matter['title'] = self::parseText($token->command_content);
+    }
+
+    if ($token->command_name === 'author') {
+      $this->front_matter['authors'][] = (object) ['name' => self::parseText($token->command_content)];
+    }
+
+    if ($token->command_name === 'date') {
+      $this->front_matter['date'] = $token->command_content;
+    }
+
   }
 
   private function handleSectionNode($token): void
@@ -456,10 +462,22 @@ class LatexParser
       $new_node->setOptions($command_options);
     }
 
-    if ($new_node->hasType('cmd:font') && $new_node->commandName() === 'footnote')
-      $new_node->setRefNum($this->getCounter('footnote'));
+    $this->tree->addNode($new_node, $this->current_node);
+  }
+
+  private function handleFootnoteNode($token): void
+  {
+    $new_node = $this->createCommandNode($token);
+
+    if (StrHelper::isNotAlpha($new_node->commandContent())) {
+      $command_content = self::parseText($new_node->commandContent(), $new_node->line_number);
+      $new_node->setCommandContent($command_content);
+    }
+
+    $new_node->setRefNum($this->getCounter('footnote'));
 
     $this->tree->addNode($new_node, $this->current_node);
+
   }
 
   private function handleCaptionNode($token): void
