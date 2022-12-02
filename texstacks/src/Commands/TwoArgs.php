@@ -11,6 +11,8 @@ class TwoArgs extends CommandGroup
 
   protected static $commands = [
     'texorpdfstring',
+    'setcounter',
+    'addtocounter',
   ];
 
   public static function signature()

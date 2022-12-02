@@ -82,7 +82,7 @@ class Renderer
 
     if ($node->hasType('cmd:footnote')) return self::renderFootnote($node, $body);
 
-    if ($node->hasType('cmd:frontmatter')) return self::renderFrontMatter($node, $body);
+    // if ($node->hasType('cmd:frontmatter')) return self::renderFrontMatter($node, $body);
 
     if ($node->hasType('tag')) return "\\tag{" . $body . "}";
 

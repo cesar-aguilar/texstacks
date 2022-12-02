@@ -38,6 +38,9 @@ class FontDeclarations extends CommandGroup
     'LARGE' => 'text-2xl',
     'huge' => 'text-3xl',
     'Huge' => 'text-4xl',
+    'centering' => 'text-center',
+    'raggedright' => 'text-left',
+    'raggedleft' => 'text-right',
   ];
 
   public static function contains($command)
