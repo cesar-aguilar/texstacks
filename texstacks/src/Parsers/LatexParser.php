@@ -252,15 +252,15 @@ class LatexParser
       'table' => ['value' => 0, 'parent' => null],
     ];
 
-    $number_within_cmds = $this->preamble_parser->getNumberWithin();
+    // $number_within_cmds = $this->preamble_parser->getNumberWithin();
 
-    foreach ($number_within_cmds as $args) {
-      if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
-        $counter_name = $args[0]->value;
-        $parent_counter_name = $args[1]->value;
-        $this->counters[$counter_name]['parent'] = $parent_counter_name;
-      }
-    }
+    // foreach ($number_within_cmds as $args) {
+    //   if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
+    //     $counter_name = $args[0]->value;
+    //     $parent_counter_name = $args[1]->value;
+    //     $this->counters[$counter_name]['parent'] = $parent_counter_name;
+    //   }
+    // }
   }
 
   private function addToCurrentNode($token): void
@@ -370,7 +370,11 @@ class LatexParser
 
     /* End environment if not a list-environment and update current_node */
     if ($token->type !== 'environment:list' && $token->type !== 'environment:bibliography') {
-      $this->current_node = $this->current_node->parent();
+      if ($token->command_content === 'document') {
+        $this->current_node = $this->tree->root();
+      } else {
+        $this->current_node = $this->current_node->parent();
+      }
       return;
     }
 
@@ -533,7 +537,11 @@ class LatexParser
 
       $this->tree->addNode($new_node, $this->current_node);
 
-      return;
+    } else if ($token->command_name === 'numberwithin') {
+      $args = $token->command_args;
+      $counter_name = $args['arg1'];
+      $parent_counter_name = $args['arg2'];
+      $this->counters[$counter_name]['parent'] = $parent_counter_name;
     }
   }
 

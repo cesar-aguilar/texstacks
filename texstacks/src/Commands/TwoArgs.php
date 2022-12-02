@@ -13,6 +13,10 @@ class TwoArgs extends CommandGroup
     'texorpdfstring',
     'setcounter',
     'addtocounter',
+    'numberwithin',
+    'setlength',
+    'settowidth',
+    'settoheight',
   ];
 
   public static function signature()
