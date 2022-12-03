@@ -15,7 +15,7 @@ class TabularEnv extends Environment {
   ];
 
   public static function signature() {
-    return '+[]{}';
+    return '[]{}';
   }
 
   public static function make($args)

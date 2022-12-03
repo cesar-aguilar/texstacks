@@ -17,6 +17,7 @@ class ActionCommands extends CommandGroup {
     'listoftables',
     'newpage',
     'clearpage',
+    'newline',
   ];
 
   public static function make($args)

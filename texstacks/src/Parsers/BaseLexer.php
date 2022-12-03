@@ -133,12 +133,17 @@ class BaseLexer extends Tokenizer
 
         $signature = $ClassName::signature();
 
+        // If begin env and env contains optional argument then need to move forward
+        // because cursor is at the } character of \begin{env-name}
+        if(!is_null($env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->forward();
+
         try {
           $token = $ClassName::make($this->getTokenData($signature, $env));
         } catch (\Exception $e) {
           $message = $e->getMessage();
           $message .= "<br>$ClassName";
           $message .= "<br>Line Number: " . $this->line_number;
+          $message .= "<br>File: " . __FILE__;
           $message .= "<br>Code line: " . __LINE__;
           throw new \Exception($message);
         }

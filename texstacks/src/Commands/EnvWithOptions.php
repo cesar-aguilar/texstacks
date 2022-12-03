@@ -7,7 +7,7 @@ use TexStacks\Parsers\Token;
 class EnvWithOptions extends Environment {
 
   public static function signature() {
-    return '+[]';
+    return '[]';
   }
  
   public static function make($args)

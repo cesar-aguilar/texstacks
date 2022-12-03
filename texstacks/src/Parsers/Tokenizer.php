@@ -93,11 +93,11 @@ class Tokenizer extends TextScanner
       if ($signature === '{}' || $signature === '+{}') {
         $content = $this->getCommandContent(move_forward: str_contains($signature, '+'));
         if (!is_null($env)) $args = [$content];
-      } else if ($signature === '+[]' || $signature === '[]') {
+      } else if ($signature === '[]') {
         $options = $this->getCmdWithOptions($signature);
       } else if ($signature === '{}[]') {
         list($content, $options) = $this->getCmdWithArgOptions();
-      } else if ($signature === '[]{}' || $signature === '+[]{}') {
+      } else if ($signature === '[]{}') {
         list($content, $options) = $this->getCmdWithOptionsArg($signature);
         if (!is_null($env)) $args = [$content];
       } else if ($signature === '{}{}') {
@@ -107,7 +107,7 @@ class Tokenizer extends TextScanner
         $args = [$params, $default_param, $defn];
       }
     } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
+      throw new \Exception($e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__);
     }
 
     return [
@@ -592,11 +592,15 @@ class Tokenizer extends TextScanner
 
       if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
       }
 
       if ($char === "\n" && $this->prev_char === "\n") {
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
       }
 
       if ($char === '%') {
@@ -607,7 +611,9 @@ class Tokenizer extends TextScanner
       if ($char === ' ') continue;
 
       if ($char === "\\" && $GOT_COMMAND) {
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
       }
 
       if ($char === "\\" && !$GOT_COMMAND) {
