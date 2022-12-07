@@ -9,7 +9,8 @@ class OneArg extends CommandGroup {
   protected static $type = 'cmd:arg';
   
   protected static $commands = [
-    'tag',    
+    'tag',
+    'theoremstyle',
   ];
 
   public static function signature() {

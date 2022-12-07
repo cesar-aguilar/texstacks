@@ -105,6 +105,10 @@ class Tokenizer extends TextScanner
       } else if ($signature === '{}[][]{}') {
         list($content, $params, $default_param, $defn) = $this->getNewCommandData();
         $args = [$params, $default_param, $defn];
+      } else if ($signature === '{}[]{}[]') {
+        list($arg1, $options1, $arg2, $options2) = $this->getNewTheoremData();
+        $args = [$arg1, $options1, $arg2, $options2];
+        $content = $arg1;
       }
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__);
@@ -675,6 +679,98 @@ class Tokenizer extends TextScanner
     }
 
     return [$command, $params, $default_param, $definition];
+
+  }
+
+  private function getNewTheoremData()
+  {
+    $thm_name = '';
+    $thm_heading = '';
+    $use_counter = null;
+    $number_within = null;
+    $src = '\\' . $this->command_name;
+    $GOT_COUNTER = false;
+    $GOT_NAME = false;
+    $GOT_HEADING = false;
+
+    $ALLOWED_CHARS = [' ', '{', '[', '%'];
+
+    $this->backup();
+
+    while (!is_null($char = $this->getNextChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+
+        if (!$GOT_NAME || !$GOT_HEADING) {
+          $src .= $char;
+          $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+          $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+          throw new \Exception($message);
+        }
+
+        $this->backup();
+        break;
+      }
+
+      if ($char === '%') {
+        $this->consumeUntilTarget("\n");
+        continue;
+      }
+
+      if ($char === ' ') continue;
+
+      if ($char === '[') {
+
+        if (!$GOT_NAME) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        if (!$GOT_COUNTER && !$GOT_HEADING) {
+          $use_counter = $options;
+          $GOT_COUNTER = true;
+          continue;
+        }
+
+        $number_within = $options;
+
+        if ($GOT_NAME && $GOT_HEADING) break;
+
+        throw new \Exception("$src <--- Parse error on line {$this->line_number}: Missing name or theorem heading in newtheorem command");
+
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getContentUpToDelimiter('}', '{');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '{' . $content . '}';
+
+        if (!$GOT_NAME) {
+          $thm_name = $content;
+          $GOT_NAME = true;
+        } else {
+          $thm_heading = $content;
+          $GOT_HEADING = true;
+        }
+
+        continue;
+      }
+    }
+
+    return [$thm_name, $use_counter, $thm_heading, $number_within];
 
   }
 

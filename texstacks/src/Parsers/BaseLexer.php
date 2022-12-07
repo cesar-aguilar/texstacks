@@ -9,6 +9,7 @@ class BaseLexer extends Tokenizer
 
   private $command_groups = [];
   private $default_env;
+  protected $updatable_commands = [];
 
   public function __construct($data = [])
   {
@@ -150,9 +151,9 @@ class BaseLexer extends Tokenizer
 
         $this->addToken($token);
 
-        if ($signature === '' && $this->getChar() !== ' ' && is_null($env)) {
-          $this->backup();
-        }
+        if ($signature === '' && $this->getChar() !== ' ' && is_null($env)) $this->backup();
+
+        if ($this->isUpdatable($token->command_name)) $this->update($token);
 
         continue 2;
       }
@@ -234,6 +235,11 @@ class BaseLexer extends Tokenizer
 
   protected function preProcessLatexSource(string $latex_src) {
     return $latex_src;
+  }
+
+  protected function update($token) {}
+  protected function isUpdatable($command_name) {
+    return in_array($command_name, $this->updatable_commands);
   }
 
 }

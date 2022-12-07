@@ -12,6 +12,8 @@ class ArticleLexer extends BaseLexer
   {
     parent::__construct($data);
 
+    $this->addUpdatableCommand(\TexStacks\Commands\Core\NewTheorem::list());
+
     if (isset($data['thm_env'])) {
       \TexStacks\Commands\TheoremEnv::add($data['thm_env']);
     }
@@ -27,6 +29,7 @@ class ArticleLexer extends BaseLexer
     $this->registerCommandGroup([
       \TexStacks\Commands\Core\PreambleCommands::class,
       \TexStacks\Commands\Core\NewCommands::class,
+      \TexStacks\Commands\Core\NewTheorem::class,
       \TexStacks\Commands\Core\SectionCommands::class,
       \TexStacks\Commands\Core\FontCommands::class,
       \TexStacks\Commands\Core\FontEnv::class,
@@ -87,7 +90,7 @@ class ArticleLexer extends BaseLexer
     //     [
     //       // \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
     //       // \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::type(),
-    //       // \TexStacks\Commands\Core\LabelCommand::type(),
+    //       // \TexStacks\Commands\Core\NewTheorem::type(),
     //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
     //       // \TexStacks\Commands\Core\SectionCommands::type(),
     //       // \TexStacks\Commands\Core\InlineMathEnv::type(),
@@ -109,5 +112,21 @@ class ArticleLexer extends BaseLexer
     // $this->tokens = array_filter($this->tokens, function ($token) {
     //     return $token->line_number > 1220 and $token->line_number < 1260;
     //   });
+  }
+
+  protected function update($token)
+  {
+    if (str_contains($token->command_name, 'newtheorem')) {
+      \TexStacks\Commands\TheoremEnv::add($token->command_content);
+    }
+  }
+
+  private function addUpdatableCommand($command)
+  {
+    if (is_array($command)) {
+      $this->updatable_commands = array_merge($this->updatable_commands, $command);
+    } else {
+      $this->updatable_commands[] = $command;
+    }
   }
 }

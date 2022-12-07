@@ -25,6 +25,7 @@ class LatexParser
   private $src;
   private $preamble_parser;
   private static $front_matter = [];
+  private $theorem_style = 'plain';
 
   public function __construct($args = [])
   {
@@ -65,6 +66,8 @@ class LatexParser
 
         'cmd:section' => 'handleSectionNode',
 
+        'cmd:newtheorem' => 'handleNewTheorem',
+
         'environment',
         'environment:generic',
         'environment:group',
@@ -102,6 +105,8 @@ class LatexParser
         'cmd:two-args' => 'handleTwoArgCommandNode',
 
         'cmd:action' => 'handleActionCommandNode',
+
+        'cmd:arg' => 'handleArgCommandNode',
 
         'tag',
         'ignore' => 'doNothing',
@@ -218,11 +223,6 @@ class LatexParser
 
   private function init(): void
   {
-    $thm_envs = $this->preamble_parser->getTheoremEnvs();
-
-    $this->thm_envs = array_merge($this->thm_envs, $thm_envs);
-
-    $this->resetTheoremCounters();
 
     $this->initTree();
 
@@ -252,15 +252,6 @@ class LatexParser
       'table' => ['value' => 0, 'parent' => null],
     ];
 
-    // $number_within_cmds = $this->preamble_parser->getNumberWithin();
-
-    // foreach ($number_within_cmds as $args) {
-    //   if ($args[0]->type === 'arg' && $args[1]->type === 'arg') {
-    //     $counter_name = $args[0]->value;
-    //     $parent_counter_name = $args[1]->value;
-    //     $this->counters[$counter_name]['parent'] = $parent_counter_name;
-    //   }
-    // }
   }
 
   private function addToCurrentNode($token): void
@@ -295,6 +286,7 @@ class LatexParser
       $authors = explode("\\and", $token->command_content);
 
       foreach ($authors as $author) {
+        if (!$author) continue;
         self::$front_matter['authors'][] = (object) ['name' => self::parseText($author)];
       }
 
@@ -526,6 +518,14 @@ class LatexParser
     $this->tree->addNode($new_node, $this->current_node);
   }
 
+  private function handleArgCommandNode($token): void
+  {
+    if ($token->command_name === 'theoremstyle') {
+      if (!in_array($token->command_content, ['plain', 'definition', 'remark'])) return;
+      $this->theorem_style = $token->command_content;
+    }
+  }
+
   private function handleTwoArgCommandNode($token): void
   {
     if ($token->command_name === 'texorpdfstring') {
@@ -550,6 +550,22 @@ class LatexParser
     // if ($token->command_name === 'appendix') $this->appendixMode();
   }
 
+  private function handleNewTheorem($token): void
+  {
+    list($name, $shared_counter, $heading, $parent_counter) = $token->command_args;
+
+    $is_starred = str_contains($token->command_name, '*');
+
+    $this->thm_envs[$name] = (object) [
+      'text' => $heading,
+      'parent' => $parent_counter,
+      'shared' => $shared_counter,
+      'style' => $this->theorem_style,
+      'starred' => $is_starred,
+      'counter' => 0,
+    ];
+  }
+
   private function createCommandNode($token): mixed
   {
 
@@ -572,9 +588,13 @@ class LatexParser
   {
 
     $env_name = $token->command_content;
-    $env = $this->thm_envs[$env_name];
 
-    $args['command_args'] = ['text' => $env->text, 'style' => $env->style, 'starred' => $env->starred];
+    if (isset($this->thm_envs[$env_name])) {
+      $env = $this->thm_envs[$env_name];
+      $args['command_args'] = ['text' => $env->text, 'style' => $env->style, 'starred' => $env->starred];
+    } else {
+      $args['command_args'] = ['text' => 'unknown', 'style' => 'plain', 'starred' => false];
+    }
 
     return new EnvironmentNode($args);
   }

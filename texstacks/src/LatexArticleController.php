@@ -46,7 +46,6 @@ class LatexArticleController
     $this->parser = new LatexParser(['latex_src' => $this->latex_src]);
 
     $this->lexer = new ArticleLexer([
-      'thm_env' => $this->parser->getTheoremEnvs(),
       'citations' => $citations,
       'ref_labels' => $ref_labels,
     ]);
