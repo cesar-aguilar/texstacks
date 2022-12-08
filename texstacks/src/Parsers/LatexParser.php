@@ -233,7 +233,7 @@ class LatexParser
   {
     $this->tree = new SyntaxTree();
 
-    $root = new Node([
+    $root = new CommandNode([
       'id' => 0,
       'type' => 'root',
     ]);
@@ -413,7 +413,7 @@ class LatexParser
 
     $parent = $this->current_node->closest('environment:list');
 
-    $this->tree->addNode($new_node, $parent);
+    $this->tree->addNode($new_node, $parent ?? $this->tree->document());
 
     $this->current_node = $new_node;
   }

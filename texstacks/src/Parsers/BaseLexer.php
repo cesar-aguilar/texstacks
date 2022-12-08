@@ -50,16 +50,16 @@ class BaseLexer extends Tokenizer
 
         if ($this->getNextChar() === "$") {
           try {
-            $this->in_math = !$this->in_math;
-            $this->addDisplayMathToken($this->in_math ? '[' : ']');
+            $this->in_displaymath = !$this->in_displaymath;
+            $this->addDisplayMathToken($this->in_displaymath ? '[' : ']');
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
         } else {
           $this->backup();
           try {
-            $this->in_math = !$this->in_math;
-            $this->addInlineMathToken($this->in_math ? '(' : ')');
+            $this->in_inlinemath = !$this->in_inlinemath;
+            $this->addInlineMathToken($this->in_inlinemath ? '(' : ')');
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }

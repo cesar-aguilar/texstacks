@@ -26,8 +26,8 @@ class NewCommands extends CommandGroup {
     $args['command_src'] = "\\" . $args['command_name'] . '{' . $args['command_content'] . '}';
     list($params, $default_param, $defn) = $args['command_args'];
 
-    $args['command_src'] .= $params ? '[' . $params . ']' : '';
-    $args['command_src'] .= $default_param ? '[' . $default_param . ']' : '';
+    $args['command_src'] .= !is_null($params) ? '[' . $params . ']' : '';
+    $args['command_src'] .= !is_null($default_param) ? '[' . $default_param . ']' : '';
     $args['command_src'] .= '{' . $defn . '}';
 
     return new Token($args);

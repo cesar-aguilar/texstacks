@@ -17,7 +17,8 @@ class Tokenizer extends TextScanner
   ];
 
   protected array $tokens = [];
-  protected bool $in_math = false;
+  protected bool $in_inlinemath = false;
+  protected bool $in_displaymath = false;
 
   protected string $command_name;
   protected static array $ref_labels;
@@ -105,6 +106,9 @@ class Tokenizer extends TextScanner
       } else if ($signature === '{}[][]{}') {
         list($content, $params, $default_param, $defn) = $this->getNewCommandData();
         $args = [$params, $default_param, $defn];
+      } else if ($signature === '{}[][]{}{}') {
+        list($content, $params, $default_param, $begin_defn, $end_defn) = $this->getNewEnvironmentData();
+        $args = [$params, $default_param, $begin_defn, $end_defn];
       } else if ($signature === '{}[]{}[]') {
         list($arg1, $options1, $arg2, $options2) = $this->getNewTheoremData();
         $args = [$arg1, $options1, $arg2, $options2];
@@ -679,6 +683,96 @@ class Tokenizer extends TextScanner
     }
 
     return [$command, $params, $default_param, $definition];
+
+  }
+
+  private function getNewEnvironmentData()
+  {
+    $command = '';
+    $params = null;
+    $default_param = null;
+    $begin_defn = '';
+    $end_defn = '';
+    $src = '\\' . $this->command_name;
+    $HAS_PARAMS = false;
+    $GOT_COMMAND = false;
+    $GOT_BEGIN = false;
+
+    $ALLOWED_CHARS = [' ', '{', '[', "\n", '%', "\\"];
+
+    $this->backup();
+
+    while (!is_null($char = $this->getNextChar())) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+        $src .= $char;
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
+      }
+
+      if ($char === "\n" && $this->prev_char === "\n") {
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
+      }
+
+      if ($char === '%') {
+        $this->consumeUntilTarget("\n");
+        continue;
+      }
+
+      if ($char === ' ') continue;
+
+      if ($char === '[') {
+
+        if (!$GOT_COMMAND) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        if (!$HAS_PARAMS) {
+          $HAS_PARAMS = true;
+          $params = $options;
+        } else {
+          $default_param = $options;
+        }
+        continue;
+      }
+
+      if ($char === '{') {
+
+        try {
+          $content = $this->getContentUpToDelimiter('}', '{');
+        } catch (\Exception $e) {
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        $src .= '{' . $content . '}';
+
+        if (!$GOT_COMMAND) {
+          $GOT_COMMAND = true;
+          $command = $content;
+        } else if (!$GOT_BEGIN) {
+          $GOT_BEGIN = true;
+          $begin_defn = $content;
+        } else {
+          $end_defn = $content;
+          break;
+        }
+
+      }
+    }
+
+    return [$command, $params, $default_param, $begin_defn, $end_defn];
 
   }
 

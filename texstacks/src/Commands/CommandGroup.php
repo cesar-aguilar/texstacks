@@ -35,7 +35,7 @@ class CommandGroup
 
   public static function is_env()
   {
-    return str_contains(static::$type, 'environment');
+    return str_starts_with(static::$type, 'environment:');
   }
 
   public static function list()

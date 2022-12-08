@@ -29,6 +29,7 @@ class ArticleLexer extends BaseLexer
     $this->registerCommandGroup([
       \TexStacks\Commands\Core\PreambleCommands::class,
       \TexStacks\Commands\Core\NewCommands::class,
+      \TexStacks\Commands\Core\NewEnvironments::class,
       \TexStacks\Commands\Core\NewTheorem::class,
       \TexStacks\Commands\Core\SectionCommands::class,
       \TexStacks\Commands\Core\FontCommands::class,
@@ -90,8 +91,9 @@ class ArticleLexer extends BaseLexer
     //     [
     //       // \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
     //       // \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::type(),
-    //       // \TexStacks\Commands\Core\NewTheorem::type(),
+    //       \TexStacks\Commands\Core\NewEnvironments::type(),
     //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
+    //       // \TexStacks\Commands\Core\PreambleCommands::type(),
     //       // \TexStacks\Commands\Core\SectionCommands::type(),
     //       // \TexStacks\Commands\Core\InlineMathEnv::type(),
     //       // \TexStacks\Commands\Core\DisplayMathEnv::type(),
@@ -110,7 +112,7 @@ class ArticleLexer extends BaseLexer
     // });
 
     // $this->tokens = array_filter($this->tokens, function ($token) {
-    //     return $token->line_number > 1220 and $token->line_number < 1260;
+    //     return $token->line_number > 0 and $token->line_number < 46;
     //   });
   }
 
