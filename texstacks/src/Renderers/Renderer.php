@@ -38,7 +38,8 @@ class Renderer
 
     if ($node->hasType('root')) return self::renderRoot($node, $body);
 
-    if ($node->hasType('cmd:section')) return SectionCommandRenderer::renderNode($node, $body);
+    // if ($node->hasType('cmd:section')) return SectionCommandRenderer::renderNode($node, $body);
+    if ($node->hasType('cmd:section')) return $node->render($body);
 
     if ($node->hasType('environment:displaymath')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
 
