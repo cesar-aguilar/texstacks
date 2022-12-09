@@ -4,13 +4,12 @@ namespace TexStacks\Parsers;
 
 use TexStacks\Nodes\Node;
 use TexStacks\Helpers\StrHelper;
-use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Nodes\CommandNode;
-use TexStacks\Nodes\SectionNode;
+use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\ArticleLexer;
 use TexStacks\Helpers\SectionCounter;
 use TexStacks\Parsers\PreambleParser;
-use TexStacks\Nodes\EnvironmentNode;
+use TexStacks\Nodes\NodeFactory;
 
 class LatexParser
 {
@@ -380,9 +379,16 @@ class LatexParser
 
     $new_node = $this->createCommandNode($token);
 
-    if (!$this->current_node->pathToRootHasType('environment:verbatim') && !$new_node->getArg('starred')) {
-      $env_name = $new_node->commandContent();
+    $env_name = $token->command_content;
 
+    if (isset($this->thm_envs[$env_name])) {
+      $env = $this->thm_envs[$env_name];
+      $new_node->setArgs(['text' => $env->text, 'style' => $env->style, 'starred' => $env->starred]);
+    } else {
+      $new_node->setArgs(['text' => 'unknown', 'style' => 'plain', 'starred' => false]);
+    }
+
+    if (!$this->current_node->pathToRootHasType('environment:verbatim') && !$new_node->getArg('starred')) {
       $new_node->setRefNum($this->getTheoremNumber($env_name));
     }
 
@@ -557,34 +563,8 @@ class LatexParser
   private function createCommandNode($token): mixed
   {
 
-    $args = ['id' => $this->tree->nodeCount(), ...(array) $token];
+    return NodeFactory::getNode(id: $this->tree->nodeCount(), token: $token);
 
-    if ($token->type === 'cmd:section') {
-      return new SectionNode($args);
-    } else if ($token->type === 'environment:theorem') {
-      return $this->createTheoremNode($token, $args);
-    } else if (preg_match('/environment/', $token->type)) {
-      return new EnvironmentNode($args);
-    } else if ($token->type === 'cmd:symbol') {
-      return new Node($args);
-    } else {
-      return new CommandNode($args);
-    }
-  }
-
-  private function createTheoremNode($token, $args): EnvironmentNode
-  {
-
-    $env_name = $token->command_content;
-
-    if (isset($this->thm_envs[$env_name])) {
-      $env = $this->thm_envs[$env_name];
-      $args['command_args'] = ['text' => $env->text, 'style' => $env->style, 'starred' => $env->starred];
-    } else {
-      $args['command_args'] = ['text' => 'unknown', 'style' => 'plain', 'starred' => false];
-    }
-
-    return new EnvironmentNode($args);
   }
 
   private function getTheoremNumber($env_name): string

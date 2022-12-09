@@ -5,12 +5,9 @@ namespace TexStacks\Renderers;
 use TexStacks\Nodes\Node;
 use TexStacks\Renderers\CaptionRenderer;
 use TexStacks\Renderers\EnvironmentRenderer;
-// use TexStacks\Renderers\SectionCommandRenderer;
-use TexStacks\Renderers\ThmEnvironmentRenderer;
 use TexStacks\Renderers\ListEnvironmentRenderer;
 use TexStacks\Renderers\GroupEnvironmentRenderer;
 use TexStacks\Renderers\TabularEnvironmentRenderer;
-use TexStacks\Renderers\DisplayMathEnvironmentRenderer;
 
 class Renderer
 {
@@ -41,11 +38,13 @@ class Renderer
     // if ($node->hasType('cmd:section')) return SectionCommandRenderer::renderNode($node, $body);
     if ($node->hasType('cmd:section')) return $node->render($body);
 
-    if ($node->hasType('environment:displaymath')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
+    // if ($node->hasType('environment:displaymath')) return DisplayMathEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:displaymath')) return $node->render($body);
 
     if ($node->hasType('inlinemath')) return "\\(" . $body . "\\)";
 
-    if ($node->hasType('environment:theorem')) return ThmEnvironmentRenderer::renderNode($node, $body);
+    // if ($node->hasType('environment:theorem')) return ThmEnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType('environment:theorem')) return $node->render($body);
 
     if ($node->hasType('environment:group')) return GroupEnvironmentRenderer::renderNode($node, $body);
 
