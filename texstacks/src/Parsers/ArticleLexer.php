@@ -55,6 +55,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\CaptionCommand::class,
       \TexStacks\Commands\Core\IncludeGraphicsCommand::class,
       \TexStacks\Commands\TheoremEnv::class,
+      \TexStacks\Commands\Environment::class,
       \TexStacks\Commands\GenericEnv::class,
       \TexStacks\Commands\CommandWithOptions::class,
       \TexStacks\Commands\OneArgPreOptions::class,
@@ -64,7 +65,6 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\AmsArt\AmsArtOneArg::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::class,
     ]);
-
   }
 
   protected function preProcessLatexSource(string $latex_src)
@@ -112,8 +112,8 @@ class ArticleLexer extends BaseLexer
     // });
 
     // $this->tokens = array_filter($this->tokens, function ($token) {
-    //     return $token->line_number > 0 and $token->line_number < 46;
-    //   });
+    //   return $token->line_number > 114 and $token->line_number < 121;
+    // });
   }
 
   protected function update($token)

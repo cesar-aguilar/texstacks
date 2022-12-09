@@ -4,12 +4,16 @@ namespace TexStacks\Commands;
 
 use TexStacks\Parsers\Token;
 
-class EnvWithOptions extends Environment {
+class EnvWithOptions extends Environment
+{
 
-  public static function signature() {
+  public static function signature()
+  {
     return '[]';
   }
- 
+
+  protected static $commands = [];
+
   public static function make($args)
   {
     $args['type'] = static::$type;
@@ -20,5 +24,4 @@ class EnvWithOptions extends Environment {
 
     return new Token($args);
   }
-
 }

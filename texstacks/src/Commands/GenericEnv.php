@@ -10,7 +10,7 @@ class GenericEnv extends EnvWithOptions
   protected static $type = 'environment:generic';
 
   protected static $commands = [
-    'document',
+    // 'document',
     'figure',
     'table',
     'proof',

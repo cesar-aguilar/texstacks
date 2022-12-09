@@ -37,9 +37,7 @@ class FontCommandRenderer
 
             'textmd' => "<span style=\"font-weight: 500\">$body</span>",
 
-            'textup' => "<span style=\"font-variant: normal\">$body</span>",
-
-            'textnormal' => "<span style=\"font-variant: normal\">$body</span>",
+            'textup', 'textnormal', 'textrm' => "<span style=\"font-variant: normal\">$body</span>",
 
             'text' => "\\text\{$body\}",
 
@@ -52,5 +50,4 @@ class FontCommandRenderer
             default => "\\" . $node->commandName() . "{" . $body . "}"
         };
     }
-
 }

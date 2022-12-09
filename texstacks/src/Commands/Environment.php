@@ -7,7 +7,11 @@ use TexStacks\Parsers\Token;
 class Environment extends CommandGroup
 {
 
-  protected static $type = 'environment';
+  protected static $type = 'environment:default';
+
+  protected static $commands = [
+    'document',
+  ];
 
   public static function end($args)
   {

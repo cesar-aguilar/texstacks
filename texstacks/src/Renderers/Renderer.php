@@ -48,7 +48,7 @@ class Renderer
 
     if ($node->hasType('environment:group')) return GroupEnvironmentRenderer::renderNode($node, $body);
 
-    if ($node->hasType(['environment', 'environment:generic'])) return EnvironmentRenderer::renderNode($node, $body);
+    if ($node->hasType(['environment:default', 'environment:generic'])) return EnvironmentRenderer::renderNode($node, $body);
 
     if ($node->hasType('environment:tabular')) return TabularEnvironmentRenderer::renderNode($node, $body);
 
@@ -198,7 +198,6 @@ class Renderer
     $html = "<details class=\"footnote\"><summary class=\"footnote\">[$num]</summary><p class=\"footnote-content\">$body</p></details>";
 
     return $html;
-
   }
 
   // private static function renderFrontMatter($node, string $body = null): string

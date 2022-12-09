@@ -102,7 +102,7 @@ class Tokenizer extends TextScanner
         list($content, $options) = $this->getCmdWithOptionsArg($signature);
         if (!is_null($env)) $args = [$content];
       } else if ($signature === '{}{}') {
-        $args = $this->getCmdWithArgArg();
+        list($args, $options) = $this->getCommandArgs($signature);
       } else if ($signature === '{}[][]{}') {
         list($content, $params, $default_param, $defn) = $this->getNewCommandData();
         $args = [$params, $default_param, $defn];
@@ -678,12 +678,10 @@ class Tokenizer extends TextScanner
 
         $GOT_COMMAND = true;
         $command = $content;
-
       }
     }
 
     return [$command, $params, $default_param, $definition];
-
   }
 
   private function getNewEnvironmentData()
@@ -698,7 +696,7 @@ class Tokenizer extends TextScanner
     $GOT_COMMAND = false;
     $GOT_BEGIN = false;
 
-    $ALLOWED_CHARS = [' ', '{', '[', "\n", '%', "\\"];
+    $ALLOWED_CHARS = [' ', '{', '[', "\n", '%'];
 
     $this->backup();
 
@@ -768,12 +766,10 @@ class Tokenizer extends TextScanner
           $end_defn = $content;
           break;
         }
-
       }
     }
 
     return [$command, $params, $default_param, $begin_defn, $end_defn];
-
   }
 
   private function getNewTheoremData()
@@ -839,7 +835,6 @@ class Tokenizer extends TextScanner
         if ($GOT_NAME && $GOT_HEADING) break;
 
         throw new \Exception("$src <--- Parse error on line {$this->line_number}: Missing name or theorem heading in newtheorem command");
-
       }
 
       if ($char === '{') {
@@ -865,7 +860,91 @@ class Tokenizer extends TextScanner
     }
 
     return [$thm_name, $use_counter, $thm_heading, $number_within];
+  }
 
+  private function getCommandArgs($signature)
+  {
+    $has_options = str_contains($signature, '[]');
+    $num_args = substr_count($signature, '{}');
+
+    $args = [];
+    $options = null;
+    $src = '\\' . $this->command_name;
+    $GOT_OPTIONS = false;
+
+    $ALLOWED_CHARS = [' ', '%', "\n"];
+
+    if ($has_options) {
+      $ALLOWED_CHARS[] = '[';
+    }
+
+    if ($num_args) {
+      $ALLOWED_CHARS[] = '{';
+    }
+
+    $char = $this->getChar();
+
+    while (!is_null($char)) {
+
+      if (!in_array($char, $ALLOWED_CHARS)) {
+
+        $src .= $char;
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
+      }
+      //
+      else if ($char === "\n" && $this->prev_char === "\n") {
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
+      }
+      //
+      else if ($char === '%') {
+        $this->consumeUntilTarget("\n");
+      }
+      //
+      else if ($char === ' ') {
+        continue; // not needed but for readability
+      }
+      //
+      else if ($char === '[') {
+
+        if (!$has_options || $GOT_OPTIONS || !empty($args)) {
+          $src .= $char;
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        try {
+          $options = $this->getContentUpToDelimiter(']', '[');
+        } catch (\Exception $e) {
+          throw new \Exception($e->getMessage());
+        }
+
+        $src .= '[' . $options . ']';
+
+        $GOT_OPTIONS = true;
+      }
+      //
+      else if ($char === '{') {
+
+        try {
+          $content = $this->getContentUpToDelimiter('}', '{');
+        } catch (\Exception $e) {
+          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        }
+
+        $src .= '{' . $content . '}';
+
+        $args[] = $content;
+
+        if (count($args) === $num_args) break;
+      }
+
+      $char = $this->getNextChar();
+    }
+
+    return [$args, $options];
   }
 
   protected function addGroupEnvToken($char)

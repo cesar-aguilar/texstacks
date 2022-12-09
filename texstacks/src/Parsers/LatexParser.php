@@ -68,7 +68,7 @@ class LatexParser
 
         'cmd:newtheorem' => 'handleNewTheorem',
 
-        'environment',
+        'environment:default',
         'environment:generic',
         'environment:group',
         'inlinemath',
@@ -251,7 +251,6 @@ class LatexParser
       'figure' => ['value' => 0, 'parent' => null],
       'table' => ['value' => 0, 'parent' => null],
     ];
-
   }
 
   private function addToCurrentNode($token): void
@@ -279,9 +278,7 @@ class LatexParser
   {
     if ($token->command_name === 'title') {
       self::$front_matter['title'] = self::parseText($token->command_content, $token->line_number);
-    }
-
-    else if ($token->command_name === 'author') {
+    } else if ($token->command_name === 'author') {
 
       $authors = explode("\\and", $token->command_content);
 
@@ -289,19 +286,12 @@ class LatexParser
         if (!$author) continue;
         self::$front_matter['authors'][] = (object) ['name' => self::parseText($author)];
       }
-
-    }
-
-    else if ($token->command_name === 'date') {
+    } else if ($token->command_name === 'date') {
       self::$front_matter['date'] = $token->command_content;
-    }
-
-    else if ($token->command_name === 'thanks') {
+    } else if ($token->command_name === 'thanks') {
 
       self::$front_matter['thanks'][] = self::parseText($token->command_content, $token->line_number);
-
     }
-
   }
 
   private function handleSectionNode($token): void
@@ -485,7 +475,6 @@ class LatexParser
     $new_node->setRefNum($this->getCounter('footnote'));
 
     $this->tree->addNode($new_node, $this->current_node);
-
   }
 
   private function handleCaptionNode($token): void
@@ -536,7 +525,6 @@ class LatexParser
       }
 
       $this->tree->addNode($new_node, $this->current_node);
-
     } else if ($token->command_name === 'numberwithin') {
       $args = $token->command_args;
       $counter_name = $args['arg1'];
