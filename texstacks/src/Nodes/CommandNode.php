@@ -1,9 +1,8 @@
 <?php
 
-namespace TexStacks\Parsers;
+namespace TexStacks\Nodes;
 
-use TexStacks\Parsers\Node;
-use TexStacks\Parsers\LatexParser;
+use TexStacks\Nodes\Node;
 
 /**
  * A node in the graph of the LaTeX document

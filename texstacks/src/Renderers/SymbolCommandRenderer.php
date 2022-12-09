@@ -2,7 +2,7 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\Node;
 
 class SymbolCommandRenderer
 {

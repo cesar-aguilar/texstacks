@@ -2,9 +2,9 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\Node;
 use TexStacks\Renderers\Renderer;
-use TexStacks\Parsers\SectionNode;
+use TexStacks\Nodes\SectionNode;
 
 class SectionCommandRenderer
 {

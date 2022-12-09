@@ -1,10 +1,10 @@
 <?php
 
-namespace TexStacks\Parsers;
+namespace TexStacks\Nodes;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\Node;
 use TexStacks\Renderers\Renderer;
-use TexStacks\Parsers\CommandNode;
+use TexStacks\Nodes\CommandNode;
 
 class SectionNode extends CommandNode
 {

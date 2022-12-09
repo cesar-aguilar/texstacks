@@ -2,7 +2,7 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\Node;
 
 class SyntaxTree
 {

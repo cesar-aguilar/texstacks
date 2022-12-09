@@ -2,7 +2,7 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\EnvironmentNode;
+use TexStacks\Nodes\EnvironmentNode;
 
 class GroupEnvironmentRenderer
 {

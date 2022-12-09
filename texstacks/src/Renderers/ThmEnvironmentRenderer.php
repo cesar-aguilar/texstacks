@@ -3,8 +3,8 @@
 namespace TexStacks\Renderers;
 
 use TexStacks\Renderers\Renderer;
-use TexStacks\Parsers\EnvironmentNode;
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\EnvironmentNode;
+use TexStacks\Nodes\Node;
 
 class ThmEnvironmentRenderer
 {

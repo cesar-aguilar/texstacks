@@ -2,8 +2,8 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\Node;
-use TexStacks\Parsers\CommandNode;
+use TexStacks\Nodes\Node;
+use TexStacks\Nodes\CommandNode;
 
 class FontCommandRenderer
 {

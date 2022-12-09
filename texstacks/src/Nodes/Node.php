@@ -1,6 +1,6 @@
 <?php
 
-namespace TexStacks\Parsers;
+namespace TexStacks\Nodes;
 
 /**
  * A node in the graph of the LaTeX document

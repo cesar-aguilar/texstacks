@@ -2,15 +2,15 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\Node;
 use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\SyntaxTree;
-use TexStacks\Parsers\CommandNode;
-use TexStacks\Parsers\SectionNode;
+use TexStacks\Nodes\CommandNode;
+use TexStacks\Nodes\SectionNode;
 use TexStacks\Parsers\ArticleLexer;
 use TexStacks\Helpers\SectionCounter;
 use TexStacks\Parsers\PreambleParser;
-use TexStacks\Parsers\EnvironmentNode;
+use TexStacks\Nodes\EnvironmentNode;
 
 class LatexParser
 {

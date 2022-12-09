@@ -2,10 +2,10 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Parsers\Node;
+use TexStacks\Nodes\Node;
 use TexStacks\Renderers\CaptionRenderer;
 use TexStacks\Renderers\EnvironmentRenderer;
-use TexStacks\Renderers\SectionCommandRenderer;
+// use TexStacks\Renderers\SectionCommandRenderer;
 use TexStacks\Renderers\ThmEnvironmentRenderer;
 use TexStacks\Renderers\ListEnvironmentRenderer;
 use TexStacks\Renderers\GroupEnvironmentRenderer;
