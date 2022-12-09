@@ -24,6 +24,7 @@ class SymbolCommandRenderer
             '{' => '{',
             '}' => '}',
             "\\" => '<br>',
+            "/" => ' ',
             ' ' => '&nbsp;',
             ',' => ' ',
             'S' => '&sect;',

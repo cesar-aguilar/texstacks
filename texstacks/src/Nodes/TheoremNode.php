@@ -9,10 +9,8 @@ use TexStacks\Nodes\EnvironmentNode;
 class TheoremNode extends EnvironmentNode
 {
 
-  public function render($body = null)
+  public function render($body): string
   {
-
-    $body = $body ?? '';
 
     if ($this->ancestorOfType('environment:verbatim')) {
       return $this->commandSource() . $body . "\\end{{$this->commandContent()}}";

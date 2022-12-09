@@ -27,7 +27,7 @@ class FontCommandRenderer
 
             'textit' => "<em>$body</em>",
 
-            'texttt' => "<code>$body</code>",
+            'texttt' => "<span style=\"font-family: monospace\">$body</span>",
 
             'textsc' => "<span style=\"font-variant: small-caps\">$body</span>",
 

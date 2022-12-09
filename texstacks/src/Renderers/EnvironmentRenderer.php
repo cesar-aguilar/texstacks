@@ -33,6 +33,8 @@ class EnvironmentRenderer
 
             'quote', 'quotation' => self::renderQuoteEnvironment($node, $body),
 
+            'verbatim' => "<pre>$body</pre>",
+
             default => self::renderUnknownEnvironment($node, $body)
         };
     }

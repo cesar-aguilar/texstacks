@@ -232,10 +232,7 @@ class LatexParser
   {
     $this->tree = new SyntaxTree();
 
-    $root = new CommandNode([
-      'id' => 0,
-      'type' => 'root',
-    ]);
+    $root = NodeFactory::createRootNode();
 
     $this->tree->setRoot($root);
 

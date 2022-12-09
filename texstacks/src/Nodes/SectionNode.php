@@ -2,8 +2,7 @@
 
 namespace TexStacks\Nodes;
 
-use TexStacks\Nodes\Node;
-use TexStacks\Renderers\Renderer;
+use TexStacks\Renderers\SectionRenderer;
 use TexStacks\Nodes\CommandNode;
 
 class SectionNode extends CommandNode
@@ -83,45 +82,8 @@ class SectionNode extends CommandNode
     }
   }
 
-  public function render(string $body = null): string
+  public function render(string $body): string
   {
-
-    $title = $this->commandRefNum() ? $this->commandRefNum() . '&nbsp;&nbsp;&nbsp;' : '';
-
-    if ($this->commandContent() instanceof Node) {
-      $section_name = Renderer::render($this->commandContent());
-      $title .= " $section_name";
-    } else {
-      $title .= $this->commandContent();
-    }
-
-    if ($this->ancestorOfType('environment:verbatim')) return $this->commandSource();
-
-    $body = trim(preg_replace('/^(<br>)+|(<br>)+$/', '', $body));
-
-    return match ($this->commandName()) {
-
-      'chapter', 'chapter*' =>
-
-      "<article id=\"{$this->commandLabel()}\" class=\"chapter\"><h1>$title</h1>$body</article>",
-
-      'section', 'section*' =>
-
-      "<section id=\"{$this->commandLabel()}\" class=\"section\"><h2>$title</h2>$body</section>",
-
-      'subsection', 'subsection*' =>
-
-      "<section id=\"{$this->commandLabel()}\" class=\"subsection\"><h3>$title</h3>$body</section>",
-
-      'subsubsection', 'subsubsection*' =>
-
-      "<section id=\"{$this->commandLabel()}\" class=\"subsubsection\"><h4>$title</h4>$body</section>",
-
-      'paragraph', 'paragraph*', 'subparagraph', 'subparagraph*' =>
-
-      "<p id=\"{$this->commandLabel()}\"><strong>$title</strong> $body</p>",
-
-      default => $body
-    };
+    return SectionRenderer::renderNode($this, $body);
   }
 }

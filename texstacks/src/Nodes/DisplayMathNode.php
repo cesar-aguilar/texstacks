@@ -7,10 +7,8 @@ use TexStacks\Nodes\EnvironmentNode;
 class DisplayMathNode extends EnvironmentNode
 {
 
-  public function render($body = null)
+  public function render($body): string
   {
-
-    $body = $body ?? '';
 
     $latex =  $this->commandSource() . $body . "\\end{{$this->commandContent()}}";
 

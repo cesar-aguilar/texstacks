@@ -6,7 +6,7 @@ use TexStacks\Nodes\Node;
 use TexStacks\Renderers\Renderer;
 use TexStacks\Nodes\SectionNode;
 
-class SectionCommandRenderer
+class SectionRenderer
 {
 
   public static function renderNode(SectionNode $node, string $body = null): string
