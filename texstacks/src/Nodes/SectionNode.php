@@ -82,7 +82,7 @@ class SectionNode extends CommandNode
     }
   }
 
-  public function render(string $body): string
+  public function render($body): string
   {
     return SectionRenderer::renderNode($this, $body);
   }

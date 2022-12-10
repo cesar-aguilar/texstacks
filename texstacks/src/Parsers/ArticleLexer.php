@@ -2,7 +2,6 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Helpers\StrHelper;
 use TexStacks\Parsers\BaseLexer;
 
 class ArticleLexer extends BaseLexer
@@ -54,6 +53,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\BibItemCommand::class,
       \TexStacks\Commands\Core\CaptionCommand::class,
       \TexStacks\Commands\Core\IncludeGraphicsCommand::class,
+      \TexStacks\Commands\Core\AccentCommand::class,
       \TexStacks\Commands\TheoremEnv::class,
       \TexStacks\Commands\Environment::class,
       \TexStacks\Commands\GenericEnv::class,

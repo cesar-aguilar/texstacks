@@ -88,26 +88,28 @@ class BaseLexer extends Tokenizer
           continue;
         }
 
-        if ($char === '[' || $char === ']') {
+        else if ($char === '[' || $char === ']') {
           $this->addDisplayMathToken($char);
           continue;
         }
 
-        if (key_exists($char, self::ACCENT_CMDS)) {
-          $this->addAccentToken($char);
+        else if (key_exists($char, self::ACCENT_CMDS)) {
+          $this->command_name = $char;
+        }
+
+        else {
+          $this->command_name = "\\";
+
+          $this->addSymbolToken($char);
           continue;
         }
 
-        $this->command_name = "\\";
-
-        $this->addSymbolToken($char);
-        continue;
+      } else {
+        // The current char is alphabetic so consume and
+        // return the command name; cursor will be a non-alphabetic char
+        // when complete
+        $this->command_name = $this->consumeUntilNonAlpha();
       }
-
-      // The current char is alphabetic so consume and
-      // return the command name; cursor will be a non-alphabetic char
-      // when complete
-      $this->command_name = $this->consumeUntilNonAlpha();
 
       // Make token
       $env = null;

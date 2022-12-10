@@ -113,6 +113,8 @@ class Tokenizer extends TextScanner
         list($arg1, $options1, $arg2, $options2) = $this->getNewTheoremData();
         $args = [$arg1, $options1, $arg2, $options2];
         $content = $arg1;
+      } else if ($signature === '^') {
+        $content = $this->getAccentData();
       }
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__);
@@ -945,6 +947,32 @@ class Tokenizer extends TextScanner
     }
 
     return [$args, $options];
+  }
+
+  private function getAccentData()
+  {
+    $this->forward();
+    $this->consumeWhiteSpace();
+
+    $src = '\\' . $this->command_name;
+
+    if ($this->getChar() === '{') {
+
+      try {
+        $content = ltrim($this->getCommandContent());
+      } catch (\Exception $e) {
+        $src .= '{';
+        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
+        throw new \Exception($message);
+      }
+
+    } else {
+      $content = $this->getChar();
+    }
+
+    return $content;
+
   }
 
   protected function addGroupEnvToken($char)

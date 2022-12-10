@@ -100,4 +100,11 @@ class CommandNode extends Node
   public function setArgs(array $args) {
     $this->command_args = $args;
   }
+
+  public function render($body): string
+  {
+    if ($body === "\n") return '';
+
+    return $body;
+  }
 }
