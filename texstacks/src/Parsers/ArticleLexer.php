@@ -54,6 +54,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\CaptionCommand::class,
       \TexStacks\Commands\Core\IncludeGraphicsCommand::class,
       \TexStacks\Commands\Core\AccentCommand::class,
+      \TexStacks\Commands\Core\SymbolCommand::class,
       \TexStacks\Commands\TheoremEnv::class,
       \TexStacks\Commands\Environment::class,
       \TexStacks\Commands\GenericEnv::class,
@@ -91,7 +92,7 @@ class ArticleLexer extends BaseLexer
     //     [
     //       // \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
     //       // \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::type(),
-    //       \TexStacks\Commands\Core\NewEnvironments::type(),
+    //       // \TexStacks\Commands\Core\SymbolCommand::type(),
     //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
     //       // \TexStacks\Commands\Core\PreambleCommands::type(),
     //       // \TexStacks\Commands\Core\SectionCommands::type(),

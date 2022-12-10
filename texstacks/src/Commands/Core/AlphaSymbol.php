@@ -17,6 +17,10 @@ class AlphaSymbol extends CommandGroup
     'copyright',
     'dag',
     'ddag',
+    'textbackslash',
+    'textdiv',
+    'texttimes',
+    'textsection',
   ];
 
   public static function make($args)

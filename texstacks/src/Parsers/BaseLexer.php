@@ -98,10 +98,7 @@ class BaseLexer extends Tokenizer
         }
 
         else {
-          $this->command_name = "\\";
-
-          $this->addSymbolToken($char);
-          continue;
+          $this->command_name = $char;
         }
 
       } else {
