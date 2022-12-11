@@ -152,6 +152,30 @@ class Node
     return null;
   }
 
+  /**
+   * Find first descendant with given type
+   */
+  public function findDescendant($type) {
+    foreach ($this->children as $child) {
+      if ($child->hasType($type)) return $child;
+      $descendant = $child->findDescendant($type);
+      if ($descendant) return $descendant;
+    }
+    return null;
+  }
+
+  /**
+   * Find all descendants with given type
+   */
+  public function findAllDescendants($type) {
+    $descendants = [];
+    foreach ($this->children as $child) {
+      if ($child->hasType($type)) $descendants[] = $child;
+      $descendants = array_merge($descendants, $child->findAllDescendants($type));
+    }
+    return $descendants;
+  }
+
   public function addClass($name)
   {
 

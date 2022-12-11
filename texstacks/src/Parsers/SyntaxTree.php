@@ -9,7 +9,7 @@ class SyntaxTree
 
   protected array $nodes = [];
   protected Node $root;
-  protected Node $document;
+  protected Node|null $document = null;
   private int $node_count = 0;
 
   public function addNode($node, $parent = null)
