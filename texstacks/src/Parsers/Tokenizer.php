@@ -21,28 +21,6 @@ class Tokenizer extends TextScanner
   protected bool $in_displaymath = false;
 
   protected string $command_name;
-  protected static array $ref_labels;
-  protected static array $citations;
-
-  public static function setRefLabels($labels)
-  {
-    self::$ref_labels = $labels;
-  }
-
-  public static function setCitations($citations)
-  {
-    self::$citations = $citations;
-  }
-
-  public function getCitations()
-  {
-    return self::$citations;
-  }
-
-  public function getRefLabels()
-  {
-    return self::$ref_labels;
-  }
 
   protected function addBufferAsToken()
   {
@@ -203,8 +181,6 @@ class Tokenizer extends TextScanner
       'body' => $content,
       'line_number' => $this->line_number,
     ]);
-
-    if ($this->command_name === 'cite') $this->tokenizeCitation($token);
 
     return $token;
   }
@@ -1062,20 +1038,4 @@ class Tokenizer extends TextScanner
     }
   }
 
-  private function tokenizeCitation($token): void
-  {
-    $labels = array_map(trim(...), explode(',', $token->command_content));
-
-    $citation_numbers = [];
-
-    foreach ($labels as $label) {
-      if (isset(self::$citations[$label])) {
-        $citation_numbers[] = self::$citations[$label];
-      } else {
-        $citation_numbers[] = '?';
-      }
-    }
-
-    $token->body = implode(',', $citation_numbers);
-  }
 }

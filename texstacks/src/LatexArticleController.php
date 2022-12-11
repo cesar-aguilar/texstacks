@@ -101,16 +101,6 @@ class LatexArticleController
     return $this->parser->getTheoremEnvs();
   }
 
-  public function getRefLabels()
-  {
-    return $this->lexer->getRefLabels();
-  }
-
-  public function getCitations()
-  {
-    return $this->lexer->getCitations();
-  }
-
   public function getRoot()
   {
     return $this->parser->getRoot();
