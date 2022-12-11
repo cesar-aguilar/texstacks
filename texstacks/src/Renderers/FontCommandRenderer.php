@@ -37,9 +37,7 @@ class FontCommandRenderer
 
             'textmd' => "<span style=\"font-weight: 500\">$body</span>",
 
-            'textup', 'textnormal', 'textrm' => "<span style=\"font-variant: normal\">$body</span>",
-
-            'text' => "\\text\{$body\}",
+            'textup', 'textnormal', 'textrm', 'text' => "<span style=\"font-variant: normal\">$body</span>",
 
             'textsuperscript' => "<sup>$body</sup>",
 

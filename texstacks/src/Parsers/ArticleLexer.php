@@ -53,15 +53,15 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\BibItemCommand::class,
       \TexStacks\Commands\Core\CaptionCommand::class,
       \TexStacks\Commands\Core\IncludeGraphicsCommand::class,
-      \TexStacks\Commands\Core\AccentCommand::class,
-      \TexStacks\Commands\Core\SymbolCommand::class,
+      // \TexStacks\Commands\Core\AccentCommand::class,
+      // \TexStacks\Commands\Core\SymbolCommand::class,
       \TexStacks\Commands\TheoremEnv::class,
       \TexStacks\Commands\Environment::class,
       \TexStacks\Commands\GenericEnv::class,
-      \TexStacks\Commands\CommandWithOptions::class,
-      \TexStacks\Commands\OneArgPreOptions::class,
+      // \TexStacks\Commands\CommandWithOptions::class,
+      // \TexStacks\Commands\OneArgPreOptions::class,
       \TexStacks\Commands\OneArg::class,
-      \TexStacks\Commands\EnvWithArg::class,
+      // \TexStacks\Commands\EnvWithArg::class,
       \TexStacks\Commands\TwoArgs::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArg::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::class,
@@ -113,7 +113,7 @@ class ArticleLexer extends BaseLexer
     // });
 
     // $this->tokens = array_filter($this->tokens, function ($token) {
-    //   return $token->line_number > 114 and $token->line_number < 121;
+    //   return $token->line_number >= 352 and $token->line_number <= 354;
     // });
   }
 

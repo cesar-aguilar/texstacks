@@ -993,74 +993,74 @@ class Tokenizer extends TextScanner
     ]);
   }
 
-  // protected function addSymbolToken(string $char)
-  // {
+  protected function addSymbolToken(string $char)
+  {
 
-  //   // Move one character forward and
-  //   // see if there are any options, this handles
-  //   // the commands like \\[1cm]
-  //   $this->getNextChar();
+    // Move one character forward and
+    // see if there are any options, this handles
+    // the commands like \\[1cm]
+    $this->getNextChar();
 
-  //   try {
-  //     $token = $this->tokenizeCmdWithOptions();
-  //   } catch (\Exception $e) {
-  //     throw new \Exception($e->getMessage());
-  //   }
+    try {
+      $token = $this->tokenizeCmdWithOptions();
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
 
-  //   $token->type = 'cmd:symbol';
-  //   $token->body = $char;
+    $token->type = 'cmd:symbol';
+    $token->body = $char;
 
-  //   $this->addToken($token);
-  // }
+    $this->addToken($token);
+  }
 
-  // protected function addAccentToken($char)
-  // {
-  //   $this->forward();
-  //   $this->consumeWhiteSpace();
+  protected function addAccentToken($char)
+  {
+    $this->forward();
+    $this->consumeWhiteSpace();
 
-  //   if ($this->getChar() === '{') {
+    if ($this->getChar() === '{') {
 
-  //     try {
-  //       $content = ltrim($this->getCommandContent());
-  //     } catch (\Exception $e) {
-  //       throw new \Exception($e->getMessage());
-  //     }
+      try {
+        $content = ltrim($this->getCommandContent());
+      } catch (\Exception $e) {
+        throw new \Exception($e->getMessage());
+      }
 
-  //     $letter = $content[0];
-  //     $tail = substr($content, 1);
-  //     $command_src = "\\" . $char . "{" . $letter . "}";
-  //   } else {
-  //     $letter = $this->getChar();
-  //     $tail = '';
-  //     $command_src = "\\" . $char . $letter;
-  //   }
+      $letter = $content[0];
+      $tail = substr($content, 1);
+      $command_src = "\\" . $char . "{" . $letter . "}";
+    } else {
+      $letter = $this->getChar();
+      $tail = '';
+      $command_src = "\\" . $char . $letter;
+    }
 
-  //   if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'n', 'A', 'E', 'I', 'O', 'U', 'Y', 'N'])) {
-  //     $this->buffer .= $command_src . $tail;
-  //     return;
-  //   }
+    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'n', 'A', 'E', 'I', 'O', 'U', 'Y', 'N'])) {
+      $this->buffer .= $command_src . $tail;
+      return;
+    }
 
-  //   $accent = self::ACCENT_CMDS[$char];
+    $accent = self::ACCENT_CMDS[$char];
 
-  //   $body = "&$letter$accent;";
+    $body = "&$letter$accent;";
 
-  //   $this->addToken(new Token([
-  //     'type' => 'cmd:accent',
-  //     'command_name' => $char,
-  //     'command_content' => $letter,
-  //     'command_src' => $command_src,
-  //     'body' => $body,
-  //     'line_number' => $this->line_number,
-  //   ]));
+    $this->addToken(new Token([
+      'type' => 'cmd:accent',
+      'command_name' => $char,
+      'command_content' => $letter,
+      'command_src' => $command_src,
+      'body' => $body,
+      'line_number' => $this->line_number,
+    ]));
 
-  //   if ($tail) {
-  //     $this->addToken(new Token([
-  //       'type' => 'text',
-  //       'body' => $tail,
-  //       'line_number' => $this->line_number,
-  //     ]));
-  //   }
-  // }
+    if ($tail) {
+      $this->addToken(new Token([
+        'type' => 'text',
+        'body' => $tail,
+        'line_number' => $this->line_number,
+      ]));
+    }
+  }
 
   private function tokenizeCitation($token): void
   {

@@ -94,19 +94,22 @@ class BaseLexer extends Tokenizer
         }
 
         else if (key_exists($char, self::ACCENT_CMDS)) {
-          $this->command_name = $char;
+          $this->addAccentToken($char);
+          continue;
         }
 
         else {
           $this->command_name = $char;
+          $this->addSymbolToken($char);
+          continue;
         }
 
-      } else {
-        // The current char is alphabetic so consume and
-        // return the command name; cursor will be a non-alphabetic char
-        // when complete
-        $this->command_name = $this->consumeUntilNonAlpha();
       }
+
+      // The current char is alphabetic so consume and
+      // return the command name; cursor will be a non-alphabetic char
+      // when complete
+      $this->command_name = $this->consumeUntilNonAlpha();
 
       // Make token
       $env = null;
@@ -150,8 +153,10 @@ class BaseLexer extends Tokenizer
 
         $this->addToken($token);
 
+        // Backup if token is a command with no signature and current char is not a blank space
         if ($signature === '' && $this->getChar() !== ' ' && is_null($env)) $this->backup();
 
+        // Some tokens affect how other tokens are generated
         if ($this->isUpdatable($token->command_name)) $this->update($token);
 
         continue 2;

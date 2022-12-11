@@ -14,17 +14,4 @@ class InlineMathEnv extends Environment
     'math',
   ];
 
-  public static function signature()
-  {
-    return '';
-  }
-
-  public static function make($args)
-  {
-    $args['type'] = self::$type;
-
-    $args['command_src'] = "\\" . $args['command_name'] . "{math}";
-
-    return new Token($args);
-  }
 }
