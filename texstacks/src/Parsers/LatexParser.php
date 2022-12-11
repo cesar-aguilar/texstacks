@@ -107,9 +107,6 @@ class LatexParser
 
         'cmd:arg' => 'handleArgCommandNode',
 
-        'tag',
-        'ignore' => 'doNothing',
-
         default => 'addToCurrentNode',
       };
 
@@ -123,8 +120,6 @@ class LatexParser
     // if (!$this->called_internally) {
     //   dd($this->tree->root()->children());
     // }
-    // dd($this->section_counters);
-    // dd($this->getNewCommands());
 
   }
 
@@ -263,11 +258,6 @@ class LatexParser
         'line_number' => $token->line_number
       ]
     ), parent: $this->current_node);
-  }
-
-  private function doNothing()
-  {
-    return;
   }
 
   private function handleFrontMatter($token)
@@ -561,7 +551,6 @@ class LatexParser
   {
 
     return NodeFactory::getNode(id: $this->tree->nodeCount(), token: $token);
-
   }
 
   private function getTheoremNumber($env_name): string
