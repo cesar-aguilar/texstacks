@@ -2,16 +2,32 @@
 
 namespace TexStacks\Nodes;
 
-class NodeFactory {
+class NodeFactory
+{
 
-  public static function createRootNode() {
+  public static function createRootNode()
+  {
     return new RootNode([
       'id' => 0,
       'type' => 'root',
     ]);
   }
 
-  public static function getNode($id, $token) {
+  public static function createTagNode($id, $token)
+  {
+    return new TagNode(
+      [
+        'id' => $id,
+        'type' => 'cmd:tag',
+        'command_src' => "\\tag{" . $token->command_options . "}",
+        'body' => $token->command_options,
+        'line_number' => $token->line_number
+      ]
+    );
+  }
+
+  public static function getNode($id, $token)
+  {
 
     $args = ['id' => $id, ...(array) $token];
 
@@ -63,5 +79,4 @@ class NodeFactory {
       return new CommandNode($args);
     }
   }
-
 }

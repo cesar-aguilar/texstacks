@@ -4,12 +4,11 @@ namespace TexStacks\Parsers;
 
 use TexStacks\Nodes\Node;
 use TexStacks\Helpers\StrHelper;
-use TexStacks\Nodes\CommandNode;
+use TexStacks\Nodes\NodeFactory;
 use TexStacks\Parsers\SyntaxTree;
 use TexStacks\Parsers\ArticleLexer;
 use TexStacks\Helpers\SectionCounter;
 use TexStacks\Parsers\PreambleParser;
-use TexStacks\Nodes\NodeFactory;
 
 class LatexParser
 {
@@ -425,15 +424,8 @@ class LatexParser
       $this->tree->addNode($new_node, $this->current_node);
 
       // Add a \tag command using ref_num from token
-      $this->tree->addNode(new CommandNode(
-        [
-          'id' => $this->tree->nodeCount(),
-          'type' => 'tag',
-          'command_src' => "\\tag{" . $token->command_options . "}",
-          'body' => $token->command_options,
-          'line_number' => $token->line_number
-        ]
-      ), parent: $this->current_node);
+      $tag_node = NodeFactory::createTagNode($this->tree->nodeCount(), $token);
+      $this->tree->addNode($tag_node, parent: $this->current_node);
     } else if ($caption = $this->current_node->findChild('cmd:caption')) {
       $caption->setRefNum($this->current_node->commandRefNum());
     }

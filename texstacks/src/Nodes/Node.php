@@ -144,7 +144,8 @@ class Node
   /**
    * Find child with given type
    */
-  public function findChild($type) {
+  public function findChild($type)
+  {
     foreach ($this->children as $child) {
       if ($child->hasType($type)) return $child;
     }
@@ -167,5 +168,14 @@ class Node
   public function hasClasses()
   {
     return !empty($this->class);
+  }
+
+  public function render($body): string
+  {
+    // return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
+
+    if ($body === "\n") return '';
+
+    return $body;
   }
 }

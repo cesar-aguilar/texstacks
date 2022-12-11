@@ -97,14 +97,8 @@ class CommandNode extends Node
     $this->command_refnum = $ref_num;
   }
 
-  public function setArgs(array $args) {
-    $this->command_args = $args;
-  }
-
-  public function render($body): string
+  public function setArgs(array $args)
   {
-    if ($body === "\n") return '';
-
-    return $body;
+    $this->command_args = $args;
   }
 }
