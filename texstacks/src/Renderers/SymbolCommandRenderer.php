@@ -2,15 +2,21 @@
 
 namespace TexStacks\Renderers;
 
-use TexStacks\Nodes\Node;
+use TexStacks\Nodes\CommandNode;
 
 class SymbolCommandRenderer
 {
-  public static function renderNode(Node $node, string $body = null): string
+  public static function renderNode(CommandNode $node, string $body = null): string
   {
+
+    $options = $node->commandOptions() ? "[" . $node->commandOptions() . "]" : '';
+
+    $src = "\\" . $node->body . $options;
+
     if ($node->ancestorOfType(['environment:displaymath', 'environment:verbatim', 'inlinemath'])) {
-      if ($node instanceof Node) return "\\" . $node->body;
-      return $node->commandSource();
+      // if ($node instanceof Node) return $src;
+      return $src;
+      // return $node->commandSource();
     }
 
     return match ($node->body) {
@@ -36,7 +42,7 @@ class SymbolCommandRenderer
       'texttimes' => '&times;',
       'textdiv' => '&divide;',
       'textsection' => '&sect;',
-      default => "\\" . $node->body
+      default => $src
       };
     }
   }

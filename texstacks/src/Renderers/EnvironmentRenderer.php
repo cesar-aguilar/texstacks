@@ -47,7 +47,7 @@ class EnvironmentRenderer
             $head = Renderer::render($node->commandOptions());
         }
 
-        return "<div class=\"proof-env\"><span class=\"proof-head\" id=\"{$node->commandLabel()}\">$head. </span> $body <span style=\"font-variant: small-caps\">QED</span></div>";
+        return "<div class=\"proof-env\"><span class=\"proof-head\" id=\"{$node->commandLabel()}\">$head. </span>&nbsp; $body <span style=\"font-variant: small-caps\">QED</span></div>";
     }
 
     private static function renderQuoteEnvironment(EnvironmentNode $node, string $body = null): string

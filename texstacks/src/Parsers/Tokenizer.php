@@ -117,184 +117,6 @@ class Tokenizer extends TextScanner
     ];
   }
 
-  protected function tokenizeCmdWithOptionsArg(string|null $type = null): Token
-  {
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $OPTIONS = false;
-
-    $ALLOWED_CHARS = [' ', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if ($OPTIONS) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        $this->cursor++;
-        $OPTIONS = true;
-        continue;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-
-        break;
-      }
-    }
-
-    $token = new Token([
-      'type' => 'cmd:' . $this->command_name,
-      'command_name' => $this->command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'body' => $content,
-      'line_number' => $this->line_number,
-    ]);
-
-    return $token;
-  }
-
-  protected function tokenizeCmdWithOptions(string|null $type = null): Token
-  {
-    $options = '';
-    $src = '\\' . $this->command_name;
-
-    $ALLOWED_CHARS = [' ', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $this->backup();
-        break;
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        break;
-      }
-    }
-
-    return new Token([
-      'type' => 'cmd:' . $this->command_name,
-      'command_name' => $this->command_name,
-      'command_content' => '',
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number,
-    ]);
-  }
-
-  protected function tokenizeCmdWithArgOptions(string|null $type = null): Token
-  {
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $ARGS_DONE = false;
-
-    $ALLOWED_CHARS = [' ', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        if (!$ARGS_DONE) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-        $this->backup();
-        break;
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if (!$ARGS_DONE) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        break;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-
-        $ARGS_DONE = true;
-      }
-    }
-
-    return new Token([
-      'type' => $type ?? $this->command_name,
-      'command_name' => $this->command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number,
-    ]);
-  }
-
   protected function addInlineMathToken($char)
   {
     // Treat inline math like a begin/end environment
@@ -320,71 +142,6 @@ class Tokenizer extends TextScanner
       'command_src' => "\\" . $cmd . "{equation*}",
       'line_number' => $this->line_number,
     ]));
-  }
-
-  protected function tokenizeSection(): Token
-  {
-
-    $content = '';
-    $options = '';
-    $src = '\\' . $this->command_name;
-    $TOC_ENTRY = false;
-
-    $ALLOWED_CHARS = [' ', '{', '['];
-
-    while (!is_null($char = $this->getChar())) {
-
-      if (!in_array($char, $ALLOWED_CHARS)) {
-        $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid sectioning command");
-      }
-
-      if ($char === ' ') {
-        $this->cursor++;
-        continue;
-      }
-
-      if ($char === '[') {
-
-        if ($TOC_ENTRY) {
-          $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
-        }
-
-        try {
-          $options = $this->getContentUpToDelimiter(']', '[');
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '[' . $options . ']';
-
-        $this->cursor++;
-        $TOC_ENTRY = true;
-        continue;
-      }
-
-      if ($char === '{') {
-
-        try {
-          $content = $this->getCommandContent();
-        } catch (\Exception $e) {
-          throw new \Exception($e->getMessage());
-        }
-
-        $src .= '{' . $content . '}';
-        break;
-      }
-    }
-
-    return new Token([
-      'type' => 'cmd:section',
-      'command_name' => $this->command_name,
-      'command_content' => $content,
-      'command_options' => $options,
-      'command_src' => $src,
-      'line_number' => $this->line_number,
-    ]);
   }
 
   private function getCmdWithArgOptions(string|null $type = null)
@@ -978,13 +735,21 @@ class Tokenizer extends TextScanner
     $this->getNextChar();
 
     try {
-      $token = $this->tokenizeCmdWithOptions();
+      $options = $this->getCmdWithOptions('');
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
 
-    $token->type = 'cmd:symbol';
-    $token->body = $char;
+    // $token->type = 'cmd:symbol';
+    // $token->body = $char;
+
+    $token = new Token([
+      'type' => 'cmd:symbol',
+      'command_name' => $char,
+      'command_options' => $options,
+      'body' => $char,
+      'line_number' => $this->line_number,
+    ]);
 
     $this->addToken($token);
   }
