@@ -21,7 +21,7 @@ class BaseLexer extends Tokenizer
   public function tokenize(string $latex_src)
   {
 
-    $this->stream = $this->preProcessLatexSource($latex_src);
+    $this->stream = $latex_src;
 
     $this->num_chars = strlen($this->stream);
 
@@ -237,11 +237,8 @@ class BaseLexer extends Tokenizer
     }
   }
 
-  protected function preProcessLatexSource(string $latex_src) {
-    return $latex_src;
-  }
-
   protected function update($token) {}
+
   protected function isUpdatable($command_name) {
     return in_array($command_name, $this->updatable_commands);
   }

@@ -68,19 +68,6 @@ class ArticleLexer extends BaseLexer
     ]);
   }
 
-  protected function preProcessLatexSource(string $latex_src)
-  {
-
-    // $n = StrHelper::findStringLineNumber("begin{document}", $latex_src);
-
-    // $this->line_number = $n > -1 ? $n : $this->line_number;
-
-    // $html_src = preg_replace('/.*\\\begin\s*{document}(.*)\\\end\s*{document}.*/sm', "$1", $latex_src);
-
-    // return $html_src;
-    return $latex_src;
-  }
-
   protected function postProcessTokens(): void
   {
 
