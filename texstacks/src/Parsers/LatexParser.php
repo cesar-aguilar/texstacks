@@ -272,7 +272,8 @@ class LatexParser
         self::$front_matter['authors'][] = (object) ['name' => self::parseText($author)];
       }
     } else if ($token->command_name === 'date') {
-      self::$front_matter['date'] = $token->command_content;
+      $date = trim($token->command_content) === '\today' ? date('F j, Y') : $token->command_content;
+      self::$front_matter['date'] = $date;
     } else if ($token->command_name === 'thanks') {
 
       self::$front_matter['thanks'][] = self::parseText($token->command_content, $token->line_number);

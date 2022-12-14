@@ -77,24 +77,7 @@ class ArticleLexer extends BaseLexer
     //   return in_array(
     //     $token->type,
     //     [
-    //       // \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
-    //       // \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::type(),
-    //       // \TexStacks\Commands\Core\SymbolCommand::type(),
-    //       // \TexStacks\Commands\Core\ReferenceCommands::type(),
-    //       // \TexStacks\Commands\Core\PreambleCommands::type(),
-    //       // \TexStacks\Commands\Core\SectionCommands::type(),
-    //       // \TexStacks\Commands\Core\InlineMathEnv::type(),
-    //       // \TexStacks\Commands\Core\DisplayMathEnv::type(),
-    //       // \TexStacks\Commands\Core\BibliographyEnv::type(),
-    //       // \TexStacks\Commands\Core\ListEnv::type(),
-    //       // \TexStacks\Commands\Core\ItemCommand::type(),
-    //       // \TexStacks\Commands\Core\BibItemCommand::type(),
-    //       // \TexStacks\Commands\Core\CaptionCommand::type(),
-    //       // \TexStacks\Commands\Core\IncludeGraphicsCommand::type(),
-    //       // \TexStacks\Commands\OneArg::type(),
-    //       // \TexStacks\Commands\TwoArgs::type(),
-    //       // 'environment:group',
-    //       // 'text',
+    //       \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
     //     ]
     //   );
     // });
