@@ -14,9 +14,9 @@ class TwoArgs extends CommandGroup
     'setcounter',
     'addtocounter',
     'numberwithin',
-    'setlength',
-    'settowidth',
-    'settoheight',
+    // 'setlength',
+    // 'settowidth',
+    // 'settoheight',
   ];
 
   public static function signature()

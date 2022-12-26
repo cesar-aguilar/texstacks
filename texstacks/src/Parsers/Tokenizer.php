@@ -151,7 +151,7 @@ class Tokenizer extends TextScanner
     $src = '\\' . $this->command_name;
     $ARGS_DONE = false;
 
-    $ALLOWED_CHARS = [' ', '{', '['];
+    $ALLOWED_CHARS = [' ', "\t", '{', '['];
 
     while (!is_null($char = $this->getChar())) {
 
@@ -164,7 +164,7 @@ class Tokenizer extends TextScanner
         break;
       }
 
-      if ($char === ' ') {
+      if ($this->is_space($char)) {
         $this->cursor++;
         continue;
       }
@@ -214,7 +214,7 @@ class Tokenizer extends TextScanner
     $src = '\\' . $this->command_name;
     $OPTIONS = false;
 
-    $ALLOWED_CHARS = [' ', '{', '['];
+    $ALLOWED_CHARS = [' ', "\t", '{', '['];
 
     while (!is_null($char = $this->getChar())) {
 
@@ -223,7 +223,7 @@ class Tokenizer extends TextScanner
         throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
       }
 
-      if ($char === ' ') {
+      if ($this->is_space($char)) {
         $this->cursor++;
         continue;
       }
@@ -271,7 +271,7 @@ class Tokenizer extends TextScanner
 
     $options = '';
 
-    $ALLOWED_CHARS = [' ', '['];
+    $ALLOWED_CHARS = [' ', "\t", '['];
 
     while (!is_null($char = $this->getChar())) {
 
@@ -280,7 +280,7 @@ class Tokenizer extends TextScanner
         break;
       }
 
-      if ($char === ' ') {
+      if ($this->is_space($char)) {
         $this->cursor++;
         continue;
       }
@@ -327,7 +327,7 @@ class Tokenizer extends TextScanner
     $HAS_PARAMS = false;
     $GOT_COMMAND = false;
 
-    $ALLOWED_CHARS = [' ', '{', '[', "\n", '%', "\\"];
+    $ALLOWED_CHARS = [' ', "\t", '{', '[', "\n", '%', "\\"];
 
     $this->backup();
 
@@ -351,7 +351,7 @@ class Tokenizer extends TextScanner
         continue;
       }
 
-      if ($char === ' ') continue;
+      if ($this->is_space($char)) continue;
 
       if ($char === "\\" && $GOT_COMMAND) {
         $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
@@ -431,7 +431,7 @@ class Tokenizer extends TextScanner
     $GOT_COMMAND = false;
     $GOT_BEGIN = false;
 
-    $ALLOWED_CHARS = [' ', '{', '[', "\n", '%'];
+    $ALLOWED_CHARS = [' ', "\t", '{', '[', "\n", '%'];
 
     $this->backup();
 
@@ -455,7 +455,7 @@ class Tokenizer extends TextScanner
         continue;
       }
 
-      if ($char === ' ') continue;
+      if ($this->is_space($char)) continue;
 
       if ($char === '[') {
 
@@ -518,7 +518,7 @@ class Tokenizer extends TextScanner
     $GOT_NAME = false;
     $GOT_HEADING = false;
 
-    $ALLOWED_CHARS = [' ', '{', '[', '%'];
+    $ALLOWED_CHARS = [' ', "\t", '{', '[', '%'];
 
     $this->backup();
 
@@ -542,7 +542,7 @@ class Tokenizer extends TextScanner
         continue;
       }
 
-      if ($char === ' ') continue;
+      if ($this->is_space($char)) continue;
 
       if ($char === '[') {
 
@@ -607,7 +607,7 @@ class Tokenizer extends TextScanner
     $src = '\\' . $this->command_name;
     $GOT_OPTIONS = false;
 
-    $ALLOWED_CHARS = [' ', '%', "\n"];
+    $ALLOWED_CHARS = [' ', "\t", '%', "\n"];
 
     if ($has_options) {
       $ALLOWED_CHARS[] = '[';
@@ -639,7 +639,7 @@ class Tokenizer extends TextScanner
         $this->consumeUntilTarget("\n");
       }
       //
-      else if ($char === ' ') {
+      else if ($this->is_space($char)) {
         continue; // not needed but for readability
       }
       //

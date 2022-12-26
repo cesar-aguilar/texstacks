@@ -94,7 +94,7 @@ class TextScanner {
   protected function getContentBetweenDelimiters($left_delim, $right_delim)
   {
     $content = '';
-    $ALLOWED_CHARS = [' ', $left_delim];
+    $ALLOWED_CHARS = [' ', "\t", $left_delim];
 
     while (!is_null($char = $this->getNextChar())) {
 
@@ -103,7 +103,7 @@ class TextScanner {
         break;
       }
 
-      if ($char === ' ') continue;
+      if ($this->is_space($char)) continue;
 
       if ($char === $left_delim) {
 
@@ -252,7 +252,7 @@ class TextScanner {
 
     $char = $this->getChar();
 
-    while (!is_null($char) && $char === ' ') {
+    while (!is_null($char) && $this->is_space($char)) {
       $char = $this->getNextChar();
     }
 
@@ -280,7 +280,7 @@ class TextScanner {
 
     $consumed = false;
 
-    while (!is_null($char) && $char === ' ') {
+    while (!is_null($char) && $this->is_space($char)) {
       $char = $this->getNextChar();
       $consumed = true;
     }
@@ -332,6 +332,10 @@ class TextScanner {
     }
 
     throw new \Exception("Parse error: missing $target on line {$this->line_number}");
+  }
+
+  protected function is_space($char) {
+    return $char === ' ' || $char === "\t";
   }
 
 }
