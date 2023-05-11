@@ -4,16 +4,19 @@ namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Tokenizer;
 
-class BaseLexer extends Tokenizer
+class BaseLexer
 {
 
+  private $tokenizer;
+  private $line_number_offset;
   private $command_groups = [];
   private $default_env;
   protected $updatable_commands = [];
 
   public function __construct($data = [])
   {
-    $this->line_number = $data['line_number_offset'] ?? 1;
+
+    $this->line_number_offset = $data['line_number_offset'] ?? 1;
 
     $this->default_env = \TexStacks\Commands\Environment::class;
   }
@@ -21,45 +24,39 @@ class BaseLexer extends Tokenizer
   public function tokenize(string $latex_src)
   {
 
-    $this->stream = $latex_src;
+    if (trim($latex_src) === '') return [];
 
-    $this->num_chars = strlen($this->stream);
-
-    if ($this->num_chars === 0) return [];
-
-    $this->cursor = -1;
-
-    while (!is_null($char = $this->getNextChar())) {
+    $this->tokenizer = new Tokenizer($this->line_number_offset, $latex_src);
+ 
+    while (!is_null($char = $this->tokenizer->getNextChar())) {
 
       if ($char === '~') {
-        $this->buffer .= ' ';
+        $this->tokenizer->addToBuffer(' ');
         continue;
       }
 
       if ($char === '{' || $char === '}') {
-        $this->addGroupEnvToken($char);
+        $this->tokenizer->addGroupEnvToken($char);
         continue;
       }
 
       if ($char === '%') {
-        $this->consumeUntilTarget("\n");
+        $this->tokenizer->consumeLatexComment();
         continue;
       }
 
       if ($char === "$") {
 
-        if ($this->getNextChar() === "$") {
+        if ($this->tokenizer->getNextChar() === "$") {
           try {
-            $this->in_displaymath = !$this->in_displaymath;
-            $this->addDisplayMathToken($this->in_displaymath ? '[' : ']');
+            $this->tokenizer->addDisplayMathToken();
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
         } else {
-          $this->backup();
+          $this->tokenizer->backup();
           try {
-            $this->in_inlinemath = !$this->in_inlinemath;
-            $this->addInlineMathToken($this->in_inlinemath ? '(' : ')');
+            $this->tokenizer->addInlineMathToken();
           } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
           }
@@ -69,14 +66,14 @@ class BaseLexer extends Tokenizer
       }
 
       if ($char !== "\\") {
-        $this->buffer .= $char;
+        $this->tokenizer->addToBuffer($char);
         continue;
       }
 
-      $char = $this->getNextChar();
+      $char = $this->tokenizer->getNextChar();
 
       if (is_null($char)) {
-        $this->buffer .= "\\";
+        $this->tokenizer->addToBuffer("\\");
         break;
       }
 
@@ -84,23 +81,23 @@ class BaseLexer extends Tokenizer
       if (!ctype_alpha($char ?? '')) {
 
         if ($char === '(' || $char === ')') {
-          $this->addInlineMathToken($char);
+          $this->tokenizer->addInlineMathToken($char);
           continue;
         }
 
         else if ($char === '[' || $char === ']') {
-          $this->addDisplayMathToken($char);
+          $this->tokenizer->addDisplayMathToken($char);
           continue;
         }
 
-        else if (key_exists($char, self::ACCENT_CMDS)) {
-          $this->addAccentToken($char);
+        else if ($this->tokenizer->isAccent($char)) {
+          $this->tokenizer->addAccentToken($char);
           continue;
         }
 
         else {
-          $this->command_name = $char;
-          $this->addSymbolToken($char);
+          $this->tokenizer->command_name = $char;
+          $this->tokenizer->addSymbolToken($char);
           continue;
         }
 
@@ -109,14 +106,14 @@ class BaseLexer extends Tokenizer
       // The current char is alphabetic so consume and
       // return the command name; cursor will be a non-alphabetic char
       // when complete
-      $this->command_name = $this->consumeUntilNonAlpha();
+      $this->tokenizer->command_name = $this->tokenizer->consumeCommandName();
 
       // Make token
       $env = null;
 
-      if ($this->command_name === 'begin' || $this->command_name === 'end') {
+      if ($this->tokenizer->command_name === 'begin' || $this->tokenizer->command_name === 'end') {
         try {
-          $env = $this->getEnvName();
+          $env = $this->tokenizer->consumeEnvName();
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
         }
@@ -124,13 +121,13 @@ class BaseLexer extends Tokenizer
 
       foreach ($this->command_groups as $ClassName) {
 
-        if (!$ClassName::contains($env ?? $this->command_name)) continue;
+        if (!$ClassName::contains($env ?? $this->tokenizer->command_name)) continue;
 
         if ($ClassName::is_env() && is_null($env)) continue;
 
-        if (!is_null($env) && $this->command_name === 'end') {
-          $token = $ClassName::end($this->getEndEnvTokenData($env));
-          $this->addToken($token);
+        if (!is_null($env) && $this->tokenizer->command_name === 'end') {
+          $token = $ClassName::end($this->tokenizer->getEndEnvTokenData($env));
+          $this->tokenizer->addToken($token);
           continue 2;
         }
 
@@ -138,23 +135,23 @@ class BaseLexer extends Tokenizer
 
         // If begin env and env contains optional argument then need to move forward
         // because cursor is at the } character of \begin{env-name}
-        if(!is_null($env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->forward();
+        if(!is_null($env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->tokenizer->forward();
 
         try {
-          $token = $ClassName::make($this->getTokenData($signature, $env));
+          $token = $ClassName::make($this->tokenizer->getTokenData($signature, $env));
         } catch (\Exception $e) {
           $message = $e->getMessage();
           $message .= "<br>$ClassName";
-          $message .= "<br>Line Number: " . $this->line_number;
+          $message .= "<br>Line Number: " . $this->tokenizer->getLineNumber();
           $message .= "<br>File: " . __FILE__;
           $message .= "<br>Code line: " . __LINE__;
           throw new \Exception($message);
         }
 
-        $this->addToken($token);
+        $this->tokenizer->addToken($token);
 
         // Backup if token is a command with no signature and current char is not a blank space
-        if ($signature === '' && $this->getChar() !== ' ' && is_null($env)) $this->backup();
+        if ($signature === '' && $this->tokenizer->getChar() !== ' ' && is_null($env)) $this->tokenizer->backup();
 
         // Some tokens affect how other tokens are generated
         if ($this->isUpdatable($token->command_name)) $this->update($token);
@@ -163,23 +160,23 @@ class BaseLexer extends Tokenizer
       }
 
       if (is_null($env)) {
-        $this->buffer .= "\\" . $this->command_name;
-        $this->backup();
+        $this->tokenizer->addToBuffer("\\" . $this->tokenizer->command_name);
+        $this->tokenizer->backup();
         continue;
       }
 
-      $token = $this->command_name === 'end'
-        ? $this->default_env::end($this->getEndEnvTokenData($env))
-        : $this->default_env::make($this->getTokenData('', $env));
+      $token = $this->tokenizer->command_name === 'end'
+        ? $this->default_env::end($this->tokenizer->getEndEnvTokenData($env))
+        : $this->default_env::make($this->tokenizer->getTokenData('', $env));
 
-      $this->addToken($token);
+      $this->tokenizer->addToken($token);
     }
 
-    $this->addBufferAsToken();
+    $this->tokenizer->addBufferAsToken();
 
     $this->postProcessTokens();
 
-    return $this->tokens;
+    return $this->tokenizer->getTokens();
   }
 
   public function registerCommandGroup($class_name)
@@ -211,30 +208,7 @@ class BaseLexer extends Tokenizer
 
   protected function postProcessTokens(): void
   {
-
-    foreach ($this->tokens as $k => $token) {
-
-      if ($token->type !== 'text') continue;
-
-      if ($k === count($this->tokens) - 1) continue;
-
-      if ($k === 0) {
-        $this->tokens[$k]->body = rtrim($token->body, "\n");
-        continue;
-      }
-
-      $next_type = $this->tokens[$k + 1]->type;
-
-      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group') {
-        $this->tokens[$k]->body = rtrim($token->body);
-      }
-
-      $prev_type = $this->tokens[$k - 1]->type;
-
-      if ((str_contains($prev_type, 'environment') || $prev_type == 'cmd:section') && $prev_type !== 'environment:group') {
-        $this->tokens[$k]->body = ltrim($token->body);
-      }
-    }
+    $this->tokenizer->postProcessTokens();
   }
 
   protected function update($token) {}

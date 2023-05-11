@@ -3,18 +3,22 @@
 namespace TexStacks\Parsers;
 
 class TextScanner {
-
-  protected string $buffer = '';
+  
   protected int $line_number;
   protected string $stream;
-  protected int $cursor;
+  protected int $cursor = -1;
   protected string|null $prev_char;
   protected int $num_chars = 0;
+
+  protected function setStream(string $latex_src) {
+    $this->stream = $latex_src;
+    $this->num_chars = strlen($this->stream);
+  }
 
   /**
    *
    */
-  protected function forward()
+  public function forward()
   {
     $this->cursor++;
     if ($this->getChar() === "\n") $this->line_number++;
@@ -23,7 +27,7 @@ class TextScanner {
   /**
    * 
    */
-  protected function backup()
+  public function backup()
   {
     if ($this->getChar() === "\n") $this->line_number--;
     $this->cursor--;
@@ -33,7 +37,7 @@ class TextScanner {
   /**
    *
    */
-  protected function getChar()
+  public function getChar()
   {
     return $this->cursor < $this->num_chars ? $this->stream[$this->cursor] : null;
   }
@@ -41,7 +45,7 @@ class TextScanner {
   /**
    *
    */
-  protected function getNextChar()
+  public function getNextChar()
   {
     $this->prev_char = $this->getChar();
     $this->cursor++;
@@ -58,6 +62,11 @@ class TextScanner {
   protected function peek()
   {
     return $this->cursor + 1 < $this->num_chars ? $this->stream[$this->cursor + 1] : null;
+  }
+
+  public function getLineNumber()
+  {
+    return $this->line_number;
   }
 
   /**
@@ -210,7 +219,7 @@ class TextScanner {
   /**
    *
    */
-  protected function getEnvName()
+  public function consumeEnvName()
   {
 
     try {

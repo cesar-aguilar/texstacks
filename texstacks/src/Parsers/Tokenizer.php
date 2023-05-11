@@ -8,7 +8,7 @@ use TexStacks\Parsers\TextScanner;
 class Tokenizer extends TextScanner
 {
 
-  const ACCENT_CMDS = [
+  private array $ACCENT_CMDS = [
     "'" => 'acute',
     "`" => 'grave',
     "^" => 'circ',
@@ -16,13 +16,29 @@ class Tokenizer extends TextScanner
     '~' => 'tilde',
   ];
 
-  protected array $tokens = [];
-  protected bool $in_inlinemath = false;
-  protected bool $in_displaymath = false;
+  private string $buffer = '';
+  private array $tokens = [];
+  private bool $in_inlinemath = false;
+  private bool $in_displaymath = false;
 
-  protected string $command_name;
+  public string $command_name;
 
-  protected function addBufferAsToken()
+  public function __construct($line_number_offset = 1, $latex_src)
+  {
+    $this->line_number = $line_number_offset;
+    $this->setStream($latex_src);
+  }
+
+  public function getTokens() {
+    return $this->tokens;
+  }
+
+  public function addToBuffer(string $text)
+  {
+    $this->buffer .= $text;
+  }
+
+  public function addBufferAsToken()
   {
 
     if ($this->buffer === '') return;
@@ -40,7 +56,7 @@ class Tokenizer extends TextScanner
     $this->buffer = '';
   }
 
-  protected function addToken(Token $token)
+  public function addToken(Token $token)
   {
 
     $this->addBufferAsToken();
@@ -48,7 +64,7 @@ class Tokenizer extends TextScanner
     $this->tokens[] = $token;
   }
 
-  protected function getLastToken()
+  public function getLastToken()
   {
     $count = count($this->tokens);
 
@@ -64,7 +80,7 @@ class Tokenizer extends TextScanner
     die();
   }
 
-  protected function getTokenData($signature, $env = null)
+  public function getTokenData($signature, $env = null)
   {
 
     try {
@@ -107,7 +123,7 @@ class Tokenizer extends TextScanner
     ];
   }
 
-  protected function getEndEnvTokenData($env)
+  public function getEndEnvTokenData($env)
   {
 
     return [
@@ -117,8 +133,14 @@ class Tokenizer extends TextScanner
     ];
   }
 
-  protected function addInlineMathToken($char)
+  public function addInlineMathToken($char = null)
   {
+
+    if ($char === null) {
+      $this->in_inlinemath = !$this->in_inlinemath;
+      $char = $this->in_inlinemath ? '(' : ')';
+    }
+
     // Treat inline math like a begin/end environment
     $this->addToken(new Token([
       'type' => 'inlinemath',
@@ -130,8 +152,14 @@ class Tokenizer extends TextScanner
     ]));
   }
 
-  protected function addDisplayMathToken($char)
+  public function addDisplayMathToken($char = null)
   {
+
+    if ($char === null) {
+      $this->in_displaymath = !$this->in_displaymath;
+      $char = $this->in_displaymath ? '[' : ']';
+    }
+
     // Treat display math like a begin/end environment
     $cmd = $char === '[' ? 'begin' : 'end';
 
@@ -142,6 +170,142 @@ class Tokenizer extends TextScanner
       'command_src' => "\\" . $cmd . "{equation*}",
       'line_number' => $this->line_number,
     ]));
+  }
+
+  public function addGroupEnvToken($char)
+  {
+    $this->addBufferAsToken();
+
+    $command_name = $char === '{' ? 'begin' : 'end';
+
+    $command_content = 'unnamed';
+
+    $this->tokens[] = new Token([
+      'type' => 'environment:group',
+      'command_name' => $command_name,
+      'command_content' => $command_content,
+      'command_src' => '',
+      'command_options' => '',
+      'line_number' => $this->line_number,
+    ]);
+  }
+
+  public function addSymbolToken(string $char)
+  {
+
+    // Move one character forward and
+    // see if there are any options, this handles
+    // the commands like \\[1cm]
+    $this->getNextChar();
+
+    try {
+      $options = $this->getCmdWithOptions('');
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    // $token->type = 'cmd:symbol';
+    // $token->body = $char;
+
+    $token = new Token([
+      'type' => 'cmd:symbol',
+      'command_name' => $char,
+      'command_options' => $options,
+      'body' => $char,
+      'line_number' => $this->line_number,
+    ]);
+
+    $this->addToken($token);
+  }
+
+  public function addAccentToken($char)
+  {
+    $this->forward();
+    $this->consumeWhiteSpace();
+
+    if ($this->getChar() === '{') {
+
+      try {
+        $content = ltrim($this->getCommandContent());
+      } catch (\Exception $e) {
+        throw new \Exception($e->getMessage());
+      }
+
+      $letter = $content[0];
+      $tail = substr($content, 1);
+      $command_src = "\\" . $char . "{" . $letter . "}";
+    } else {
+      $letter = $this->getChar();
+      $tail = '';
+      $command_src = "\\" . $char . $letter;
+    }
+
+    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'n', 'A', 'E', 'I', 'O', 'U', 'Y', 'N'])) {
+      $this->buffer .= $command_src . $tail;
+      return;
+    }
+
+    $accent = $this->ACCENT_CMDS[$char];
+
+    $body = "&$letter$accent;";
+
+    $this->addToken(new Token([
+      'type' => 'cmd:accent',
+      'command_name' => $char,
+      'command_content' => $letter,
+      'command_src' => $command_src,
+      'body' => $body,
+      'line_number' => $this->line_number,
+    ]));
+
+    if ($tail) {
+      $this->addToken(new Token([
+        'type' => 'text',
+        'body' => $tail,
+        'line_number' => $this->line_number,
+      ]));
+    }
+  }
+
+  public function consumeCommandName() {
+    return $this->consumeUntilNonAlpha();
+  }
+
+  public function consumeLatexComment() {
+    $this->consumeUntilTarget("\n");
+  }
+
+  public function isAccent($char)
+  {
+    return key_exists($char, $this->ACCENT_CMDS);
+  }
+
+  public function postProcessTokens() {
+
+    foreach ($this->tokens as $k => $token) {
+
+      if ($token->type !== 'text') continue;
+
+      if ($k === count($this->tokens) - 1) continue;
+
+      if ($k === 0) {
+        $this->tokens[$k]->body = rtrim($token->body, "\n");
+        continue;
+      }
+
+      $next_type = $this->tokens[$k + 1]->type;
+
+      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group') {
+        $this->tokens[$k]->body = rtrim($token->body);
+      }
+
+      $prev_type = $this->tokens[$k - 1]->type;
+
+      if ((str_contains($prev_type, 'environment') || $prev_type == 'cmd:section') && $prev_type !== 'environment:group') {
+        $this->tokens[$k]->body = ltrim($token->body);
+      }
+    }
+
   }
 
   private function getCmdWithArgOptions(string|null $type = null)
@@ -706,101 +870,6 @@ class Tokenizer extends TextScanner
 
     return $content;
 
-  }
-
-  protected function addGroupEnvToken($char)
-  {
-    $this->addBufferAsToken();
-
-    $command_name = $char === '{' ? 'begin' : 'end';
-
-    $command_content = 'unnamed';
-
-    $this->tokens[] = new Token([
-      'type' => 'environment:group',
-      'command_name' => $command_name,
-      'command_content' => $command_content,
-      'command_src' => '',
-      'command_options' => '',
-      'line_number' => $this->line_number,
-    ]);
-  }
-
-  protected function addSymbolToken(string $char)
-  {
-
-    // Move one character forward and
-    // see if there are any options, this handles
-    // the commands like \\[1cm]
-    $this->getNextChar();
-
-    try {
-      $options = $this->getCmdWithOptions('');
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    // $token->type = 'cmd:symbol';
-    // $token->body = $char;
-
-    $token = new Token([
-      'type' => 'cmd:symbol',
-      'command_name' => $char,
-      'command_options' => $options,
-      'body' => $char,
-      'line_number' => $this->line_number,
-    ]);
-
-    $this->addToken($token);
-  }
-
-  protected function addAccentToken($char)
-  {
-    $this->forward();
-    $this->consumeWhiteSpace();
-
-    if ($this->getChar() === '{') {
-
-      try {
-        $content = ltrim($this->getCommandContent());
-      } catch (\Exception $e) {
-        throw new \Exception($e->getMessage());
-      }
-
-      $letter = $content[0];
-      $tail = substr($content, 1);
-      $command_src = "\\" . $char . "{" . $letter . "}";
-    } else {
-      $letter = $this->getChar();
-      $tail = '';
-      $command_src = "\\" . $char . $letter;
-    }
-
-    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'n', 'A', 'E', 'I', 'O', 'U', 'Y', 'N'])) {
-      $this->buffer .= $command_src . $tail;
-      return;
-    }
-
-    $accent = self::ACCENT_CMDS[$char];
-
-    $body = "&$letter$accent;";
-
-    $this->addToken(new Token([
-      'type' => 'cmd:accent',
-      'command_name' => $char,
-      'command_content' => $letter,
-      'command_src' => $command_src,
-      'body' => $body,
-      'line_number' => $this->line_number,
-    ]));
-
-    if ($tail) {
-      $this->addToken(new Token([
-        'type' => 'text',
-        'body' => $tail,
-        'line_number' => $this->line_number,
-      ]));
-    }
   }
 
 }
