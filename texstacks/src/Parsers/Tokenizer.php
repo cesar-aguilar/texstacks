@@ -18,12 +18,13 @@ class Tokenizer extends TextScanner
 
   private string $buffer = '';
   private array $tokens = [];
+  protected static $newCommandTokens = [];
   private bool $in_inlinemath = false;
   private bool $in_displaymath = false;
 
   public string $command_name;
 
-  public function __construct($line_number_offset = 1, $latex_src)
+  public function __construct($latex_src, $line_number_offset = 1)
   {
     $this->line_number = $line_number_offset;
     $this->setStream($latex_src);
@@ -61,7 +62,12 @@ class Tokenizer extends TextScanner
 
     $this->addBufferAsToken();
 
+    if ($token->type === 'cmd:newcommand') {
+      self::$newCommandTokens[$token->body] = $token;
+    }
+
     $this->tokens[] = $token;
+
   }
 
   public function getLastToken()
@@ -111,7 +117,9 @@ class Tokenizer extends TextScanner
         $content = $this->getAccentData();
       }
     } catch (\Exception $e) {
-      throw new \Exception($e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__);
+      $msg = $e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__;
+      $msg .= "<br>&nbsp;&nbsp; Called as " . __CLASS__ . "->" . __FUNCTION__ . "('$signature', '$env')";
+      throw new \Exception($msg);
     }
 
     return [
@@ -305,6 +313,9 @@ class Tokenizer extends TextScanner
         $this->tokens[$k]->body = ltrim($token->body);
       }
     }
+
+    // $this->dumpTokensLineRange(56, 60);
+    // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
 
   }
 
@@ -869,6 +880,26 @@ class Tokenizer extends TextScanner
     }
 
     return $content;
+
+  }
+
+  private function dumpTokensLineRange($a, $b) {
+
+    $this->tokens = array_filter($this->tokens, function ($token) use ($a, $b) {
+      return $token->line_number >= $a and $token->line_number <= $b;
+    });
+
+    dd($this->tokens);
+
+  }
+
+  private function dumpTokensOfType($token_type) {
+
+    $this->tokens = array_filter($this->tokens, function ($token) use ($token_type) {
+      return $token->type === $token_type;
+    });
+
+    dd($this->tokens);
 
   }
 

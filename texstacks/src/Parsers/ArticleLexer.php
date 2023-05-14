@@ -12,6 +12,7 @@ class ArticleLexer extends BaseLexer
     parent::__construct($data);
 
     $this->addUpdatableCommand(\TexStacks\Commands\Core\NewTheorem::list());
+    $this->addUpdatableCommand(\TexStacks\Commands\Core\NewCommands::list());
 
     if (isset($data['thm_env'])) {
       \TexStacks\Commands\TheoremEnv::add($data['thm_env']);
@@ -65,26 +66,12 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\TwoArgs::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArg::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::class,
+      \TexStacks\Commands\CustomBasic::class,
+      \TexStacks\Commands\CustomOneArg::class,
+      \TexStacks\Commands\CustomWithDefault::class,
+      \TexStacks\Commands\CustomTwoArgWithDefault::class,
+      \TexStacks\Commands\CustomTwoArgs::class,
     ]);
-  }
-
-  protected function postProcessTokens(): void
-  {
-
-    parent::postProcessTokens();
-
-    // $this->tokens = array_filter($this->tokens, function ($token) {
-    //   return in_array(
-    //     $token->type,
-    //     [
-    //       \TexStacks\Commands\AmsArt\AmsArtOneArg::type(),
-    //     ]
-    //   );
-    // });
-
-    // $this->tokens = array_filter($this->tokens, function ($token) {
-    //   return $token->line_number >= 110 and $token->line_number <= 130;
-    // });
   }
 
   protected function update($token)
@@ -92,6 +79,36 @@ class ArticleLexer extends BaseLexer
     if (str_contains($token->command_name, 'newtheorem')) {
       \TexStacks\Commands\TheoremEnv::add($token->command_content);
     }
+
+    else if (str_contains($token->command_name, 'newcommand')) {
+      /* Add custom defined commands to the appropriate command group 
+       * depending on signature of the newly defined command
+       */
+
+      if (is_null($token->command_args[0])) {
+
+        \TexStacks\Commands\CustomBasic::customAdd($token->body, $token);
+
+      } else if ($token->command_args[0] == '1' && is_null($token->command_args[1])) {
+
+        \TexStacks\Commands\CustomOneArg::customAdd($token->body, $token);
+
+      } else if ($token->command_args[0] == '1' && !is_null($token->command_args[1])) {
+
+        \TexStacks\Commands\CustomWithDefault::customAdd($token->body, $token);
+
+      } else if ($token->command_args[0] == '2' && !is_null($token->command_args[1])) {
+
+        \TexStacks\Commands\CustomTwoArgWithDefault::customAdd($token->body, $token);
+
+      } else if ($token->command_args[0] == '2' && is_null($token->command_args[1])) {
+
+        \TexStacks\Commands\CustomTwoArgs::customAdd($token->body, $token);
+
+      }
+
+    }
+
   }
 
   private function addUpdatableCommand($command)

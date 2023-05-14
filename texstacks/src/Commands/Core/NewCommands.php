@@ -13,6 +13,7 @@ class NewCommands extends CommandGroup {
     'newcommand',
     'renewcommand',
     'providecommand',
+    'def',
   ];
 
   public static function signature() {
@@ -29,6 +30,8 @@ class NewCommands extends CommandGroup {
     $args['command_src'] .= !is_null($params) ? '[' . $params . ']' : '';
     $args['command_src'] .= !is_null($default_param) ? '[' . $default_param . ']' : '';
     $args['command_src'] .= '{' . $defn . '}';
+
+    $args['body'] = trim(str_replace("\\", '', $args['command_content']));
 
     return new Token($args);
   }

@@ -75,6 +75,8 @@ class NodeFactory
       return new EnvironmentNode($args);
     } else if ($token->type === 'cmd:two-args') {
       return new TwoArgsNode($args);
+    } else if (str_contains($token->type, 'cmd:custom')) {
+      return new CustomMacroNode($args);
     } else {
       return new CommandNode($args);
     }

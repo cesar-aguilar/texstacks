@@ -26,6 +26,7 @@ class CommandNode extends Node
   protected string|null $command_label;
   protected string|null $command_refnum;
   protected $command_content;
+  protected $command_args;
   protected $command_options;
 
   public function __construct($args)

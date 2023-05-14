@@ -26,7 +26,7 @@ class BaseLexer
 
     if (trim($latex_src) === '') return [];
 
-    $this->tokenizer = new Tokenizer($this->line_number_offset, $latex_src);
+    $this->tokenizer = new Tokenizer($latex_src, $this->line_number_offset);
  
     while (!is_null($char = $this->tokenizer->getNextChar())) {
 
@@ -141,6 +141,7 @@ class BaseLexer
           $token = $ClassName::make($this->tokenizer->getTokenData($signature, $env));
         } catch (\Exception $e) {
           $message = $e->getMessage();
+          $message .= "<br>Command: " . $this->tokenizer->command_name;
           $message .= "<br>$ClassName";
           $message .= "<br>Line Number: " . $this->tokenizer->getLineNumber();
           $message .= "<br>File: " . __FILE__;
@@ -150,8 +151,8 @@ class BaseLexer
 
         $this->tokenizer->addToken($token);
 
-        // Backup if token is a command with no signature and current char is not a blank space
-        if ($signature === '' && $this->tokenizer->getChar() !== ' ' && is_null($env)) $this->tokenizer->backup();
+        // Backup if token is a command with no signature
+        if ($signature === '' && is_null($env)) $this->tokenizer->backup();
 
         // Some tokens affect how other tokens are generated
         if ($this->isUpdatable($token->command_name)) $this->update($token);

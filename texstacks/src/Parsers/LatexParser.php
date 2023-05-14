@@ -106,6 +106,12 @@ class LatexParser
 
         'cmd:arg' => 'handleArgCommandNode',
 
+        'cmd:custom-basic',
+        'cmd:custom-arg',
+        'cmd:custom-option',
+        'cmd:custom-option-arg',
+        'cmd:custom-two-args', => 'handleCustomNode',
+
         default => 'addToCurrentNode',
       };
 
@@ -538,6 +544,24 @@ class LatexParser
       'starred' => $is_starred,
       'counter' => 0,
     ];
+  }
+
+  private function handleCustomNode($token): void
+  {
+    if ($this->current_node->pathToRootHasType(['environment:displaymath', 'inlinemath', 'verbatim'])) {
+      $this->addToCurrentNode($token);
+      return;
+    }
+
+    $new_node = $this->createCommandNode($token);
+
+    if (StrHelper::isNotAlpha($new_node->body)) {
+      $command_content = self::parseText($new_node->body, $new_node->line_number);
+      $new_node->setCommandContent($command_content);
+    }
+
+    $this->tree->addNode($new_node, $this->current_node);
+
   }
 
   private function createCommandNode($token): mixed
