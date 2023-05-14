@@ -92,30 +92,49 @@ class Tokenizer extends TextScanner
     try {
 
       if ($signature === '{}' || $signature === '+{}') {
+
         $content = $this->getCommandContent(move_forward: str_contains($signature, '+'));
         if (!is_null($env)) $args = [$content];
+
       } else if ($signature === '[]') {
+
         $options = $this->getCmdWithOptions($signature);
+
       } else if ($signature === '{}[]') {
+
         list($content, $options) = $this->getCmdWithArgOptions();
-      } else if ($signature === '[]{}') {
-        list($content, $options) = $this->getCmdWithOptionsArg($signature);
-        if (!is_null($env)) $args = [$content];
-      } else if ($signature === '{}{}') {
-        list($args, $options) = $this->getCommandArgs($signature);
+
       } else if ($signature === '{}[][]{}') {
+
         list($content, $params, $default_param, $defn) = $this->getNewCommandData();
         $args = [$params, $default_param, $defn];
+
       } else if ($signature === '{}[][]{}{}') {
+
         list($content, $params, $default_param, $begin_defn, $end_defn) = $this->getNewEnvironmentData();
         $args = [$params, $default_param, $begin_defn, $end_defn];
+
       } else if ($signature === '{}[]{}[]') {
+
         list($arg1, $options1, $arg2, $options2) = $this->getNewTheoremData();
         $args = [$arg1, $options1, $arg2, $options2];
         $content = $arg1;
+
       } else if ($signature === '^') {
+
         $content = $this->getAccentData();
+
+      } else if ($signature === '[]{}') {
+
+        list($content, $options) = $this->getCmdWithOptionsArg($signature);
+        if (!is_null($env)) $args = [$content];
+
+      } else if (in_array($signature, ['{}{}', '{}{}{}'])) {
+
+        list($args, $options) = $this->getCommandArgs($signature);
+
       }
+
     } catch (\Exception $e) {
       $msg = $e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__;
       $msg .= "<br>&nbsp;&nbsp; Called as " . __CLASS__ . "->" . __FUNCTION__ . "('$signature', '$env')";

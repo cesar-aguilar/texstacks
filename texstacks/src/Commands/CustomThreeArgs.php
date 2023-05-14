@@ -5,17 +5,18 @@ namespace TexStacks\Commands;
 use TexStacks\Parsers\Token;
 use TexStacks\Commands\CustomAddTrait;
 
-class CustomTwoArgs extends CommandGroup {
+class CustomThreeArgs extends CommandGroup {
 
   protected static $commands = [];
   protected static $newCommandTokens = [];
-  protected static $type = 'cmd:custom-two-args';
+  protected static $type = 'cmd:custom-three-args';
+
+  public static function signature()
+  {
+    return '{}{}{}';
+  }
 
   use CustomAddTrait;
-
-  public static function signature() {
-    return '{}{}';
-  }
 
   public static function make($args)
   {
@@ -39,5 +40,5 @@ class CustomTwoArgs extends CommandGroup {
 
     return new Token($args);
   }
-
+ 
 }

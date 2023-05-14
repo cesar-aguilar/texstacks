@@ -21,8 +21,6 @@ class CustomTwoArgWithDefault extends OneArgPreOptions {
 
     $args['command_src'] = "\\" . $args['command_name'] . $options . "{" . $args['command_content'] . "}";
 
-    // $args['body'] = $args['command_content'];
-
     $token = self::$newCommandTokens[$args['command_name']];
 
     list($params, $default, $defn) = $token->command_args;

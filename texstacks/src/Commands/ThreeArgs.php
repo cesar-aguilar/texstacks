@@ -5,24 +5,16 @@ namespace TexStacks\Commands;
 use TexStacks\Parsers\Token;
 use TexStacks\Commands\CommandGroup;
 
-class TwoArgs extends CommandGroup
+class ThreeArgs extends CommandGroup
 {
 
-  protected static $type = 'cmd:two-args';
+  protected static $type = 'cmd:three-args';
 
-  protected static $commands = [
-    'texorpdfstring',
-    'setcounter',
-    'addtocounter',
-    'numberwithin',
-    // 'setlength',
-    // 'settowidth',
-    // 'settoheight',
-  ];
+  protected static $commands = [];
 
   public static function signature()
   {
-    return '{}{}';
+    return '{}{}{}';
   }
 
   public static function make($args)
@@ -39,5 +31,4 @@ class TwoArgs extends CommandGroup
 
     return new Token($args);
   }
-
 }

@@ -71,6 +71,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\CustomWithDefault::class,
       \TexStacks\Commands\CustomTwoArgWithDefault::class,
       \TexStacks\Commands\CustomTwoArgs::class,
+      \TexStacks\Commands\CustomThreeArgs::class,
     ]);
   }
 
@@ -104,6 +105,10 @@ class ArticleLexer extends BaseLexer
       } else if ($token->command_args[0] == '2' && is_null($token->command_args[1])) {
 
         \TexStacks\Commands\CustomTwoArgs::customAdd($token->body, $token);
+
+      } else if ($token->command_args[0] == '3' && is_null($token->command_args[1])) {
+
+        \TexStacks\Commands\CustomThreeArgs::customAdd($token->body, $token);
 
       }
 
