@@ -3,6 +3,8 @@
 namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Tokenizer;
+use TexStacks\Parsers\LatexParser;
+use TexStacks\Parsers\ArticleLexer;
 
 class BaseLexer
 {
@@ -19,6 +21,22 @@ class BaseLexer
     $this->line_number_offset = $data['line_number_offset'] ?? 1;
 
     $this->default_env = \TexStacks\Commands\Environment::class;
+  }
+
+  private static function recursiveTokenize($text, $line_number_offset = 1) {
+
+    $cleanLatex = LatexParser::cleanLatex($text);
+
+    $lexer = new ArticleLexer(['line_number_offset' => $line_number_offset]);
+
+    try {
+      $tokens = $lexer->tokenize($cleanLatex);
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    return $tokens;
+
   }
 
   public function tokenize(string $latex_src)
@@ -149,7 +167,12 @@ class BaseLexer
           throw new \Exception($message);
         }
 
-        $this->tokenizer->addToken($token);
+        if ($ClassName::type() === 'cmd:custom-macro' ) {
+          $subTokens = self::recursiveTokenize($token->body, $this->tokenizer->getLineNumber());
+          $this->tokenizer->addTokens($subTokens);
+        } else {
+          $this->tokenizer->addToken($token);
+        }
 
         // Backup if token is a command with no signature
         if ($signature === '' && is_null($env)) $this->tokenizer->backup();

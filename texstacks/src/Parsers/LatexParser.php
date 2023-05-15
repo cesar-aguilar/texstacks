@@ -35,7 +35,7 @@ class LatexParser
 
     $this->raw_src = $args['latex_src'] ?? '';
 
-    $this->src = $this->preProcessRawSource();
+    $this->src = self::cleanLatex($this->raw_src);
 
     $this->preamble_parser = new PreambleParser($this->src);
 
@@ -105,8 +105,6 @@ class LatexParser
         'cmd:action' => 'handleActionCommandNode',
 
         'cmd:arg' => 'handleArgCommandNode',
-
-        'cmd:custom-macro' => 'handleCustomNode',
 
         default => 'addToCurrentNode',
       };
@@ -206,14 +204,14 @@ class LatexParser
     return $parser->tree->document();
   }
 
-  private function preProcessRawSource()
+  public static function cleanLatex($raw_text)
   {
     $search_replace = [
       '<' => '&lt;',
       '>' => '&gt;',
     ];
 
-    return str_replace(array_keys($search_replace), array_values($search_replace), $this->raw_src);
+    return str_replace(array_keys($search_replace), array_values($search_replace), $raw_text);
   }
 
   private function init(): void
@@ -351,7 +349,7 @@ class LatexParser
     /* If token was the end of a list-env/bibliography-env then we need to move up the tree 
       to find the first list-env/bibliography-env node */
 
-    $parent = $this->current_node->parent()->closest($token->type);
+    $parent = $this->current_node->parent()?->closest($token->type);
 
     $this->current_node = $parent?->parent() ?? $this->tree->document();
 
@@ -540,24 +538,6 @@ class LatexParser
       'starred' => $is_starred,
       'counter' => 0,
     ];
-  }
-
-  private function handleCustomNode($token): void
-  {
-    if ($this->current_node->pathToRootHasType(['environment:displaymath', 'inlinemath', 'verbatim'])) {
-      $this->addToCurrentNode($token);
-      return;
-    }
-
-    $new_node = $this->createCommandNode($token);
-
-    if (StrHelper::isNotAlpha($new_node->body)) {
-      $command_content = self::parseText($new_node->body, $new_node->line_number);
-      $new_node->setCommandContent($command_content);
-    }
-
-    $this->tree->addNode($new_node, $this->current_node);
-
   }
 
   private function createCommandNode($token): mixed

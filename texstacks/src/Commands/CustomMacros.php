@@ -78,8 +78,8 @@ class CustomMacros extends CommandGroup {
     $args['body'] = str_replace($hash_nums, $values, $defn);
 
     // Rename the arguments to arg1, arg2, etc., possibly used by the Node class
-    $keys = array_map( fn($num) => 'arg' . $num , range(1, $nargs));    
-    $args['command_args'] = array_combine($keys, $values);
+    // $keys = array_map( fn($num) => 'arg' . $num , range(1, $nargs));
+    // $args['command_args'] = array_combine($keys, $values);
  
     return new Token($args);
   }

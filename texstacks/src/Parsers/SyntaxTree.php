@@ -23,6 +23,13 @@ class SyntaxTree
     }
   }
 
+  public function addNodes($nodes, $parent = null)
+  {
+    foreach ($nodes as $node) {
+      $this->addNode($node, $parent);
+    }
+  }
+
   public function prependNode($node)
   {
     if ($this->document) {

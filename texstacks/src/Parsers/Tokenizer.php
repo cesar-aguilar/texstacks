@@ -70,6 +70,13 @@ class Tokenizer extends TextScanner
 
   }
 
+  public function addTokens(array $tokens)
+  {
+    foreach ($tokens as $token) {
+      $this->addToken($token);
+    }
+  }
+
   public function getLastToken()
   {
     $count = count($this->tokens);
@@ -335,7 +342,7 @@ class Tokenizer extends TextScanner
       }
     }
 
-    // $this->dumpTokensLineRange(56, 60);
+    // $this->dumpTokensLineRange(1, 1000);
     // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
 
   }

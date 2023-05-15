@@ -76,10 +76,9 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\TheoremEnv::add($token->command_content);
     }
 
-    else if (str_contains($token->command_name, 'newcommand')) {
+    else if ($token->type === 'cmd:newcommand') {
       // Register the new command token in CustomMacros
       \TexStacks\Commands\CustomMacros::customAdd($token);
- 
     }
 
   }
