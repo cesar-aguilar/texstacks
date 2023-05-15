@@ -169,6 +169,17 @@ class Tokenizer extends TextScanner
     ];
   }
 
+  public function addDollarMath()
+  {
+
+    if ($this->peek() === "$") {
+      $this->addDisplayMathToken();
+    } else {
+      $this->addInlineMathToken();
+    }
+
+  }
+
   public function addInlineMathToken($char = null)
   {
 
@@ -190,6 +201,8 @@ class Tokenizer extends TextScanner
 
   public function addDisplayMathToken($char = null)
   {
+
+    $this->forward();
 
     if ($char === null) {
       $this->in_displaymath = !$this->in_displaymath;
@@ -224,6 +237,24 @@ class Tokenizer extends TextScanner
       'command_options' => '',
       'line_number' => $this->line_number,
     ]);
+  }
+
+  public function addControlSymbol($char)
+  {
+    $this->command_name = $char;
+
+    if ($char === '(' || $char === ')') {
+      $this->addInlineMathToken($char);
+    }
+    else if ($char === '[' || $char === ']') {
+      $this->addDisplayMathToken($char);
+    }
+    else if ($this->isAccent($char)) {
+      $this->addAccentToken($char);
+    }
+    else {
+      $this->addSymbolToken($char);
+    }
   }
 
   public function addSymbolToken(string $char)
@@ -301,6 +332,12 @@ class Tokenizer extends TextScanner
         'line_number' => $this->line_number,
       ]));
     }
+  }
+
+  public function addUnknownCommandToBuffer() {
+    $this->addToBuffer("\\" . $this->command_name);
+    // Backup because cursor is one after the command name
+    $this->backup();
   }
 
   public function consumeCommandName() {

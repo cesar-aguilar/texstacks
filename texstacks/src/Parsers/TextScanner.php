@@ -20,6 +20,7 @@ class TextScanner {
    */
   public function forward()
   {
+    $this->prev_char = $this->getChar();
     $this->cursor++;
     if ($this->getChar() === "\n") $this->line_number++;
   }
@@ -59,7 +60,7 @@ class TextScanner {
   /**
    *
    */
-  protected function peek()
+  public function peek()
   {
     return $this->cursor + 1 < $this->num_chars ? $this->stream[$this->cursor + 1] : null;
   }

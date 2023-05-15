@@ -64,22 +64,7 @@ class BaseLexer
       }
 
       if ($char === "$") {
-
-        if ($this->tokenizer->getNextChar() === "$") {
-          try {
-            $this->tokenizer->addDisplayMathToken();
-          } catch (\Exception $e) {
-            throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
-          }
-        } else {
-          $this->tokenizer->backup();
-          try {
-            $this->tokenizer->addInlineMathToken();
-          } catch (\Exception $e) {
-            throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
-          }
-        }
-
+        $this->tokenizer->addDollarMath();
         continue;
       }
 
@@ -97,28 +82,8 @@ class BaseLexer
 
       // If char is non-alphabetic then we have a control symbol
       if (!ctype_alpha($char ?? '')) {
-
-        if ($char === '(' || $char === ')') {
-          $this->tokenizer->addInlineMathToken($char);
-          continue;
-        }
-
-        else if ($char === '[' || $char === ']') {
-          $this->tokenizer->addDisplayMathToken($char);
-          continue;
-        }
-
-        else if ($this->tokenizer->isAccent($char)) {
-          $this->tokenizer->addAccentToken($char);
-          continue;
-        }
-
-        else {
-          $this->tokenizer->command_name = $char;
-          $this->tokenizer->addSymbolToken($char);
-          continue;
-        }
-
+        $this->tokenizer->addControlSymbol($char);
+        continue;
       }
 
       // The current char is alphabetic so consume and
@@ -183,12 +148,13 @@ class BaseLexer
         continue 2;
       }
 
+      // If we get here then we have an unknown command
       if (is_null($env)) {
-        $this->tokenizer->addToBuffer("\\" . $this->tokenizer->command_name);
-        $this->tokenizer->backup();
+        $this->tokenizer->addUnknownCommandToBuffer();
         continue;
       }
 
+      // If we get here then we have an unknown environment
       $token = $this->tokenizer->command_name === 'end'
         ? $this->default_env::end($this->tokenizer->getEndEnvTokenData($env))
         : $this->default_env::make($this->tokenizer->getTokenData('', $env));
