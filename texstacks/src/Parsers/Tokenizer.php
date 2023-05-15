@@ -94,7 +94,8 @@ class Tokenizer extends TextScanner
       if ($signature === '{}' || $signature === '+{}') {
 
         $content = $this->getCommandContent(move_forward: str_contains($signature, '+'));
-        if (!is_null($env)) $args = [$content];
+        // if (!is_null($env)) $args = [$content];
+        $args = [$content];
 
       } else if ($signature === '[]') {
 
@@ -127,9 +128,10 @@ class Tokenizer extends TextScanner
       } else if ($signature === '[]{}') {
 
         list($content, $options) = $this->getCmdWithOptionsArg($signature);
-        if (!is_null($env)) $args = [$content];
+        // if (!is_null($env)) $args = [$content];
+        $args = [$content];
 
-      } else if (in_array($signature, ['{}{}', '{}{}{}'])) {
+      } else if (in_array($signature, ['{}{}', '{}{}{}', '[]{}{}', '[]{}{}{}', '{}{}{}{}'])) {
 
         list($args, $options) = $this->getCommandArgs($signature);
 

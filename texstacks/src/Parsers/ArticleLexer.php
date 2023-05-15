@@ -66,12 +66,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\TwoArgs::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArg::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::class,
-      \TexStacks\Commands\CustomBasic::class,
-      \TexStacks\Commands\CustomOneArg::class,
-      \TexStacks\Commands\CustomWithDefault::class,
-      \TexStacks\Commands\CustomTwoArgWithDefault::class,
-      \TexStacks\Commands\CustomTwoArgs::class,
-      \TexStacks\Commands\CustomThreeArgs::class,
+      \TexStacks\Commands\CustomMacros::class,
     ]);
   }
 
@@ -82,36 +77,9 @@ class ArticleLexer extends BaseLexer
     }
 
     else if (str_contains($token->command_name, 'newcommand')) {
-      /* Add custom defined commands to the appropriate command group 
-       * depending on signature of the newly defined command
-       */
-
-      if (is_null($token->command_args[0])) {
-
-        \TexStacks\Commands\CustomBasic::customAdd($token->body, $token);
-
-      } else if ($token->command_args[0] == '1' && is_null($token->command_args[1])) {
-
-        \TexStacks\Commands\CustomOneArg::customAdd($token->body, $token);
-
-      } else if ($token->command_args[0] == '1' && !is_null($token->command_args[1])) {
-
-        \TexStacks\Commands\CustomWithDefault::customAdd($token->body, $token);
-
-      } else if ($token->command_args[0] == '2' && !is_null($token->command_args[1])) {
-
-        \TexStacks\Commands\CustomTwoArgWithDefault::customAdd($token->body, $token);
-
-      } else if ($token->command_args[0] == '2' && is_null($token->command_args[1])) {
-
-        \TexStacks\Commands\CustomTwoArgs::customAdd($token->body, $token);
-
-      } else if ($token->command_args[0] == '3' && is_null($token->command_args[1])) {
-
-        \TexStacks\Commands\CustomThreeArgs::customAdd($token->body, $token);
-
-      }
-
+      // Register the new command token in CustomMacros
+      \TexStacks\Commands\CustomMacros::customAdd($token);
+ 
     }
 
   }

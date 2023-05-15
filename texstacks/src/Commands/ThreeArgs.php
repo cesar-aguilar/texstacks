@@ -12,7 +12,7 @@ class ThreeArgs extends CommandGroup
 
   protected static $commands = [];
 
-  public static function signature()
+  public static function signature($command_name = null)
   {
     return '{}{}{}';
   }

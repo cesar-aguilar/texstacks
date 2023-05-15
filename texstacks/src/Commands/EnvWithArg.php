@@ -9,7 +9,7 @@ class EnvWithArg extends Environment
 
   public static $type = "environment:arg";
 
-  public static function signature()
+  public static function signature($command_name = null)
   {
     return '+{}';
   }

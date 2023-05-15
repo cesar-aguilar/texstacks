@@ -20,7 +20,7 @@ class TwoArgs extends CommandGroup
     // 'settoheight',
   ];
 
-  public static function signature()
+  public static function signature($command_name = null)
   {
     return '{}{}';
   }

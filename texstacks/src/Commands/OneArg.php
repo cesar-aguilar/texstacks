@@ -13,7 +13,7 @@ class OneArg extends CommandGroup {
     'theoremstyle',
   ];
 
-  public static function signature() {
+  public static function signature($command_name = null) {
     return '{}';
   }
 

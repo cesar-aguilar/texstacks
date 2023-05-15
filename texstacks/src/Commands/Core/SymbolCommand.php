@@ -24,7 +24,7 @@ class SymbolCommand extends CommandWithOptions {
     ',',
   ];
 
-  public static function signature() {
+  public static function signature($command_name = null) {
     return '+[]';
   }
 

@@ -131,7 +131,7 @@ class BaseLexer
           continue 2;
         }
 
-        $signature = $ClassName::signature();
+        $signature = $ClassName::signature($this->tokenizer->command_name);
 
         // If begin env and env contains optional argument then need to move forward
         // because cursor is at the } character of \begin{env-name}

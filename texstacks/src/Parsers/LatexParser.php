@@ -106,11 +106,7 @@ class LatexParser
 
         'cmd:arg' => 'handleArgCommandNode',
 
-        'cmd:custom-basic',
-        'cmd:custom-arg',
-        'cmd:custom-option',
-        'cmd:custom-option-arg',
-        'cmd:custom-two-args', => 'handleCustomNode',
+        'cmd:custom-macro' => 'handleCustomNode',
 
         default => 'addToCurrentNode',
       };
