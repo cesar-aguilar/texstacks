@@ -379,7 +379,7 @@ class Tokenizer extends TextScanner
       }
     }
 
-    // $this->dumpTokensLineRange(1, 1000);
+    // $this->dumpTokensLineRange(10, 38);
     // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
 
   }

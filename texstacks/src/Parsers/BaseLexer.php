@@ -17,7 +17,6 @@ class BaseLexer
 
   public function __construct($data = [])
   {
-
     $this->line_number_offset = $data['line_number_offset'] ?? 1;
 
     $this->default_env = \TexStacks\Commands\Environment::class;

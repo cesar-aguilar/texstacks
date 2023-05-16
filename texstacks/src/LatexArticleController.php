@@ -78,9 +78,9 @@ class LatexArticleController
   {
     $front_matter = $this->parser->getFrontMatter();
 
-    $front_matter['title'] = Renderer::render($front_matter['title']);
+    $front_matter['title'] = isset($front_matter['title']) ? Renderer::render($front_matter['title']) : '';
 
-    foreach ($front_matter['authors'] as $author) {
+    foreach ($front_matter['authors'] ?? [] as $author) {
       $author->name = Renderer::render($author->name);
     }
 

@@ -45,6 +45,10 @@ class FontCommandRenderer
 
             'centerline' => "<div style=\"text-align: center\">$body</div>",
 
+            'underline' => "<span style=\"text-decoration: underline\">$body</span>",
+
+            'phantom' => "<span style=\"color: transparent\">$body</span>",
+
             default => "\\" . $node->commandName() . "{" . $body . "}"
         };
     }
