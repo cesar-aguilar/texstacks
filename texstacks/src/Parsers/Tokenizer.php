@@ -24,9 +24,9 @@ class Tokenizer extends TextScanner
 
   public string $command_name;
 
-  public function __construct($latex_src, $line_number_offset = 1)
+  public function __construct($latex_src, $line_number = 1)
   {
-    $this->line_number = $line_number_offset;
+    $this->line_number = $line_number;
     $this->setStream($latex_src);
   }
 

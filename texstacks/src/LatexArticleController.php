@@ -51,7 +51,7 @@ class LatexArticleController
       'ref_labels' => $ref_labels,
     ]);
 
-    $this->lexer = new BaseLexer(['library' => $library]);
+    $this->lexer = new BaseLexer($library);
 
     try {
       $tokens = $this->lexer->tokenize($this->parser->getSrc());

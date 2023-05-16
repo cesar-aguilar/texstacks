@@ -2,12 +2,10 @@
 
 namespace TexStacks\Parsers;
 
-class ArticleTokenLibrary
-{
+use TexStacks\Parsers\TokenLibrary;
 
-  private $command_groups = [];
-  private $default_env;
-  private $updatable_commands = [];
+class ArticleTokenLibrary extends TokenLibrary
+{
 
   /**
    * 
@@ -74,35 +72,11 @@ class ArticleTokenLibrary
       \TexStacks\Commands\CustomMacros::class,
     ];
   }
-  
-  /**
-   * 
-   */
-  public function getCommandGroups()
-  {
-    return $this->command_groups;
-  }
 
   /**
    * 
    */
-  public function defaultEnv()
-  {
-    return $this->default_env;
-  }
-
-  /**
-   * 
-   */
-  public function isUpdatable($command_name) {
-    return in_array($command_name, $this->updatable_commands);
-  }
-
-  /**
-   * 
-   */
-  public function update($token)
-  {
+  public function update($token): void {
     if (str_contains($token->command_name, 'newtheorem')) {
       \TexStacks\Commands\TheoremEnv::add($token->command_content);
     }
@@ -111,36 +85,6 @@ class ArticleTokenLibrary
       // Register the new command token in CustomMacros
       \TexStacks\Commands\CustomMacros::customAdd($token);
     }
-
   }
-
-  /**
-   * 
-   */
-  private function registerCommandGroup($class_name)
-  {
-    if (is_array($class_name)) {
-      foreach ($class_name as $name) {
-        $this->command_groups[] = $name;
-      }
-      return;
-    }
-
-    $this->command_groups[] = $class_name;
-  }
-
-  /**
-   * 
-   */
-  private function addUpdatableCommand($command)
-  {
-    if (is_array($command)) {
-      $this->updatable_commands = array_merge($this->updatable_commands, $command);
-    } else {
-      $this->updatable_commands[] = $command;
-    }
-  }
-
-
 
 }

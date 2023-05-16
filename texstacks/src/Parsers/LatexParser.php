@@ -179,7 +179,7 @@ class LatexParser
     $this->tree->prependNode($node);
   }
 
-  private static function parseText($text, $line_number_offset = 0): Node
+  private static function parseText($text, $line_number = 1): Node
   {
 
     $parser = new self([
@@ -187,13 +187,12 @@ class LatexParser
       'latex_src' => $text,
     ]);
 
-    $lexer = new BaseLexer(['line_number_offset' => $line_number_offset]);
-
     try {
-      $tokens = $lexer->tokenize($parser->getSrc());
+      $tokens = (new BaseLexer)->tokenize($parser->getSrc(), $line_number);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
+
     try {
       $parser->parse($tokens);
     } catch (\Exception $e) {

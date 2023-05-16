@@ -8,21 +8,17 @@ class BaseLexer
 {
 
   private $tokenizer;
-  private $line_number_offset;
   private static $library;
 
-  public function __construct($data = [])
+  public function __construct(TokenLibrary $library = null)
   {
-    $this->line_number_offset = $data['line_number_offset'] ?? 1;
-    self::$library = self::$library ?? $data['library'] ?? null;
+    self::$library = self::$library ?? $library ?? null;
   }
 
-  private static function recursiveTokenize($text, $line_number_offset = 1) {
-
-    $lexer = new self(['line_number_offset' => $line_number_offset]);
+  private static function recursiveTokenize($text, $line_number = 1) {
 
     try {
-      $tokens = $lexer->tokenize($text);
+      $tokens = (new self)->tokenize($text, $line_number);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
@@ -31,12 +27,12 @@ class BaseLexer
 
   }
 
-  public function tokenize(string $latex_src)
+  public function tokenize(string $latex_src, int $line_number = 1)
   {
 
     if (trim($latex_src) === '') return [];
 
-    $this->tokenizer = new Tokenizer($latex_src, $this->line_number_offset);
+    $this->tokenizer = new Tokenizer($latex_src, $line_number);
 
     while (!is_null($char = $this->tokenizer->getNextChar())) {
 
