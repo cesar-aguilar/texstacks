@@ -2,14 +2,19 @@
 
 namespace TexStacks\Parsers;
 
-use TexStacks\Parsers\BaseLexer;
-
-class ArticleLexer extends BaseLexer
+class ArticleTokenLibrary
 {
 
+  private $command_groups = [];
+  private $default_env;
+  private $updatable_commands = [];
+
+  /**
+   * 
+   */
   public function __construct($data = [])
   {
-    parent::__construct($data);
+    $this->default_env = \TexStacks\Commands\Environment::class;
 
     $this->addUpdatableCommand(\TexStacks\Commands\Core\NewTheorem::list());
     $this->addUpdatableCommand(\TexStacks\Commands\Core\NewCommands::list());
@@ -26,7 +31,7 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\Core\ReferenceCommands::add($data['ref_labels']);
     }
 
-    $this->registerCommandGroup([
+    $this->command_groups = [
       \TexStacks\Commands\Core\PreambleCommands::class,
       \TexStacks\Commands\Core\NewCommands::class,
       \TexStacks\Commands\Core\NewEnvironments::class,
@@ -67,10 +72,36 @@ class ArticleLexer extends BaseLexer
       \TexStacks\Commands\AmsArt\AmsArtOneArg::class,
       \TexStacks\Commands\AmsArt\AmsArtOneArgPreOptions::class,
       \TexStacks\Commands\CustomMacros::class,
-    ]);
+    ];
+  }
+  
+  /**
+   * 
+   */
+  public function getCommandGroups()
+  {
+    return $this->command_groups;
   }
 
-  protected function update($token)
+  /**
+   * 
+   */
+  public function defaultEnv()
+  {
+    return $this->default_env;
+  }
+
+  /**
+   * 
+   */
+  public function isUpdatable($command_name) {
+    return in_array($command_name, $this->updatable_commands);
+  }
+
+  /**
+   * 
+   */
+  public function update($token)
   {
     if (str_contains($token->command_name, 'newtheorem')) {
       \TexStacks\Commands\TheoremEnv::add($token->command_content);
@@ -83,6 +114,24 @@ class ArticleLexer extends BaseLexer
 
   }
 
+  /**
+   * 
+   */
+  private function registerCommandGroup($class_name)
+  {
+    if (is_array($class_name)) {
+      foreach ($class_name as $name) {
+        $this->command_groups[] = $name;
+      }
+      return;
+    }
+
+    $this->command_groups[] = $class_name;
+  }
+
+  /**
+   * 
+   */
   private function addUpdatableCommand($command)
   {
     if (is_array($command)) {
@@ -91,4 +140,7 @@ class ArticleLexer extends BaseLexer
       $this->updatable_commands[] = $command;
     }
   }
+
+
+
 }

@@ -18,7 +18,7 @@ class Tokenizer extends TextScanner
 
   private string $buffer = '';
   private array $tokens = [];
-  protected static $newCommandTokens = [];
+  private static $newCommandTokens = [];
   private bool $in_inlinemath = false;
   private bool $in_displaymath = false;
 

@@ -6,7 +6,7 @@ use TexStacks\Nodes\Node;
 use TexStacks\Helpers\StrHelper;
 use TexStacks\Nodes\NodeFactory;
 use TexStacks\Parsers\SyntaxTree;
-use TexStacks\Parsers\ArticleLexer;
+use TexStacks\Parsers\BaseLexer;
 use TexStacks\Helpers\SectionCounter;
 use TexStacks\Parsers\PreambleParser;
 
@@ -187,7 +187,7 @@ class LatexParser
       'latex_src' => $text,
     ]);
 
-    $lexer = new ArticleLexer(['line_number_offset' => $line_number_offset]);
+    $lexer = new BaseLexer(['line_number_offset' => $line_number_offset]);
 
     try {
       $tokens = $lexer->tokenize($parser->getSrc());

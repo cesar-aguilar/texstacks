@@ -4,8 +4,9 @@ namespace TexStacks;
 
 use TexStacks\Parsers\LatexParser;
 use TexStacks\Parsers\AuxParser;
-use TexStacks\Parsers\ArticleLexer;
+use TexStacks\Parsers\BaseLexer;
 use TexStacks\Renderers\Renderer;
+use TexStacks\Parsers\ArticleTokenLibrary;
 
 class LatexArticleController
 {
@@ -45,17 +46,19 @@ class LatexArticleController
 
     $this->parser = new LatexParser(['latex_src' => $this->latex_src]);
 
-    $this->lexer = new ArticleLexer([
+    $library = new ArticleTokenLibrary([
       'citations' => $citations,
       'ref_labels' => $ref_labels,
     ]);
+
+    $this->lexer = new BaseLexer(['library' => $library]);
 
     try {
       $tokens = $this->lexer->tokenize($this->parser->getSrc());
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
-
+    // dd($tokens);
     try {
       $this->parser->parse($tokens);
     } catch (\Exception $e) {

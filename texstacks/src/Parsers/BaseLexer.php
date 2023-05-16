@@ -3,33 +3,26 @@
 namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Tokenizer;
-use TexStacks\Parsers\LatexParser;
-use TexStacks\Parsers\ArticleLexer;
 
 class BaseLexer
 {
 
   private $tokenizer;
   private $line_number_offset;
-  private $command_groups = [];
-  private $default_env;
-  protected $updatable_commands = [];
+  private static $library;
 
   public function __construct($data = [])
   {
     $this->line_number_offset = $data['line_number_offset'] ?? 1;
-
-    $this->default_env = \TexStacks\Commands\Environment::class;
+    self::$library = self::$library ?? $data['library'] ?? null;
   }
 
   private static function recursiveTokenize($text, $line_number_offset = 1) {
 
-    $cleanLatex = LatexParser::cleanLatex($text);
-
-    $lexer = new ArticleLexer(['line_number_offset' => $line_number_offset]);
+    $lexer = new self(['line_number_offset' => $line_number_offset]);
 
     try {
-      $tokens = $lexer->tokenize($cleanLatex);
+      $tokens = $lexer->tokenize($text);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
@@ -44,7 +37,7 @@ class BaseLexer
     if (trim($latex_src) === '') return [];
 
     $this->tokenizer = new Tokenizer($latex_src, $this->line_number_offset);
- 
+
     while (!is_null($char = $this->tokenizer->getNextChar())) {
 
       if ($char === '~') {
@@ -101,7 +94,7 @@ class BaseLexer
         }
       }
 
-      foreach ($this->command_groups as $ClassName) {
+      foreach (self::$library->getCommandGroups() as $ClassName) {
 
         if (!$ClassName::contains($env ?? $this->tokenizer->command_name)) continue;
 
@@ -142,7 +135,7 @@ class BaseLexer
         if ($signature === '' && is_null($env)) $this->tokenizer->backup();
 
         // Some tokens affect how other tokens are generated
-        if ($this->isUpdatable($token->command_name)) $this->update($token);
+        if (self::$library->isUpdatable($token->command_name)) self::$library->update($token);
 
         continue 2;
       }
@@ -155,55 +148,17 @@ class BaseLexer
 
       // If we get here then we have an unknown environment
       $token = $this->tokenizer->command_name === 'end'
-        ? $this->default_env::end($this->tokenizer->getEndEnvTokenData($env))
-        : $this->default_env::make($this->tokenizer->getTokenData('', $env));
+        ? self::$library->defaultEnv()::end($this->tokenizer->getEndEnvTokenData($env))
+        : self::$library->defaultEnv()::make($this->tokenizer->getTokenData('', $env));
 
       $this->tokenizer->addToken($token);
     }
 
     $this->tokenizer->addBufferAsToken();
 
-    $this->postProcessTokens();
+    $this->tokenizer->postProcessTokens();
 
     return $this->tokenizer->getTokens();
   }
-
-  public function registerCommandGroup($class_name)
-  {
-    if (is_array($class_name)) {
-      foreach ($class_name as $name) {
-        $this->command_groups[] = $name;
-      }
-      return;
-    }
-
-    $this->command_groups[] = $class_name;
-  }
-
-  public function registerDefaultEnvironment($class_name)
-  {
-    $this->default_env = $class_name;
-  }
-
-  public function getCommandGroups()
-  {
-    return $this->command_groups;
-  }
-
-  public function getDefaultEnvironment()
-  {
-    return $this->default_env;
-  }
-
-  protected function postProcessTokens(): void
-  {
-    $this->tokenizer->postProcessTokens();
-  }
-
-  protected function update($token) {}
-
-  protected function isUpdatable($command_name) {
-    return in_array($command_name, $this->updatable_commands);
-  }
-
+  
 }
