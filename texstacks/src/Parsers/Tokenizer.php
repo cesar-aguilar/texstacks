@@ -353,7 +353,7 @@ class Tokenizer extends TextScanner
     return key_exists($char, $this->ACCENT_CMDS);
   }
 
-  public function postProcessTokens() {
+  public function postProcessTokens($is_recursive) {
 
     foreach ($this->tokens as $k => $token) {
 
@@ -379,8 +379,10 @@ class Tokenizer extends TextScanner
       }
     }
 
-    // $this->dumpTokensLineRange(10, 38);
-    // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
+    if (!$is_recursive) {
+      // $this->dumpTokensLineRange(10, 38);
+      // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
+    }
 
   }
 

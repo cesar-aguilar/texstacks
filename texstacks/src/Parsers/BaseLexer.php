@@ -9,16 +9,20 @@ class BaseLexer
 
   private $tokenizer;
   private static $library;
+  private bool $is_recursive;
 
-  public function __construct(TokenLibrary $library = null)
+  public function __construct(TokenLibrary $library = null, bool $is_recursive = false)
   {
     self::$library = self::$library ?? $library ?? null;
+    $this->is_recursive = $is_recursive;
   }
 
   private static function recursiveTokenize($text, $line_number = 1) {
 
+    $lexer = new self(is_recursive: true);
+
     try {
-      $tokens = (new self)->tokenize($text, $line_number);
+      $tokens = $lexer->tokenize($text, $line_number);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
@@ -152,7 +156,7 @@ class BaseLexer
 
     $this->tokenizer->addBufferAsToken();
 
-    $this->tokenizer->postProcessTokens();
+    $this->tokenizer->postProcessTokens($this->is_recursive);
 
     return $this->tokenizer->getTokens();
   }
