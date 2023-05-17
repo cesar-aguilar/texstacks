@@ -79,14 +79,14 @@ class BaseLexer
       }
 
       // The current char is alphabetic so consume and
-      // return the command name; cursor will be a non-alphabetic char
+      // set the command name; cursor will be a non-alphabetic char
       // when complete
-      $this->tokenizer->command_name = $this->tokenizer->consumeCommandName();
+      $this->tokenizer->setCommandName();
 
       // Make token
       $env = null;
 
-      if ($this->tokenizer->command_name === 'begin' || $this->tokenizer->command_name === 'end') {
+      if ($this->tokenizer->isEnv()) {
         try {
           $env = $this->tokenizer->consumeEnvName();
         } catch (\Exception $e) {
@@ -106,10 +106,11 @@ class BaseLexer
           continue 2;
         }
 
+        // If we get here, then $ClassName contains the command or environment (begin)
         $signature = $ClassName::signature($this->tokenizer->command_name);
 
-        // If begin env and env contains optional argument then need to move forward
-        // because cursor is at the } character of \begin{env-name}
+        // If we are at a begin env and env contains optional argument then we need to
+        // move forward because the cursor is at the } character of \begin{env-name}
         if(!is_null($env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->tokenizer->forward();
 
         try {

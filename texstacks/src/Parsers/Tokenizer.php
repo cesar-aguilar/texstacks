@@ -147,6 +147,7 @@ class Tokenizer extends TextScanner
     } catch (\Exception $e) {
       $msg = $e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__;
       $msg .= "<br>&nbsp;&nbsp; Called as " . __CLASS__ . "->" . __FUNCTION__ . "('$signature', '$env')";
+      $msg .= "<br>&nbsp;&nbsp; Command name: " . $this->command_name;
       throw new \Exception($msg);
     }
 
@@ -340,12 +341,16 @@ class Tokenizer extends TextScanner
     $this->backup();
   }
 
-  public function consumeCommandName() {
-    return $this->consumeUntilNonAlpha();
+  public function setCommandName() {
+    $this->command_name = $this->consumeUntilNonAlpha();
   }
 
   public function consumeLatexComment() {
     $this->consumeUntilTarget("\n");
+  }
+
+  public function isEnv() {
+    return $this->command_name === 'begin' || $this->command_name === 'end';
   }
 
   public function isAccent($char)
