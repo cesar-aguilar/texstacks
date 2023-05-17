@@ -162,15 +162,6 @@ class Tokenizer extends TextScanner
     ];
   }
 
-  public function getEndEnvTokenData()
-  {
-    return [
-      'command_name' => $this->command_name,
-      'command_content' => $this->env,
-      'line_number' => $this->line_number,
-    ];
-  }
-
   public function addDollarMath()
   {
 
@@ -200,6 +191,20 @@ class Tokenizer extends TextScanner
     ]);
   }
 
+  public function addEnvToken($tokenType) {
+
+    // $this->command_name is either begin or end
+
+    $this->addToken(new Token([
+      'type' => $tokenType,
+      'command_name' => $this->command_name,
+      'command_content' => $this->env,
+      'command_src' => "\\" . $this->command_name . "{" . $this->env . "}",
+      'line_number' => $this->line_number,
+    ]));
+
+  }
+
   public function addControlSymbol($char)
   {
     $this->command_name = $char;
@@ -218,10 +223,19 @@ class Tokenizer extends TextScanner
     }
   }
   
-  public function addUnknownCommandToBuffer() {
-    $this->addToBuffer("\\" . $this->command_name);
-    // Backup because cursor is one after the command name
-    $this->backup();
+  public function addUnregisteredToken($tokenType) {
+
+    if (is_null($this->env)) {
+      // Add unknown command to buffer
+      $this->addToBuffer("\\" . $this->command_name);
+      // Backup because cursor is one after the command name
+      $this->backup();
+      return;
+    }
+
+    // If we get here then we have an unknown environment (begin or end)
+    $this->addEnvToken($tokenType);
+
   }
 
   public function setCommandName() {

@@ -101,8 +101,7 @@ class BaseLexer
         if ($ClassName::is_env() && is_null($this->tokenizer->env)) continue;
 
         if ($this->tokenizer->commandIsEndEnv()) {
-          $token = $ClassName::end($this->tokenizer->getEndEnvTokenData());
-          $this->tokenizer->addToken($token);
+          $this->tokenizer->addEnvToken($ClassName::type());
           continue 2;
         }
 
@@ -141,18 +140,9 @@ class BaseLexer
         continue 2;
       }
 
-      // If we get here then we have an unknown command
-      if (is_null($this->tokenizer->env)) {
-        $this->tokenizer->addUnknownCommandToBuffer();
-        continue;
-      }
+      // If we get here then we have an unknown command/environment
+      $this->tokenizer->addUnregisteredToken(self::$library->defaultEnv()::type());
 
-      // If we get here then we have an unknown environment
-      $token = $this->tokenizer->command_name === 'end'
-        ? self::$library->defaultEnv()::end($this->tokenizer->getEndEnvTokenData())
-        : self::$library->defaultEnv()::make($this->tokenizer->getTokenData(''));
-
-      $this->tokenizer->addToken($token);
     }
 
     $this->tokenizer->addBufferAsToken();
