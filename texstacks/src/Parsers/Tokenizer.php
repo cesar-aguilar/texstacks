@@ -182,47 +182,6 @@ class Tokenizer extends TextScanner
 
   }
 
-  public function addInlineMathToken($char = null)
-  {
-
-    if ($char === null) {
-      $this->in_inlinemath = !$this->in_inlinemath;
-      $char = $this->in_inlinemath ? '(' : ')';
-    }
-
-    // Treat inline math like a begin/end environment
-    $this->addToken(new Token([
-      'type' => 'inlinemath',
-      'command_name' => $char === '(' ? 'begin' : 'end',
-      'command_content' => 'inlinemath',
-      'command_options' => '',
-      'command_src' => "\\" . $char,
-      'line_number' => $this->line_number,
-    ]));
-  }
-
-  public function addDisplayMathToken($char = null)
-  {
-
-    $this->forward();
-
-    if ($char === null) {
-      $this->in_displaymath = !$this->in_displaymath;
-      $char = $this->in_displaymath ? '[' : ']';
-    }
-
-    // Treat display math like a begin/end environment
-    $cmd = $char === '[' ? 'begin' : 'end';
-
-    $this->addToken(new Token([
-      'type' => 'environment:displaymath',
-      'command_name' => $cmd,
-      'command_content' => 'equation*',
-      'command_src' => "\\" . $cmd . "{equation*}",
-      'line_number' => $this->line_number,
-    ]));
-  }
-
   public function addGroupEnvToken($char)
   {
     $this->addBufferAsToken();
@@ -258,8 +217,110 @@ class Tokenizer extends TextScanner
       $this->addSymbolToken($char);
     }
   }
+  
+  public function addUnknownCommandToBuffer() {
+    $this->addToBuffer("\\" . $this->command_name);
+    // Backup because cursor is one after the command name
+    $this->backup();
+  }
 
-  public function addSymbolToken(string $char)
+  public function setCommandName() {
+    $this->command_name = $this->consumeUntilNonAlpha();
+  }
+
+  public function setEnvName() {
+    $this->env = $this->consumeEnvName();
+  }
+
+  public function consumeLatexComment() {
+    $this->consumeUntilTarget("\n");
+  }
+
+  public function commandIsEnv() {
+    return $this->command_name === 'begin' || $this->command_name === 'end';
+  }
+
+  public function commandIsEndEnv() {
+    return !is_null($this->env) && $this->command_name === 'end';
+  }
+
+  public function postProcessTokens($is_recursive) {
+
+    foreach ($this->tokens as $k => $token) {
+
+      if ($token->type !== 'text') continue;
+
+      if ($k === count($this->tokens) - 1) continue;
+
+      if ($k === 0) {
+        $this->tokens[$k]->body = rtrim($token->body, "\n");
+        continue;
+      }
+
+      $next_type = $this->tokens[$k + 1]->type;
+
+      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group') {
+        $this->tokens[$k]->body = rtrim($token->body);
+      }
+
+      $prev_type = $this->tokens[$k - 1]->type;
+
+      if ((str_contains($prev_type, 'environment') || $prev_type == 'cmd:section') && $prev_type !== 'environment:group') {
+        $this->tokens[$k]->body = ltrim($token->body);
+      }
+    }
+
+    if (!$is_recursive) {
+      // $this->dumpTokensLineRange(10, 38);
+      // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
+    }
+
+  }
+
+  /*  PRIVATE METHODS */
+
+  private function addInlineMathToken($char = null)
+  {
+
+    if ($char === null) {
+      $this->in_inlinemath = !$this->in_inlinemath;
+      $char = $this->in_inlinemath ? '(' : ')';
+    }
+
+    // Treat inline math like a begin/end environment
+    $this->addToken(new Token([
+      'type' => 'inlinemath',
+      'command_name' => $char === '(' ? 'begin' : 'end',
+      'command_content' => 'inlinemath',
+      'command_options' => '',
+      'command_src' => "\\" . $char,
+      'line_number' => $this->line_number,
+    ]));
+  }
+
+  private function addDisplayMathToken($char = null)
+  {
+
+    $this->forward();
+
+    if ($char === null) {
+      $this->in_displaymath = !$this->in_displaymath;
+      $char = $this->in_displaymath ? '[' : ']';
+    }
+
+    // Treat display math like a begin/end environment
+    $cmd = $char === '[' ? 'begin' : 'end';
+
+    $this->addToken(new Token([
+      'type' => 'environment:displaymath',
+      'command_name' => $cmd,
+      'command_content' => 'equation*',
+      'command_src' => "\\" . $cmd . "{equation*}",
+      'line_number' => $this->line_number,
+    ]));
+  }
+
+  private function addSymbolToken(string $char)
   {
 
     // Move one character forward and
@@ -287,7 +348,7 @@ class Tokenizer extends TextScanner
     $this->addToken($token);
   }
 
-  public function addAccentToken($char)
+  private function addAccentToken($char)
   {
     $this->forward();
     $this->consumeWhiteSpace();
@@ -336,68 +397,9 @@ class Tokenizer extends TextScanner
     }
   }
 
-  public function addUnknownCommandToBuffer() {
-    $this->addToBuffer("\\" . $this->command_name);
-    // Backup because cursor is one after the command name
-    $this->backup();
-  }
-
-  public function setCommandName() {
-    $this->command_name = $this->consumeUntilNonAlpha();
-  }
-
-  public function setEnvName() {
-    $this->env = $this->consumeEnvName();
-  }
-
-  public function consumeLatexComment() {
-    $this->consumeUntilTarget("\n");
-  }
-
-  public function commandIsEnv() {
-    return $this->command_name === 'begin' || $this->command_name === 'end';
-  }
-
-  public function commandIsEndEnv() {
-    return !is_null($this->env) && $this->command_name === 'end';
-  }
-
-  public function isAccent($char)
+  private function isAccent($char)
   {
     return key_exists($char, $this->ACCENT_CMDS);
-  }
-
-  public function postProcessTokens($is_recursive) {
-
-    foreach ($this->tokens as $k => $token) {
-
-      if ($token->type !== 'text') continue;
-
-      if ($k === count($this->tokens) - 1) continue;
-
-      if ($k === 0) {
-        $this->tokens[$k]->body = rtrim($token->body, "\n");
-        continue;
-      }
-
-      $next_type = $this->tokens[$k + 1]->type;
-
-      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group') {
-        $this->tokens[$k]->body = rtrim($token->body);
-      }
-
-      $prev_type = $this->tokens[$k - 1]->type;
-
-      if ((str_contains($prev_type, 'environment') || $prev_type == 'cmd:section') && $prev_type !== 'environment:group') {
-        $this->tokens[$k]->body = ltrim($token->body);
-      }
-    }
-
-    if (!$is_recursive) {
-      // $this->dumpTokensLineRange(10, 38);
-      // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
-    }
-
   }
 
   private function getCmdWithArgOptions(string|null $type = null)
