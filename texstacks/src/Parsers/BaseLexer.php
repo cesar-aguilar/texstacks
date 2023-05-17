@@ -84,11 +84,11 @@ class BaseLexer
       $this->tokenizer->setCommandName();
 
       // Make token
-      $env = null;
+      $this->tokenizer->env = null;
 
-      if ($this->tokenizer->isEnv()) {
+      if ($this->tokenizer->commandIsEnv()) {
         try {
-          $env = $this->tokenizer->consumeEnvName();
+          $this->tokenizer->setEnvName();
         } catch (\Exception $e) {
           throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
         }
@@ -96,12 +96,12 @@ class BaseLexer
 
       foreach (self::$library->getCommandGroups() as $ClassName) {
 
-        if (!$ClassName::contains($env ?? $this->tokenizer->command_name)) continue;
+        if (!$ClassName::contains($this->tokenizer->env ?? $this->tokenizer->command_name)) continue;
 
-        if ($ClassName::is_env() && is_null($env)) continue;
+        if ($ClassName::is_env() && is_null($this->tokenizer->env)) continue;
 
-        if (!is_null($env) && $this->tokenizer->command_name === 'end') {
-          $token = $ClassName::end($this->tokenizer->getEndEnvTokenData($env));
+        if ($this->tokenizer->commandIsEndEnv()) {
+          $token = $ClassName::end($this->tokenizer->getEndEnvTokenData());
           $this->tokenizer->addToken($token);
           continue 2;
         }
@@ -111,10 +111,10 @@ class BaseLexer
 
         // If we are at a begin env and env contains optional argument then we need to
         // move forward because the cursor is at the } character of \begin{env-name}
-        if(!is_null($env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->tokenizer->forward();
+        if(!is_null($this->tokenizer->env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->tokenizer->forward();
 
         try {
-          $token = $ClassName::make($this->tokenizer->getTokenData($signature, $env));
+          $token = $ClassName::make($this->tokenizer->getTokenData($signature));
         } catch (\Exception $e) {
           $message = $e->getMessage();
           $message .= "<br>Command: " . $this->tokenizer->command_name;
@@ -133,7 +133,7 @@ class BaseLexer
         }
 
         // Backup if token is a command with no signature
-        if ($signature === '' && is_null($env)) $this->tokenizer->backup();
+        if ($signature === '' && is_null($this->tokenizer->env)) $this->tokenizer->backup();
 
         // Some tokens affect how other tokens are generated
         if (self::$library->isUpdatable($token->command_name)) self::$library->update($token);
@@ -142,15 +142,15 @@ class BaseLexer
       }
 
       // If we get here then we have an unknown command
-      if (is_null($env)) {
+      if (is_null($this->tokenizer->env)) {
         $this->tokenizer->addUnknownCommandToBuffer();
         continue;
       }
 
       // If we get here then we have an unknown environment
       $token = $this->tokenizer->command_name === 'end'
-        ? self::$library->defaultEnv()::end($this->tokenizer->getEndEnvTokenData($env))
-        : self::$library->defaultEnv()::make($this->tokenizer->getTokenData('', $env));
+        ? self::$library->defaultEnv()::end($this->tokenizer->getEndEnvTokenData())
+        : self::$library->defaultEnv()::make($this->tokenizer->getTokenData(''));
 
       $this->tokenizer->addToken($token);
     }

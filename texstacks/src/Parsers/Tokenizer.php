@@ -23,6 +23,7 @@ class Tokenizer extends TextScanner
   private bool $in_displaymath = false;
 
   public string $command_name;
+  public string|null $env;
 
   public function __construct($latex_src, $line_number = 1)
   {
@@ -93,7 +94,7 @@ class Tokenizer extends TextScanner
     die();
   }
 
-  public function getTokenData($signature, $env = null)
+  public function getTokenData($signature)
   {
 
     try {
@@ -146,26 +147,26 @@ class Tokenizer extends TextScanner
 
     } catch (\Exception $e) {
       $msg = $e->getMessage() . "<br>Function: " . __FUNCTION__ . " on Line: " . __LINE__;
-      $msg .= "<br>&nbsp;&nbsp; Called as " . __CLASS__ . "->" . __FUNCTION__ . "('$signature', '$env')";
+      $msg .= "<br>&nbsp;&nbsp; Called as " . __CLASS__ . "->" . __FUNCTION__ . "('$signature')";
       $msg .= "<br>&nbsp;&nbsp; Command name: " . $this->command_name;
+      $msg .= "<br>&nbsp;&nbsp; Environment name: " . $this->env;
       throw new \Exception($msg);
     }
 
     return [
       'command_name' => $this->command_name,
-      'command_content' => $env ?? $content ?? null,
+      'command_content' => $this->env ?? $content ?? null,
       'command_args' => $args ?? [],
       'command_options' => $options ?? null,
       'line_number' => $this->line_number,
     ];
   }
 
-  public function getEndEnvTokenData($env)
+  public function getEndEnvTokenData()
   {
-
     return [
       'command_name' => $this->command_name,
-      'command_content' => $env,
+      'command_content' => $this->env,
       'line_number' => $this->line_number,
     ];
   }
@@ -345,12 +346,20 @@ class Tokenizer extends TextScanner
     $this->command_name = $this->consumeUntilNonAlpha();
   }
 
+  public function setEnvName() {
+    $this->env = $this->consumeEnvName();
+  }
+
   public function consumeLatexComment() {
     $this->consumeUntilTarget("\n");
   }
 
-  public function isEnv() {
+  public function commandIsEnv() {
     return $this->command_name === 'begin' || $this->command_name === 'end';
+  }
+
+  public function commandIsEndEnv() {
+    return !is_null($this->env) && $this->command_name === 'end';
   }
 
   public function isAccent($char)
