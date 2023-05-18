@@ -40,24 +40,6 @@ class Tokenizer extends TextScanner
     $this->buffer .= $text;
   }
 
-  public function addBufferAsToken()
-  {
-
-    if ($this->buffer === '') return;
-
-    // Replace more than two newlines with two newlines
-    // $text = preg_replace('/\n{3,}/', "\n\n", $this->buffer);
-    $text = $this->buffer;
-
-    $this->tokens[] = new Token([
-      'type' => 'text',
-      'body' => $text,
-      'line_number' => $this->line_number,
-    ]);
-
-    $this->buffer = '';
-  }
-
   public function addToken(Token $token)
   {
 
@@ -260,6 +242,12 @@ class Tokenizer extends TextScanner
 
   public function postProcessTokens($is_recursive) {
 
+    // Important: Add anything left in the buffer as text Token
+    $this->addBufferAsToken();
+
+    /* This is a hack to trim white space/newlines
+     * before and after section headings and environments
+     */
     foreach ($this->tokens as $k => $token) {
 
       if ($token->type !== 'text') continue;
@@ -284,14 +272,35 @@ class Tokenizer extends TextScanner
       }
     }
 
-    if (!$is_recursive) {
-      // $this->dumpTokensLineRange(10, 38);
-      // $this->dumpTokensOfType(\TexStacks\Commands\CustomOneArg::type());
-    }
+    // if (!$is_recursive) {
+      // $this->dumpTokensLineRange(38, 39);
+      // $this->dumpTokensOfType([
+      //   \TexStacks\Commands\Core\FontDeclarations::type(),
+      //   \TexStacks\Commands\Core\FontEnv::type(),
+      // ]);
+    // }
 
   }
 
   /*  PRIVATE METHODS */
+
+  private function addBufferAsToken()
+  {
+
+    if ($this->buffer === '') return;
+
+    // Replace more than two newlines with two newlines
+    // $text = preg_replace('/\n{3,}/', "\n\n", $this->buffer);
+    $text = $this->buffer;
+
+    $this->tokens[] = new Token([
+      'type' => 'text',
+      'body' => $text,
+      'line_number' => $this->line_number,
+    ]);
+
+    $this->buffer = '';
+  }
 
   private function addInlineMathToken($char = null)
   {
@@ -990,10 +999,12 @@ class Tokenizer extends TextScanner
 
   }
 
-  private function dumpTokensOfType($token_type) {
+  private function dumpTokensOfType($token_types) {
 
-    $this->tokens = array_filter($this->tokens, function ($token) use ($token_type) {
-      return $token->type === $token_type;
+    $token_types = is_array($token_types) ? $token_types : [$token_types];
+
+    $this->tokens = array_filter($this->tokens, function ($token) use ($token_types) {
+      return in_array($token->type, $token_types);
     });
 
     dd($this->tokens);

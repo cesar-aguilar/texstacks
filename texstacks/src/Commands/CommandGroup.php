@@ -38,6 +38,11 @@ class CommandGroup
     return str_starts_with(static::$type, 'environment:');
   }
 
+  public static function isCustomMacro()
+  {
+    return static::$type === 'cmd:custom-macro';
+  }
+
   public static function list()
   {
     return static::$commands;

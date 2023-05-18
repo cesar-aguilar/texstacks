@@ -83,7 +83,6 @@ class BaseLexer
       // when complete
       $this->tokenizer->setCommandName();
 
-      // Make token
       $this->tokenizer->env = null;
 
       if ($this->tokenizer->commandIsEnv()) {
@@ -94,62 +93,76 @@ class BaseLexer
         }
       }
 
-      foreach (self::$library->getCommandGroups() as $ClassName) {
+      $commandGroup = self::$library->getCommandGroup($this->tokenizer->command_name, $this->tokenizer->env);
 
-        if (!$ClassName::contains($this->tokenizer->env ?? $this->tokenizer->command_name)) continue;
-
-        if ($ClassName::is_env() && is_null($this->tokenizer->env)) continue;
-
-        if ($this->tokenizer->commandIsEndEnv()) {
-          $this->tokenizer->addEnvToken($ClassName::type());
-          continue 2;
-        }
-
-        // If we get here, then $ClassName contains the command or environment (begin)
-        $signature = $ClassName::signature($this->tokenizer->command_name);
-
-        // If we are at a begin env and env contains optional argument then we need to
-        // move forward because the cursor is at the } character of \begin{env-name}
-        if(!is_null($this->tokenizer->env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->tokenizer->forward();
-
-        try {
-          $token = $ClassName::make($this->tokenizer->getTokenData($signature));
-        } catch (\Exception $e) {
-          $message = $e->getMessage();
-          $message .= "<br>Command: " . $this->tokenizer->command_name;
-          $message .= "<br>$ClassName";
-          $message .= "<br>Line Number: " . $this->tokenizer->getLineNumber();
-          $message .= "<br>File: " . __FILE__;
-          $message .= "<br>Code line: " . __LINE__;
-          throw new \Exception($message);
-        }
-
-        if ($ClassName::type() === 'cmd:custom-macro' ) {
-          $subTokens = self::recursiveTokenize($token->body, $this->tokenizer->getLineNumber());
-          $this->tokenizer->addTokens($subTokens);
-        } else {
-          $this->tokenizer->addToken($token);
-        }
-
-        // Backup if token is a command with no signature
-        if ($signature === '' && is_null($this->tokenizer->env)) $this->tokenizer->backup();
-
-        // Some tokens affect how other tokens are generated
-        if (self::$library->isUpdatable($token->command_name)) self::$library->update($token);
-
-        continue 2;
+      // When command/environment is not contained in any command group
+      if (!$commandGroup) {
+        $this->tokenizer->addUnregisteredToken(self::$library->defaultEnv());
+        continue;
       }
 
-      // If we get here then we have an unknown command/environment
-      $this->tokenizer->addUnregisteredToken(self::$library->defaultEnv()::type());
+      // Just in case the name of the command is a registered environment name in commandGroup
+      // This should be deleted: May 18, 2023
+      // if ($commandGroup::is_env() && is_null($this->tokenizer->env)) continue;
+
+      // Short circuit if ending an environment
+      if ($this->tokenizer->commandIsEndEnv()) {
+        $this->tokenizer->addEnvToken($commandGroup::type());
+        continue;
+      }
+
+      // Get signature of command/environment to get the rest of the token data
+      $signature = $commandGroup::signature($this->tokenizer->command_name);
+
+      // If we are at a begin env and env contains an optional argument then we need to
+      // move forward because the cursor is at the } character of \begin{env-name}
+      if(!is_null($this->tokenizer->env) && $signature && $signature[0] === '[' && $signature[1] === ']') $this->tokenizer->forward();
+
+      // Make the token for the command/environment
+      try {
+        $token = $commandGroup::make($this->tokenizer->getTokenData($signature));
+      } catch (\Exception $e) {
+        $message = $this->getErrorMessage($e, $commandGroup);
+        throw new \Exception($message);
+      }
+
+      // Now add the token.  If the token was for a custom macro, we need
+      // to tokenize the token body which contains the custom macro definition
+      if ($commandGroup::isCustomMacro()) {
+        $subTokens = self::recursiveTokenize($token->body, $this->tokenizer->getLineNumber());
+        $this->tokenizer->addTokens($subTokens);
+      } else {
+        $this->tokenizer->addToken($token);
+      }
+
+      // Backup if token is a command with no signature because the
+      // cursor is at the character after the command name
+      if ($signature === '' && is_null($this->tokenizer->env)) $this->tokenizer->backup();
+
+      // Update the library if token affects how other tokens are generated
+      // For example, \newcommand affects how the new command is tokenized
+      if (self::$library->isUpdatable($token->command_name)) self::$library->update($token);
 
     }
-
-    $this->tokenizer->addBufferAsToken();
 
     $this->tokenizer->postProcessTokens($this->is_recursive);
 
     return $this->tokenizer->getTokens();
+  }
+
+  /**
+   *
+   */
+  private function getErrorMessage($e, $commandGroup): string
+  {
+    $message = $e->getMessage();
+    $message .= "<br>Command: " . $this->tokenizer->command_name;
+    $message .= "<br>$commandGroup";
+    $message .= "<br>Line Number: " . $this->tokenizer->getLineNumber();
+    $message .= "<br>File: " . __FILE__;
+    $message .= "<br>Code line: " . __LINE__;
+
+    return $message;
   }
   
 }

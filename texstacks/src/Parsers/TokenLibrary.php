@@ -11,17 +11,9 @@ abstract class TokenLibrary {
   /**
    * 
    */
-  public function getCommandGroups()
-  {
-    return $this->command_groups;
-  }
-
-  /**
-   * 
-   */
   public function defaultEnv()
   {
-    return $this->default_env;
+    return $this->default_env::type();
   }
 
   /**
@@ -46,6 +38,51 @@ abstract class TokenLibrary {
     } else {
       $this->updatable_commands[] = $command;
     }
+  }
+
+  /**
+   * 
+   */
+  public function getCommandGroup($commandName, $envName) {
+
+    $commandGroup = null;
+    $is_env = $commandName === 'begin' || $commandName === 'end';
+
+    if($is_env) {
+
+      $queryName = $envName ?? '';
+      // Will ensure that we only check for environment groups
+      $lambda = fn($x) => $x;
+
+    } else {
+
+      $queryName = $commandName;
+      // Will ensure that we only check for non-environment groups, i.e, command groups
+      $lambda = fn($x) => !$x;
+
+    }
+
+    foreach ($this->getCommandGroups() as $registeredCommandGroup) {
+
+      if($lambda($registeredCommandGroup::is_env()) && $registeredCommandGroup::contains($queryName)) {
+        $commandGroup = $registeredCommandGroup;
+        break;
+      }
+
+    }
+
+    return $commandGroup;
+
+  }
+
+
+
+  /**
+   * 
+   */
+  private function getCommandGroups()
+  {
+    return $this->command_groups;
   }
 
   /**
