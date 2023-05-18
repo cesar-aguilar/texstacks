@@ -18,7 +18,6 @@ class Tokenizer extends TextScanner
 
   private string $buffer = '';
   private array $tokens = [];
-  private static $newCommandTokens = [];
   private bool $in_inlinemath = false;
   private bool $in_displaymath = false;
 
@@ -42,15 +41,9 @@ class Tokenizer extends TextScanner
 
   public function addToken(Token $token)
   {
-
     $this->addBufferAsToken();
 
-    if ($token->type === 'cmd:newcommand') {
-      self::$newCommandTokens[$token->body] = $token;
-    }
-
     $this->tokens[] = $token;
-
   }
 
   public function addTokens(array $tokens)
@@ -69,7 +62,6 @@ class Tokenizer extends TextScanner
 
   public function prettyPrintTokens()
   {
-
     foreach ($this->tokens as $token) {
       echo $token;
     }
