@@ -26,8 +26,7 @@ class Tokenizer extends TextScanner
 
   public function __construct($latex_src, $line_number = 1)
   {
-    $this->line_number = $line_number;
-    $this->setStream($latex_src);
+    $this->setStream($latex_src, $line_number);
   }
 
   public function getTokens() {
@@ -132,7 +131,7 @@ class Tokenizer extends TextScanner
       'command_content' => $this->env ?? $content ?? null,
       'command_args' => $args ?? [],
       'command_options' => $options ?? null,
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ];
   }
 
@@ -161,7 +160,7 @@ class Tokenizer extends TextScanner
       'command_content' => $command_content,
       'command_src' => '',
       'command_options' => '',
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]);
   }
 
@@ -174,7 +173,7 @@ class Tokenizer extends TextScanner
       'command_name' => $this->command_name,
       'command_content' => $this->env,
       'command_src' => "\\" . $this->command_name . "{" . $this->env . "}",
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]));
 
   }
@@ -288,7 +287,7 @@ class Tokenizer extends TextScanner
     $this->tokens[] = new Token([
       'type' => 'text',
       'body' => $text,
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]);
 
     $this->buffer = '';
@@ -309,7 +308,7 @@ class Tokenizer extends TextScanner
       'command_content' => 'inlinemath',
       'command_options' => '',
       'command_src' => "\\" . $char,
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]));
   }
 
@@ -331,7 +330,7 @@ class Tokenizer extends TextScanner
       'command_name' => $cmd,
       'command_content' => 'equation*',
       'command_src' => "\\" . $cmd . "{equation*}",
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]));
   }
 
@@ -357,7 +356,7 @@ class Tokenizer extends TextScanner
       'command_name' => $char,
       'command_options' => $options,
       'body' => $char,
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]);
 
     $this->addToken($token);
@@ -400,14 +399,14 @@ class Tokenizer extends TextScanner
       'command_content' => $letter,
       'command_src' => $command_src,
       'body' => $body,
-      'line_number' => $this->line_number,
+      'line_number' => $this->lineNumber(),
     ]));
 
     if ($tail) {
       $this->addToken(new Token([
         'type' => 'text',
         'body' => $tail,
-        'line_number' => $this->line_number,
+        'line_number' => $this->lineNumber(),
       ]));
     }
   }
@@ -431,14 +430,14 @@ class Tokenizer extends TextScanner
       if (!in_array($char, $ALLOWED_CHARS)) {
         if (!$ARGS_DONE) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
         $this->backup();
         break;
       }
 
       if ($this->is_space($char)) {
-        $this->cursor++;
+        $this->forward();
         continue;
       }
 
@@ -446,7 +445,7 @@ class Tokenizer extends TextScanner
 
         if (!$ARGS_DONE) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         try {
@@ -493,11 +492,11 @@ class Tokenizer extends TextScanner
 
       if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+        throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
       }
 
       if ($this->is_space($char)) {
-        $this->cursor++;
+        $this->forward();
         continue;
       }
 
@@ -505,7 +504,7 @@ class Tokenizer extends TextScanner
 
         if ($OPTIONS) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         try {
@@ -516,7 +515,7 @@ class Tokenizer extends TextScanner
 
         $src .= '[' . $options . ']';
 
-        $this->cursor++;
+        $this->forward();
         $OPTIONS = true;
         continue;
       }
@@ -554,7 +553,7 @@ class Tokenizer extends TextScanner
       }
 
       if ($this->is_space($char)) {
-        $this->cursor++;
+        $this->forward();
         continue;
       }
 
@@ -608,13 +607,13 @@ class Tokenizer extends TextScanner
 
       if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
 
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+      if ($char === "\n" && $this->getPrevChar() === "\n") {
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
@@ -627,7 +626,7 @@ class Tokenizer extends TextScanner
       if ($this->is_space($char)) continue;
 
       if ($char === "\\" && $GOT_COMMAND) {
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
@@ -649,7 +648,7 @@ class Tokenizer extends TextScanner
 
         if (!$GOT_COMMAND) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         try {
@@ -712,13 +711,13 @@ class Tokenizer extends TextScanner
 
       if (!in_array($char, $ALLOWED_CHARS)) {
         $src .= $char;
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
 
-      if ($char === "\n" && $this->prev_char === "\n") {
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+      if ($char === "\n" && $this->getPrevChar() === "\n") {
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
@@ -734,7 +733,7 @@ class Tokenizer extends TextScanner
 
         if (!$GOT_COMMAND) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         try {
@@ -759,7 +758,7 @@ class Tokenizer extends TextScanner
         try {
           $content = $this->getContentUpToDelimiter('}', '{');
         } catch (\Exception $e) {
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         $src .= '{' . $content . '}';
@@ -801,7 +800,7 @@ class Tokenizer extends TextScanner
 
         if (!$GOT_NAME || !$GOT_HEADING) {
           $src .= $char;
-          $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+          $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
           $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
           throw new \Exception($message);
         }
@@ -821,7 +820,7 @@ class Tokenizer extends TextScanner
 
         if (!$GOT_NAME) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         try {
@@ -842,7 +841,7 @@ class Tokenizer extends TextScanner
 
         if ($GOT_NAME && $GOT_HEADING) break;
 
-        throw new \Exception("$src <--- Parse error on line {$this->line_number}: Missing name or theorem heading in newtheorem command");
+        throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: Missing name or theorem heading in newtheorem command");
       }
 
       if ($char === '{') {
@@ -897,13 +896,13 @@ class Tokenizer extends TextScanner
       if (!in_array($char, $ALLOWED_CHARS)) {
 
         $src .= $char;
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
       //
-      else if ($char === "\n" && $this->prev_char === "\n") {
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+      else if ($char === "\n" && $this->getPrevChar() === "\n") {
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }
@@ -920,7 +919,7 @@ class Tokenizer extends TextScanner
 
         if (!$has_options || $GOT_OPTIONS || !empty($args)) {
           $src .= $char;
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         try {
@@ -939,7 +938,7 @@ class Tokenizer extends TextScanner
         try {
           $content = $this->getContentUpToDelimiter('}', '{');
         } catch (\Exception $e) {
-          throw new \Exception("$src <--- Parse error on line {$this->line_number}: invalid syntax");
+          throw new \Exception("$src <--- Parse error on line {$this->lineNumber()}: invalid syntax");
         }
 
         $src .= '{' . $content . '}';
@@ -968,7 +967,7 @@ class Tokenizer extends TextScanner
         $content = ltrim($this->getCommandContent());
       } catch (\Exception $e) {
         $src .= '{';
-        $message = "$src <--- Parse error on line {$this->line_number}: invalid syntax";
+        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
         $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
         throw new \Exception($message);
       }

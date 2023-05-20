@@ -129,7 +129,7 @@ class BaseLexer
       // Now add the token.  If the token was for a custom macro, we need
       // to tokenize the token body which contains the custom macro definition
       if ($commandGroup::isCustomMacro()) {
-        $subTokens = self::recursiveTokenize($token->body, $this->tokenizer->getLineNumber());
+        $subTokens = self::recursiveTokenize($token->body, $this->tokenizer->lineNumber());
         $this->tokenizer->addTokens($subTokens);
       } else {
         $this->tokenizer->addToken($token);
@@ -158,7 +158,7 @@ class BaseLexer
     $message = $e->getMessage();
     $message .= "<br>Command: " . $this->tokenizer->command_name;
     $message .= "<br>$commandGroup";
-    $message .= "<br>Line Number: " . $this->tokenizer->getLineNumber();
+    $message .= "<br>Line Number: " . $this->tokenizer->lineNumber();
     $message .= "<br>File: " . __FILE__;
     $message .= "<br>Code line: " . __LINE__;
 

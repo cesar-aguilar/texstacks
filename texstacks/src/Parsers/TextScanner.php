@@ -3,16 +3,17 @@
 namespace TexStacks\Parsers;
 
 class TextScanner {
-  
-  protected int $line_number;
-  protected string $stream;
-  protected int $cursor = -1;
-  protected string|null $prev_char;
-  protected int $num_chars = 0;
 
-  protected function setStream(string $latex_src) {
+  private int $line_number;
+  private string $stream;
+  private int $cursor = -1;
+  private string|null $prev_char;
+  private int $length = 0;
+
+  protected function setStream(string $latex_src, int $line_number = 1) {
+    $this->line_number = $line_number;
     $this->stream = $latex_src;
-    $this->num_chars = strlen($this->stream);
+    $this->length = strlen($this->stream);
   }
 
   /**
@@ -40,7 +41,7 @@ class TextScanner {
    */
   public function getChar()
   {
-    return $this->cursor < $this->num_chars ? $this->stream[$this->cursor] : null;
+    return $this->cursor < $this->length ? $this->stream[$this->cursor] : null;
   }
 
   /**
@@ -60,12 +61,20 @@ class TextScanner {
   /**
    *
    */
-  public function peek()
+  public function getPrevChar()
   {
-    return $this->cursor + 1 < $this->num_chars ? $this->stream[$this->cursor + 1] : null;
+    return $this->prev_char;
   }
 
-  public function getLineNumber()
+  /**
+   *
+   */
+  public function peek()
+  {
+    return $this->cursor + 1 < $this->length ? $this->stream[$this->cursor + 1] : null;
+  }
+
+  public function lineNumber()
   {
     return $this->line_number;
   }
@@ -174,7 +183,7 @@ class TextScanner {
       }
     }
 
-    if ($this->cursor === $this->num_chars) {
+    if ($this->cursor === $this->length) {
       $so_far = $left_delimiter . $content;
       $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
       $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter, $left_delimiter)";
@@ -207,7 +216,7 @@ class TextScanner {
       $char = $this->getNextChar();
     }
 
-    if ($this->cursor === $this->num_chars) {
+    if ($this->cursor === $this->length) {
       $so_far = $left_delimiter . $content;
       $message = "$so_far <--- Parse error on line {$this->line_number}: missing $right_delimiter";
       $message .= "<br>Function: " . __FUNCTION__ . "($right_delimiter)";
@@ -243,7 +252,7 @@ class TextScanner {
       $char = $this->getNextChar();
     }
 
-    if ($this->cursor === $this->num_chars) {
+    if ($this->cursor === $this->length) {
       throw new \Exception("Expected } at line {$this->line_number}");
     }
 
@@ -256,7 +265,7 @@ class TextScanner {
   protected function consumeSpaceUntilTarget($target)
   {
 
-    if ($this->cursor === $this->num_chars) {
+    if ($this->cursor === $this->length) {
       throw new \Exception("Unexpected end of file on line {$this->line_number}");
     }
 
@@ -282,7 +291,7 @@ class TextScanner {
   protected function consumeWhiteSpace($backup = false)
   {
 
-    if ($this->cursor === $this->num_chars) {
+    if ($this->cursor === $this->length) {
       return;
     }
 
@@ -313,7 +322,7 @@ class TextScanner {
 
     $alpha_text = '';
 
-    while (!is_null($char) && (ctype_alpha($char) || $char === '*')) {
+    while (!is_null($char) && (ctype_alpha($char) || $char === '*' || $char === '@')) {
       $alpha_text .= $char;
       $char = $this->getNextChar();
     }
@@ -327,7 +336,7 @@ class TextScanner {
   protected function consumeUntilTarget($target)
   {
 
-    if ($this->cursor === $this->num_chars) {
+    if ($this->cursor === $this->length) {
       throw new \Exception("Unexpected end of file on line {$this->line_number}");
     }
 
