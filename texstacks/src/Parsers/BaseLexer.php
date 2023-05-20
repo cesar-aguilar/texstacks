@@ -72,8 +72,8 @@ class BaseLexer
         break;
       }
 
-      // If char is non-alphabetic and not an accent then we have a control symbol
-      if (! ctype_alpha($char ?? '') && ! $this->tokenizer->isAccent($char)) {
+      // If math inline or display environment
+      if (in_array($char, ['(', ')', '[', ']'])) {
         $this->tokenizer->addControlSymbol($char);
         continue;
       }

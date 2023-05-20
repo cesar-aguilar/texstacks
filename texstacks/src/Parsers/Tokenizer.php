@@ -122,6 +122,10 @@ class Tokenizer extends TextScanner
         // if (!is_null($env)) $args = [$content];
         $args = [$content];
 
+      } else if ($signature === '+[]') {
+
+        $options = $this->getCmdWithOptions($signature);
+
       } else if (in_array($signature, ['{}{}', '{}{}{}', '[]{}{}', '[]{}{}{}', '{}{}{}{}'])) {
 
         list($args, $options) = $this->getCommandArgs($signature);
@@ -196,9 +200,6 @@ class Tokenizer extends TextScanner
     else if ($char === '[' || $char === ']') {
       $this->addDisplayMathToken($char);
     }
-    else {
-      $this->addSymbolToken($char);
-    }
   }
   
   public function addUnregisteredToken($tokenType) {
@@ -217,7 +218,22 @@ class Tokenizer extends TextScanner
   }
 
   public function setCommandName() {
-    $this->command_name = $this->isAccent($this->getChar()) ? $this->getChar() : $this->consumeUntilNonAlpha();
+
+    // Handles accents
+    if ($this->isAccent($this->getChar())) {
+      $this->command_name = $this->getChar();
+      return;
+    }
+
+    // Handles control symbols
+    if (! ctype_alpha($this->getChar()) && $this->getChar() !== '@' && $this->getChar() !== '*') {
+      $this->command_name = $this->getChar();
+      return;
+    }
+
+    // Handles alpha commands (regex [a-zA-Z@]+)
+    $this->command_name = $this->consumeUntilNonAlpha();
+
   }
 
   public function setEnvName() {
@@ -344,33 +360,19 @@ class Tokenizer extends TextScanner
     ]));
   }
 
-  private function addSymbolToken(string $char)
-  {
+  // private function addSymbolToken(string $char)
+  // {
 
-    // Move one character forward and
-    // see if there are any options, this handles
-    // the commands like \\[1cm]
-    $this->getNextChar();
+  //   $token = new Token([
+  //     'type' => 'cmd:symbol',
+  //     'command_name' => $char,
+  //     'command_options' => $options,
+  //     'body' => $char,
+  //     'line_number' => $this->lineNumber(),
+  //   ]);
 
-    try {
-      $options = $this->getCmdWithOptions('');
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    // $token->type = 'cmd:symbol';
-    // $token->body = $char;
-
-    $token = new Token([
-      'type' => 'cmd:symbol',
-      'command_name' => $char,
-      'command_options' => $options,
-      'body' => $char,
-      'line_number' => $this->lineNumber(),
-    ]);
-
-    $this->addToken($token);
-  }
+  //   $this->addToken($token);
+  // }
 
   /* Commands that get token data */
 
@@ -918,6 +920,22 @@ class Tokenizer extends TextScanner
 
     return [$letter, $tail];
 
+  }
+
+  private function getSymboldData()
+  {
+    // Move one character forward and
+    // see if there are any options, this handles
+    // the commands like \\[1cm]
+    $this->getNextChar();
+
+    try {
+      $options = $this->getCmdWithOptions('');
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
+
+    return $options;
   }
 
   private function dumpTokensLineRange($a, $b) {
