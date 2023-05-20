@@ -72,13 +72,13 @@ class BaseLexer
         break;
       }
 
-      // If char is non-alphabetic then we have a control symbol
-      if (!ctype_alpha($char ?? '')) {
+      // If char is non-alphabetic and not an accent then we have a control symbol
+      if (! ctype_alpha($char ?? '') && ! $this->tokenizer->isAccent($char)) {
         $this->tokenizer->addControlSymbol($char);
         continue;
       }
 
-      // The current char is alphabetic so consume and
+      // The current char is alphabetic (or an accent) so consume and
       // set the command name; cursor will be a non-alphabetic char
       // when complete
       $this->tokenizer->setCommandName();
@@ -132,7 +132,7 @@ class BaseLexer
         $subTokens = self::recursiveTokenize($token->body, $this->tokenizer->lineNumber());
         $this->tokenizer->addTokens($subTokens);
       } else {
-        $this->tokenizer->addToken($token);
+        $this->tokenizer->addTokens($token);
       }
 
       // Backup if token is a command with no signature because the

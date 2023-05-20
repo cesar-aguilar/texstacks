@@ -38,15 +38,16 @@ class AccentCommand extends CommandGroup {
 
     $letter = $args['command_content'];
     $char = $args['command_name'];
+    $tail = $args['command_options'];
 
     $args['command_src'] = "\\" . $char . $letter;
 
     if (!in_array($letter, self::VALID_LETTERS)) {
-      $args['body'] = '?';
+      $args['body'] = $letter . $tail;
     } else {
       $accent = self::ACCENT_CMDS[$char];
 
-      $args['body'] = "&$letter$accent;";
+      $args['body'] = "&$letter$accent;$tail";
     }
 
     return new Token($args);

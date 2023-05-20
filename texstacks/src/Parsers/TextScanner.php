@@ -10,7 +10,7 @@ class TextScanner {
   private string|null $prev_char;
   private int $length = 0;
 
-  protected function setStream(string $latex_src, int $line_number = 1) {
+  public function setStream(string $latex_src, int $line_number = 1) {
     $this->line_number = $line_number;
     $this->stream = $latex_src;
     $this->length = strlen($this->stream);
@@ -82,7 +82,7 @@ class TextScanner {
   /**
    *
    */
-  protected function getCommandContent($move_forward = false)
+  public function getCommandContent($move_forward = false)
   {
     if ($move_forward) $this->forward();
 
@@ -110,7 +110,7 @@ class TextScanner {
    * before the $left delimiter, otherwise we break out of the loop
    * which indicates that the $left delimiter is not found.
    */
-  protected function getContentBetweenDelimiters($left_delim, $right_delim)
+  public function getContentBetweenDelimiters($left_delim, $right_delim)
   {
     $content = '';
     $ALLOWED_CHARS = [' ', "\t", $left_delim];
@@ -148,7 +148,7 @@ class TextScanner {
    * contain nested $left_delimiter and $right_delimiter.  Upon
    * success, the cursor will be at the $right_delimiter.
    */
-  protected function getContentUpToDelimiter($right_delimiter, $left_delimiter)
+  public function getContentUpToDelimiter($right_delimiter, $left_delimiter)
   {
     $content = '';
 
@@ -196,7 +196,7 @@ class TextScanner {
   /**
    *
    */
-  protected function getContentUpToDelimiterNoNesting($right_delimiter, $left_delimiter)
+  public function getContentUpToDelimiterNoNesting($right_delimiter, $left_delimiter)
   {
     $content = '';
 
@@ -262,7 +262,7 @@ class TextScanner {
   /**
    *
    */
-  protected function consumeSpaceUntilTarget($target)
+  public function consumeSpaceUntilTarget($target)
   {
 
     if ($this->cursor === $this->length) {
@@ -288,7 +288,7 @@ class TextScanner {
    * After this method is called, the cursor will be at the first
    * non white space character
    */
-  protected function consumeWhiteSpace($backup = false)
+  public function consumeWhiteSpace($backup = false)
   {
 
     if ($this->cursor === $this->length) {
@@ -315,7 +315,7 @@ class TextScanner {
    * After running the method, the cursor will be at
    * a non-alphabetic character
    */
-  protected function consumeUntilNonAlpha($from_cursor = true)
+  public function consumeUntilNonAlpha($from_cursor = true)
   {
 
     $char = $from_cursor ? $this->getChar() : $this->getNextChar();
@@ -333,7 +333,7 @@ class TextScanner {
   /**
    *
    */
-  protected function consumeUntilTarget($target)
+  public function consumeUntilTarget($target)
   {
 
     if ($this->cursor === $this->length) {
@@ -353,7 +353,7 @@ class TextScanner {
     throw new \Exception("Parse error: missing $target on line {$this->line_number}");
   }
 
-  protected function is_space($char) {
+  public function is_space($char) {
     return $char === ' ' || $char === "\t";
   }
 

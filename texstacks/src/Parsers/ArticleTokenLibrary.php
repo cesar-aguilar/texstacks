@@ -43,6 +43,7 @@ class ArticleTokenLibrary extends TokenLibrary
       \TexStacks\Commands\Core\Citations::class,
       \TexStacks\Commands\Core\Footnote::class,
       \TexStacks\Commands\Core\ReferenceCommands::class,
+      \TexStacks\Commands\Core\AccentCommand::class,
       \TexStacks\Commands\Core\AlphaSymbol::class,
       \TexStacks\Commands\Core\DisplayMathEnv::class,
       \TexStacks\Commands\Core\InlineMathEnv::class,

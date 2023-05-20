@@ -3,6 +3,7 @@
 namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Token;
+use TexStacks\Parsers\CommandParser;
 use TexStacks\Parsers\TextScanner;
 
 class Tokenizer extends TextScanner
@@ -21,12 +22,15 @@ class Tokenizer extends TextScanner
   private bool $in_inlinemath = false;
   private bool $in_displaymath = false;
 
+  private CommandParser $cmdParser;
+
   public string $command_name;
   public string|null $env;
 
   public function __construct($latex_src, $line_number = 1)
   {
     $this->setStream($latex_src, $line_number);
+    $this->cmdParser = new CommandParser($latex_src, $line_number);
   }
 
   public function getTokens() {
@@ -38,18 +42,24 @@ class Tokenizer extends TextScanner
     $this->buffer .= $text;
   }
 
-  public function addToken(Token $token)
+  private function addToken(Token $token)
   {
     $this->addBufferAsToken();
 
     $this->tokens[] = $token;
   }
 
-  public function addTokens(array $tokens)
+  public function addTokens(array|Token $tokens)
   {
-    foreach ($tokens as $token) {
-      $this->addToken($token);
+
+    if (is_array($tokens)) {
+      foreach ($tokens as $token) {
+        $this->addToken($token);
+      }
+    } else {
+      $this->addToken($tokens);
     }
+
   }
 
   public function getLastToken()
@@ -104,7 +114,7 @@ class Tokenizer extends TextScanner
 
       } else if ($signature === '^') {
 
-        $content = $this->getAccentData();
+        list($content, $options) = $this->getAccentData();
 
       } else if ($signature === '[]{}') {
 
@@ -180,16 +190,11 @@ class Tokenizer extends TextScanner
 
   public function addControlSymbol($char)
   {
-    $this->command_name = $char;
-
     if ($char === '(' || $char === ')') {
       $this->addInlineMathToken($char);
     }
     else if ($char === '[' || $char === ']') {
       $this->addDisplayMathToken($char);
-    }
-    else if ($this->isAccent($char)) {
-      $this->addAccentToken($char);
     }
     else {
       $this->addSymbolToken($char);
@@ -212,7 +217,7 @@ class Tokenizer extends TextScanner
   }
 
   public function setCommandName() {
-    $this->command_name = $this->consumeUntilNonAlpha();
+    $this->command_name = $this->isAccent($this->getChar()) ? $this->getChar() : $this->consumeUntilNonAlpha();
   }
 
   public function setEnvName() {
@@ -271,6 +276,11 @@ class Tokenizer extends TextScanner
       // ]);
     // }
 
+  }
+
+  public function isAccent($char)
+  {
+    return key_exists($char, $this->ACCENT_CMDS);
   }
 
   /*  PRIVATE METHODS */
@@ -362,61 +372,9 @@ class Tokenizer extends TextScanner
     $this->addToken($token);
   }
 
-  private function addAccentToken($char)
-  {
-    $this->forward();
-    $this->consumeWhiteSpace();
+  /* Commands that get token data */
 
-    if ($this->getChar() === '{') {
-
-      try {
-        $content = ltrim($this->getCommandContent());
-      } catch (\Exception $e) {
-        throw new \Exception($e->getMessage());
-      }
-
-      $letter = $content[0];
-      $tail = substr($content, 1);
-      $command_src = "\\" . $char . "{" . $letter . "}";
-    } else {
-      $letter = $this->getChar();
-      $tail = '';
-      $command_src = "\\" . $char . $letter;
-    }
-
-    if (!in_array($letter, ['a', 'e', 'i', 'o', 'u', 'y', 'n', 'A', 'E', 'I', 'O', 'U', 'Y', 'N'])) {
-      $this->buffer .= $command_src . $tail;
-      return;
-    }
-
-    $accent = $this->ACCENT_CMDS[$char];
-
-    $body = "&$letter$accent;";
-
-    $this->addToken(new Token([
-      'type' => 'cmd:accent',
-      'command_name' => $char,
-      'command_content' => $letter,
-      'command_src' => $command_src,
-      'body' => $body,
-      'line_number' => $this->lineNumber(),
-    ]));
-
-    if ($tail) {
-      $this->addToken(new Token([
-        'type' => 'text',
-        'body' => $tail,
-        'line_number' => $this->lineNumber(),
-      ]));
-    }
-  }
-
-  private function isAccent($char)
-  {
-    return key_exists($char, $this->ACCENT_CMDS);
-  }
-
-  private function getCmdWithArgOptions(string|null $type = null)
+  private function getCmdWithArgOptions()
   {
     $content = '';
     $options = '';
@@ -476,7 +434,7 @@ class Tokenizer extends TextScanner
     return [$content, $options];
   }
 
-  private function getCmdWithOptionsArg($signature, string|null $type = null)
+  private function getCmdWithOptionsArg($signature)
   {
 
     if (str_contains($signature, '+')) $this->forward();
@@ -570,23 +528,6 @@ class Tokenizer extends TextScanner
     }
 
     return $options;
-  }
-
-  private function getCmdWithArgArg()
-  {
-    try {
-      $arg_1 = $this->getCommandContent();
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
-    }
-
-    try {
-      $arg_2 = $this->getCommandContent(move_forward: true);
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage() . "<br>Code line: " . __LINE__);
-    }
-
-    return [$arg_1, $arg_2];
   }
 
   private function getNewCommandData()
@@ -959,24 +900,23 @@ class Tokenizer extends TextScanner
     $this->forward();
     $this->consumeWhiteSpace();
 
-    $src = '\\' . $this->command_name;
-
     if ($this->getChar() === '{') {
 
       try {
         $content = ltrim($this->getCommandContent());
       } catch (\Exception $e) {
-        $src .= '{';
-        $message = "$src <--- Parse error on line {$this->lineNumber()}: invalid syntax";
-        $message .= "<br>Function: " . __FUNCTION__ . " in Code line: " . __LINE__;
-        throw new \Exception($message);
+        throw new \Exception($e->getMessage());
       }
 
+      $letter = $content[0];
+      $tail = substr($content, 1);
+
     } else {
-      $content = $this->getChar();
+      $letter = $this->getChar();
+      $tail = '';
     }
 
-    return $content;
+    return [$letter, $tail];
 
   }
 
