@@ -346,9 +346,8 @@ class Tokenizer extends TextScanner
   private function addDisplayMathToken($char = null)
   {
 
-    $this->forward();
-
     if ($char === null) {
+      $this->forward();
       $this->in_displaymath = !$this->in_displaymath;
       $char = $this->in_displaymath ? '[' : ']';
     }

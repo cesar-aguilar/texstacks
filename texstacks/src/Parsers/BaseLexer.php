@@ -73,7 +73,7 @@ class BaseLexer
       }
 
       // If math inline or display environment
-      if (in_array($char, ['(', ')', '[', ']'])) {
+      if (in_array($char, ['[', ']'])) {
         $this->tokenizer->addControlSymbol($char);
         continue;
       }
