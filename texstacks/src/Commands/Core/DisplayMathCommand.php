@@ -23,8 +23,8 @@ class DisplayMathCommand extends CommandGroup
   {
     $args['type'] = self::$type;
 
-    $cmd = $args['command_content'] === '[' ? 'begin' : 'end';
-    
+    $cmd = $args['command_name'] === '[' ? 'begin' : 'end';
+
     $args['command_src'] = "\\" . $cmd . "{equation*}";
     $args['command_name'] = $cmd;
     $args['command_content'] = 'equation*';

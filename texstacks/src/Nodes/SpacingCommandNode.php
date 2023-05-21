@@ -9,7 +9,7 @@ class SpacingCommandNode extends CommandNode
 
   public function render($body): string
   {
-    if ($this->ancestorOfType(['environment:verbatim', 'environment:displaymath', 'inlinemath'])) return $this->commandSource() . ' ';
+    if ($this->ancestorOfType(['environment:verbatim', 'environment:inlinemath', 'environment:displaymath', 'inlinemath', 'displaymath'])) return $this->commandSource() . ' ';
 
     return match ($this->commandName()) {
       'smallskip' => '<div style="height: 1em;"></div>',

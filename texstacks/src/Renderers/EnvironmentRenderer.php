@@ -12,7 +12,7 @@ class EnvironmentRenderer
     public static function renderNode(EnvironmentNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim']))
+        if ($node->ancestorOfType(['environment:displaymath', 'environment:inlinemath', 'displaymath', 'inlinemath', 'environment:verbatim']))
             return $node->commandSource() . $body . "\\end{{$node->commandContent()}}";
 
         return match ($node->commandContent()) {
@@ -67,7 +67,7 @@ class EnvironmentRenderer
 
     private static function renderUnknownEnvironment(EnvironmentNode $node, string $body = null): string
     {
-        if ($node->ancestorOfType(['environment:displaymath', 'environment:tabular'])) return $body;
+        if ($node->ancestorOfType(['environment:displaymath', 'environment:inlinemath', 'environment:tabular','inlinemath','displaymath'])) return $body;
 
         return "<div class=\"unknown-env\"><div class=\"unknown-env-head\" id=\"{$node->commandLabel()}\">Name: <strong>{$node->commandContent()}</strong></div><div class=\"unknown-env-body\">$body</div></div>";
     }

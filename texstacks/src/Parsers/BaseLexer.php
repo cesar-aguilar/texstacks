@@ -72,12 +72,6 @@ class BaseLexer
         break;
       }
 
-      // If math inline or display environment
-      if (in_array($char, ['[', ']'])) {
-        $this->tokenizer->addControlSymbol($char);
-        continue;
-      }
-
       /* After setting the command for command names that contain only alphabetic
       characters, the cursor will be a non-alphabetic character */
       $this->tokenizer->setCommandName();

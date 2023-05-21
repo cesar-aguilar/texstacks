@@ -31,6 +31,7 @@ class ArticleTokenLibrary extends TokenLibrary
 
     $this->command_groups = [
       \TexStacks\Commands\Core\InlineMathCommand::class,
+      \TexStacks\Commands\Core\DisplayMathCommand::class,
       \TexStacks\Commands\Core\PreambleCommands::class,
       \TexStacks\Commands\Core\NewCommands::class,
       \TexStacks\Commands\Core\NewEnvironments::class,
@@ -63,6 +64,7 @@ class ArticleTokenLibrary extends TokenLibrary
       \TexStacks\Commands\TheoremEnv::class,
       \TexStacks\Commands\Environment::class,
       \TexStacks\Commands\GenericEnv::class,
+      \TexStacks\Commands\Core\InlineMathEnv::class,
       // \TexStacks\Commands\CommandWithOptions::class,
       // \TexStacks\Commands\OneArgPreOptions::class,
       \TexStacks\Commands\OneArg::class,

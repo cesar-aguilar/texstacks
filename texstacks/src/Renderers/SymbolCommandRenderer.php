@@ -13,7 +13,7 @@ class SymbolCommandRenderer
 
     $src = "\\" . $node->body . $options;
 
-    if ($node->ancestorOfType(['environment:displaymath', 'environment:verbatim', 'inlinemath'])) {
+    if ($node->ancestorOfType(['environment:displaymath', 'environment:inlinemath', 'environment:verbatim', 'displaymath', 'inlinemath'])) {
       // if ($node instanceof Node) return $src;
       return $src;
       // return $node->commandSource();

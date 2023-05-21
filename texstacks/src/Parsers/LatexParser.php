@@ -70,7 +70,9 @@ class LatexParser
         'environment:generic',
         'environment:group',
         'inlinemath',
+        'displaymath',
         'environment:displaymath',
+        'environment:inlinemath',
         'environment:verbatim',
         'environment:tabular',
         'environment:list',
@@ -117,7 +119,7 @@ class LatexParser
     }
 
     // if (!$this->called_internally) {
-    //   dd($this->tree->root()->children());
+    //   dd($this->tree->document()->children());
     // }
 
   }

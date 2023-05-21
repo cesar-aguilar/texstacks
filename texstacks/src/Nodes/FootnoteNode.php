@@ -11,7 +11,7 @@ class FootnoteNode extends CommandNode
 
   public function render($body): string
   {
-    if ($this->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) return $this->commandSource();
+    if ($this->ancestorOfType(['environment:displaymath', 'environment:inlinemath', 'displaymath', 'inlinemath', 'environment:verbatim'])) return $this->commandSource();
 
     $body = $this->commandContent();
 

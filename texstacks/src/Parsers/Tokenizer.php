@@ -219,7 +219,7 @@ class Tokenizer extends TextScanner
 
   public function setCommandName() {
 
-    if (in_array($this->getChar(), ['(', ')'])) {
+    if (in_array($this->getChar(), ['(', ')', '[', ']'])) {
       $this->command_name = $this->getChar();
       return;
     }
@@ -278,7 +278,7 @@ class Tokenizer extends TextScanner
 
       $next_type = $this->tokens[$k + 1]->type;
 
-      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group') {
+      if ((str_contains($next_type, 'environment') || $next_type == 'cmd:section') && $next_type !== 'environment:group' && $next_type !== 'environment:inlinemath') {
         $this->tokens[$k]->body = rtrim($token->body);
       }
 
@@ -289,13 +289,12 @@ class Tokenizer extends TextScanner
       }
     }
 
-    // if (!$is_recursive) {
-      // $this->dumpTokensLineRange(38, 39);
+    if (!$is_recursive) {
+      // $this->dumpTokensLineRange(39, 43);
       // $this->dumpTokensOfType([
-      //   \TexStacks\Commands\Core\FontDeclarations::type(),
-      //   \TexStacks\Commands\Core\FontEnv::type(),
+      //   \TexStacks\Commands\Core\DisplayMathCommand::type(),
       // ]);
-    // }
+    }
 
   }
 

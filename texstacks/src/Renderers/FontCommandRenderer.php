@@ -11,7 +11,7 @@ class FontCommandRenderer
     public static function renderNode(CommandNode $node, string $body = null): string
     {
 
-        if ($node->ancestorOfType(['environment:displaymath', 'inlinemath', 'environment:verbatim'])) return $node->commandSource();
+        if ($node->ancestorOfType(['environment:displaymath', 'environment:inlinemath', 'displaymath', 'inlinemath', 'environment:verbatim'])) return $node->commandSource();
 
         $body = $node->commandContent();
 

@@ -33,9 +33,13 @@ class NodeFactory
 
     if ($token->type === 'inlinemath') {
       return new InlineMathNode($args);
+    } else if ($token->type === 'environment:inlinemath') {
+      return new InlineMathNode($args);
     } else if ($token->type === 'environment:group') {
       return new GroupNode($args);
     } else if ($token->type === 'environment:displaymath') {
+      return new DisplayMathNode($args);
+    } else if ($token->type === 'displaymath') {
       return new DisplayMathNode($args);
     } else if ($token->type === 'cmd:section') {
       return new SectionNode($args);
@@ -45,7 +49,9 @@ class NodeFactory
       return new ListNode($args);
     } else if ($token->type === 'cmd:font') {
       return new FontCommandNode($args);
-    } else if ($token->type === 'cmd:symbol' || $token->type === 'cmd:alpha-symbol') {
+    } else if ($token->type === 'cmd:symbol') {
+      return new SymbolNode($args);
+    } else if ($token->type === 'cmd:alpha-symbol') {
       return new SymbolNode($args);
     } else if ($token->type === 'cmd:caption') {
       return new CaptionNode($args);
