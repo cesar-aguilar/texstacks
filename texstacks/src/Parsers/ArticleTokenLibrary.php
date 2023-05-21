@@ -30,6 +30,7 @@ class ArticleTokenLibrary extends TokenLibrary
     }
 
     $this->command_groups = [
+      \TexStacks\Commands\Core\InlineMathCommand::class,
       \TexStacks\Commands\Core\PreambleCommands::class,
       \TexStacks\Commands\Core\NewCommands::class,
       \TexStacks\Commands\Core\NewEnvironments::class,

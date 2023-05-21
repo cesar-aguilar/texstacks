@@ -78,9 +78,8 @@ class BaseLexer
         continue;
       }
 
-      // The current char is alphabetic (or an accent) so consume and
-      // set the command name; cursor will be a non-alphabetic char
-      // when complete
+      /* After setting the command for command names that contain only alphabetic
+      characters, the cursor will be a non-alphabetic character */
       $this->tokenizer->setCommandName();
 
       $this->tokenizer->env = null;

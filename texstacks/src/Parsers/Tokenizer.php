@@ -201,7 +201,7 @@ class Tokenizer extends TextScanner
       $this->addDisplayMathToken($char);
     }
   }
-  
+
   public function addUnregisteredToken($tokenType) {
 
     if (is_null($this->env)) {
@@ -218,6 +218,11 @@ class Tokenizer extends TextScanner
   }
 
   public function setCommandName() {
+
+    if (in_array($this->getChar(), ['(', ')'])) {
+      $this->command_name = $this->getChar();
+      return;
+    }
 
     // Handles accents
     if ($this->isAccent($this->getChar())) {
@@ -359,20 +364,6 @@ class Tokenizer extends TextScanner
       'line_number' => $this->lineNumber(),
     ]));
   }
-
-  // private function addSymbolToken(string $char)
-  // {
-
-  //   $token = new Token([
-  //     'type' => 'cmd:symbol',
-  //     'command_name' => $char,
-  //     'command_options' => $options,
-  //     'body' => $char,
-  //     'line_number' => $this->lineNumber(),
-  //   ]);
-
-  //   $this->addToken($token);
-  // }
 
   /* Commands that get token data */
 
@@ -920,22 +911,6 @@ class Tokenizer extends TextScanner
 
     return [$letter, $tail];
 
-  }
-
-  private function getSymboldData()
-  {
-    // Move one character forward and
-    // see if there are any options, this handles
-    // the commands like \\[1cm]
-    $this->getNextChar();
-
-    try {
-      $options = $this->getCmdWithOptions('');
-    } catch (\Exception $e) {
-      throw new \Exception($e->getMessage());
-    }
-
-    return $options;
   }
 
   private function dumpTokensLineRange($a, $b) {
