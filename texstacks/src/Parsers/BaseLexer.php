@@ -153,7 +153,6 @@ class BaseLexer
     $message .= "<br>$commandGroup";
     $message .= "<br>Line Number: " . $this->tokenizer->lineNumber();
     $message .= "<br>File: " . __FILE__;
-    $message .= "<br>Code line: " . __LINE__;
 
     return $message;
   }

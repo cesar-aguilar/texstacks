@@ -192,15 +192,15 @@ class Tokenizer extends TextScanner
 
   }
 
-  public function addControlSymbol($char)
-  {
-    if ($char === '(' || $char === ')') {
-      $this->addInlineMathToken($char);
-    }
-    else if ($char === '[' || $char === ']') {
-      $this->addDisplayMathToken($char);
-    }
-  }
+  // public function addControlSymbol($char)
+  // {
+  //   if ($char === '(' || $char === ')') {
+  //     $this->addInlineMathToken($char);
+  //   }
+  //   else if ($char === '[' || $char === ']') {
+  //     $this->addDisplayMathToken($char);
+  //   }
+  // }
 
   public function addUnregisteredToken($tokenType) {
 
