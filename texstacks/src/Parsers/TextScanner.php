@@ -333,7 +333,35 @@ class TextScanner {
   /**
    *
    */
-  public function consumeUntilTarget($target)
+  public function consumeLine() {
+    $this->consumeUntilTarget("\n");
+  }
+
+  /**
+   * Moves cursor to given target $target
+   */
+  public function moveToTarget($target, $end = true) {
+
+    $pos = strpos($this->stream, $target, $this->cursor);
+
+    if ($pos === false) {
+      throw new \Exception("Parse error: Unexecpted EOF, $target not found!");
+    }
+
+    $this->cursor = $pos;
+
+    $this->cursor += $end ? strlen($target) - 1 : 0;
+
+  }
+
+  public function is_space($char) {
+    return $char === ' ' || $char === "\t";
+  }
+
+  /**
+   *
+   */
+  private function consumeUntilTarget($target)
   {
 
     if ($this->cursor === $this->length) {
@@ -351,10 +379,6 @@ class TextScanner {
     }
 
     throw new \Exception("Parse error: missing $target on line {$this->line_number}");
-  }
-
-  public function is_space($char) {
-    return $char === ' ' || $char === "\t";
   }
 
 }

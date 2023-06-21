@@ -246,7 +246,20 @@ class Tokenizer extends TextScanner
   }
 
   public function consumeLatexComment() {
-    $this->consumeUntilTarget("\n");
+
+    if ($this->peek() !== '@') {
+      $this->consumeLine();
+      return;
+    }
+
+    $this->forward();
+
+    if ($this->peek() === '=') {
+      // Found %@=
+      $this->forward();
+      $this->moveToTarget("%@=");
+    }
+
   }
 
   public function commandIsEnv() {
@@ -551,7 +564,7 @@ class Tokenizer extends TextScanner
       }
 
       if ($char === '%') {
-        $this->consumeUntilTarget("\n");
+        $this->consumeLine();
         continue;
       }
 
@@ -655,7 +668,7 @@ class Tokenizer extends TextScanner
       }
 
       if ($char === '%') {
-        $this->consumeUntilTarget("\n");
+        $this->consumeLine();
         continue;
       }
 
@@ -742,7 +755,7 @@ class Tokenizer extends TextScanner
       }
 
       if ($char === '%') {
-        $this->consumeUntilTarget("\n");
+        $this->consumeLine();
         continue;
       }
 
@@ -840,7 +853,7 @@ class Tokenizer extends TextScanner
       }
       //
       else if ($char === '%') {
-        $this->consumeUntilTarget("\n");
+        $this->consumeLine();
       }
       //
       else if ($this->is_space($char)) {

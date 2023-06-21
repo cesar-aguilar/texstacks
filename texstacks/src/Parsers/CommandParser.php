@@ -212,7 +212,7 @@ class CommandParser {
       }
 
       if ($char === '%') {
-        $this->reader->consumeUntilTarget("\n");
+        $this->reader->consumeLine();
         continue;
       }
 
@@ -319,7 +319,7 @@ class CommandParser {
       }
 
       if ($char === '%') {
-        $this->reader->consumeUntilTarget("\n");
+        $this->reader->consumeLine();
         continue;
       }
 
@@ -409,7 +409,7 @@ class CommandParser {
       }
 
       if ($char === '%') {
-        $this->reader->consumeUntilTarget("\n");
+        $this->reader->consumeLine();
         continue;
       }
 
@@ -510,7 +510,7 @@ class CommandParser {
       }
       //
       else if ($char === '%') {
-        $this->reader->consumeUntilTarget("\n");
+        $this->reader->consumeLine();
       }
       //
       else if ($this->reader->is_space($char)) {
