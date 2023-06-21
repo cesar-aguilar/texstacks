@@ -3,7 +3,6 @@
 namespace TexStacks\Parsers;
 
 use TexStacks\Parsers\Token;
-use TexStacks\Parsers\CommandParser;
 use TexStacks\Parsers\TextScanner;
 
 class Tokenizer extends TextScanner
@@ -22,15 +21,12 @@ class Tokenizer extends TextScanner
   private bool $in_inlinemath = false;
   private bool $in_displaymath = false;
 
-  private CommandParser $cmdParser;
-
   public string $command_name;
   public string|null $env;
 
   public function __construct($latex_src, $line_number = 1)
   {
     $this->setStream($latex_src, $line_number);
-    $this->cmdParser = new CommandParser($latex_src, $line_number);
   }
 
   public function getTokens() {
