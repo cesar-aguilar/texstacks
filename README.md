@@ -2,7 +2,7 @@
 Takes .tex file path and converts to HTML.
 
 ## How to use
-
+```
 <?php
 
 use TexStacks\LatexArticleController;
@@ -67,3 +67,4 @@ $front_matter = $article->getFrontMatter();
   
 </body>
 </html>
+```
