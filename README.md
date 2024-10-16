@@ -2,7 +2,7 @@
 Takes .tex file path and converts to HTML.
 
 ## How to use
-```
+```php
 <?php
 
 use TexStacks\LatexArticleController;
