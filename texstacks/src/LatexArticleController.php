@@ -39,7 +39,11 @@ class LatexArticleController
 
     $aux_path = $this->dir . DIRECTORY_SEPARATOR . $this->basename . '.aux';
 
-    $aux_parser = new AuxParser($aux_path);
+    try {
+      $aux_parser = new AuxParser($aux_path);
+    } catch (\Exception $e) {
+      throw new \Exception($e->getMessage());
+    }
 
     $ref_labels = $aux_parser->getLabelsAsArray();
     $citations = $aux_parser->getCitationsAsArray();

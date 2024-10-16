@@ -16,7 +16,6 @@ class AuxParser
   public function __construct(private $absolute_path)
   {
     if (!file_exists($absolute_path)) {
-      // throw new \Exception("File not found: $absolute_path");
       return;
     }
 
