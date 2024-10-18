@@ -2,28 +2,20 @@
 
 namespace TexStacks\Parsers;
 
-use SplFileObject;
 use TexStacks\Helpers\StrHelper;
 
 class AuxParser
 {
 
-  private $aux_file;
+  private $aux_src;
   private $labels = [];
   private $sections = [];
   private $citations = [];
 
-  public function __construct(private $absolute_path)
+  public function __construct($aux_src = '')
   {
-    if (!file_exists($absolute_path)) {
-      return;
-    }
 
-    try {
-      $this->aux_file = new SplFileObject($absolute_path);
-    } catch (\Exception $e) {
-      throw new \Exception("Error reading file: $absolute_path");
-    }
+    $this->aux_src = $aux_src;
 
     $this->parse();
   }
@@ -45,15 +37,21 @@ class AuxParser
 
   private function parse()
   {
-    while (!$this->aux_file->eof()) {
-      $line = $this->aux_file->fgets();
+
+    $lines = explode(PHP_EOL, $this->aux_src);
+
+    foreach ($lines as $line) {
+
       $line = trim($line);
+
       if (str_contains($line, '\newlabel')) {
         $this->parseNewLabel($line);
       } else if (str_contains($line, '\bibcite')) {
         $this->parseBibCite($line);
       }
+
     }
+
   }
 
   /**

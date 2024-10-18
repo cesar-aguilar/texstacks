@@ -8,54 +8,61 @@ use TexStacks\Parsers\BaseLexer;
 use TexStacks\Renderers\Renderer;
 use TexStacks\Parsers\ArticleTokenLibrary;
 
-class LatexArticleController
+class LatexTransformer
 {
-
-  private $latex_src;
-  private $basename;
-  private $dir;
+  
   private $parser;
+  private $aux_parser;
   private $lexer;
+  private $latex_src;
+  private $aux_src;
 
   public $section_names = [];
   public $section_ids = [];
   public $section_labels = [];
 
-  public function __construct(private $absolute_path)
+  /**
+   * 
+   */
+  public function __construct($latex_src='', $aux_src='')
   {
 
-    if (!file_exists($absolute_path)) {
-      throw new \Exception("File not found: $absolute_path");
-    }
+    $this->latex_src = $latex_src;
+    $this->aux_src = $aux_src;
 
-    try {
-      $this->latex_src = file_get_contents($absolute_path);
-    } catch (\Exception $e) {
-      throw new \Exception("Error reading file: $absolute_path");
-    }
-
-    $this->basename = basename($this->absolute_path, '.tex');
-    $this->dir = dirname($this->absolute_path);
-
-    $aux_path = $this->dir . DIRECTORY_SEPARATOR . $this->basename . '.aux';
-
-    try {
-      $aux_parser = new AuxParser($aux_path);
+    try {      
+      $this->aux_parser = new AuxParser($this->aux_src);
     } catch (\Exception $e) {
       throw new \Exception($e->getMessage());
     }
 
-    $ref_labels = $aux_parser->getLabelsAsArray();
-    $citations = $aux_parser->getCitationsAsArray();
-
-    $this->parser = new LatexParser(['latex_src' => $this->latex_src]);
-
+    $ref_labels = $this->aux_parser->getLabelsAsArray();
+    $citations = $this->aux_parser->getCitationsAsArray();
+    
     $library = new ArticleTokenLibrary([
       'citations' => $citations,
       'ref_labels' => $ref_labels,
     ]);
 
     $this->lexer = new BaseLexer($library);
+
+    $this->parser = new LatexParser(['latex_src' => $this->latex_src]);
+    
+  }
+
+  /**
+   * 
+   */
+  public function getLatex()
+  {
+    return $this->latex_src;
+  }
+
+  /**
+   * 
+   */
+  public function transform()
+  {
 
     try {
       $tokens = $this->lexer->tokenize($this->parser->getSrc());
@@ -68,19 +75,15 @@ class LatexArticleController
     } catch (\Exception $e) {
       $this->parser->terminateWithError("<div>Message: {$e->getMessage()}</div><div>File: {$e->getFile()}</div><div>Line: {$e->getLine()}</div>");
     }
-  }
 
-  public function getLatex()
-  {
-    return $this->latex_src;
-  }
-
-  public function convert()
-  {
     $body = trim(Renderer::render($this->parser->getRoot()));
     return preg_replace('/(\n[\s\t]*){2,}/', "<br><br>", $body);
+
   }
 
+  /**
+   * 
+   */
   public function getFrontMatter()
   {
     $front_matter = $this->parser->getFrontMatter();
@@ -98,18 +101,28 @@ class LatexArticleController
     return $front_matter;
   }
 
+  /**
+   * 
+   */
   public function getMathMacros()
   {
     return $this->parser->getMathMacros();
   }
 
+  /**
+   * 
+   */
   public function getTheoremEnvs()
   {
     return $this->parser->getTheoremEnvs();
   }
 
+  /**
+   * 
+   */
   public function getRoot()
   {
     return $this->parser->getRoot();
   }
+
 }
