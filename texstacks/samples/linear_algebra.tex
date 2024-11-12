@@ -1,0 +1,684 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[top=1in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage{paralist}
+\usepackage{graphicx,subfigure}
+
+% Move section titles to the center in PDF output
+% Any text contained between matching pairs of @=
+%  will be ignored in the convertion to HTML
+%@=
+\usepackage[center]{titlesec}
+\titleformat{\section}[hang]{\large\sc}{\thesection.}{.5em}{\filcenter}[]
+\titleformat{\subsection}[hang]{\sc}{\thesubsection.}{.5em}{\filcenter}[]
+%@=
+
+% Use this commented environment to include any math
+% macro that cannot be defined without \newcommand
+
+%\begin{mathmacros}
+
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\spn}{span}
+\DeclareMathOperator{\rng}{img}
+\DeclareMathOperator{\nullity}{nullity}
+
+%\end{mathmacros}
+
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\field}{\mathbb{F}}
+\newcommand{\adj}{\mathbf{A}}
+\newcommand{\lap}{\mathbf{L}}
+\newcommand{\Dd}{\mathbf{D}}
+\newcommand{\bv}{\mathbf{b}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\grph}{\mathcal{G}}
+\newcommand{\edges}{\mathcal{E}}
+\newcommand{\bs}[1]{\mathbf{#1}}
+\newcommand{\F}{\bs{F}}
+\newcommand{\dotprd}[1]{\left\langle #1\right\rangle}
+\newcommand{\bin}{\{0,1\}^n}
+\newcommand{\ones}{\bs{1}}
+\newcommand{\zeros}{\bs{0}}
+\newcommand{\U}{\bs{U}}
+\newcommand{\ubs}{\bs{u}_1,\bs{u}_2,\cdots,\bs{u}_n}
+\newcommand{\tv}{T:V\rightarrow V}
+\newcommand{\indot}[1]{\left\langle #1 \right\rangle}
+\newcommand{\xv}[2][x]{\mathbf{#1}_{#2}}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\begin{document}
+
+\begin{center}
+\textbf{\Large Linear Algebra Notes}\\[0.5cm]
+Cesar O. Aguilar\footnote{Assistant Professor, Department of Mathematics, State University of New York, Geneseo}
+\end{center}
+
+% Any text contained between matching pairs of @= will be ignored
+%@=
+\tableofcontents
+\baselineskip 1.5em
+%@=
+
+%=============================================
+
+\section{Basics}
+We will use the symbol $\mathbb{F}$ to denote a \textbf{field}.  Throughout these notes you may safely assume that $\mathbb{F}=\real$, that is the field of real numbers, or $\mathbb{F}=\mathbb{C}$, that is the field of complex numbers.  Throughout these notes, $V$ will denote a vector space over the field $\mathbb{F}$.  The most familiar vector space to you is $V=\real^n$ but we will use the more generic symbol $V$.
+
+Recall some basic definitions.  
+\begin{itemize}
+\item A subset $W\subseteq V$ is called a \textbf{subspace} of $V$ if it is closed under addition and scalar multiplication:
+\begin{enumerate}[(i)]
+\item if $x, y\in W$ then $x+y\in W$ (closed under addition)
+\item if $x\in W$ and $c\in\mathbb{F}$ then $cx \in W$ (closed under scalar multiplication)
+\end{enumerate}
+Geometrically, a subspace is a plane that goes through the origin in $V$.
+
+\item Let $\beta=\{v_1,v_2,\ldots,v_k\}$ be a set of vectors in $V$.  The \textbf{span} of $\beta$ is the set of all linear combinations of vectors in $\beta$, that is,
+\[
+\spn(\beta) = \{c_1 v_1 + c_2 v_2 + \cdots + c_k v_k\; |\; c_1,\ldots,c_k\in\mathbb{F} \}.
+\]
+The $\spn(\beta)$ is a subspace of $V$.  The opposite is true; if $W$ is a subspace then there exists vectors $\gamma=\{w_1,w_2,\ldots,w_k\}$ in $W$ such that $W=\spn(\gamma)$.
+
+\item A set of vectors $\beta=\{v_1,v_2,\ldots,v_k\}$ in $V$ is called \textbf{linearly independent} if whenever we have
+\[
+c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = 0
+\]
+then necessarily $c_1=c_2=\cdots=c_k=0$.  Thus, $\beta$ is linearly independent if the only way to write the zero vector as a linear combination of the vectors in $\beta$ is to set all $c_1=c_2=\cdots=c_k=0$.
+
+\item Let $W\subseteq V$ be a subspace.  A \textbf{basis} of $W$ is a set $\beta=\{v_1,v_2,\ldots,v_k\}$ that is linearly independent and that spans $W$, that is, $\spn(\beta) = W$.   It is a fact that every subspace $W$ has a basis and all bases of $W$ will have the same number of elements.  The \textbf{dimension} of $W$ is then the number of vectors in any basis of $W$, hence in this case $\dim(W) = k$. 
+
+\item A mapping $\tv$ is called a \textbf{linear operator} or a \textbf{linear mapping} if the following two conditions hold:
+\begin{enumerate}[(i)]
+\item $T(u+v) = T(u) + T(v)$, for all $u,v\in V$
+\item $T(c v) = c T(v)$, for all $v\in V$ and $c\in\mathbb{F}$
+\end{enumerate}
+If $T$ is linear then if $x = c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = \sum_{i=1}^k c_i v_i$ then
+\[
+T(x) = T\left(\sum_{i=1}^k c_i v_i\right) = \sum_{i=1}^k c_i T(v_i)
+\]
+
+\item If $T:V\rightarrow V$ is a linear operator, the \textbf{image} or \textbf{range} of $T$ will be denoted by
+\[
+\rng(T) = \{ T(x)\in V\;|\; x\in V\}.
+\]
+The dimension of $\rng(T)$ is called the \textbf{rank} of $T$, denoted by $\rank(T)=\dim(\rng(T))$.  The \textbf{kernel} of $T$ is
+\[
+\ker(T) = \{ x\in V \;|\; T(x) = 0\}.
+\]
+The dimension of $\ker(T)$ is the \textbf{nullity} of $T$, denoted by $\nullity(T)=\dim(\ker(T))$.  The kernel is never empty since if $T$ is linear then $T(0) = 0$ and thus $0\in\ker(T)$.  It may be the case however that $\ker(T)=\{0\}$.
+\end{itemize}
+
+
+\begin{theorem}[The Rank theorem] If $V$ is finite dimensional and $\tv$ is a linear operator then
+\[
+\dim(V) = \rank(T) + \nullity(T).
+\]
+\end{theorem}
+\begin{proof}
+Let $\dim(V)=n$ and suppose that $k=\nullity(T)$.  Let $\beta_1=\{v_1,\ldots,v_k\}$ be a basis for $\ker(T)$, and thus $T(v_i)=0$ for $i=1,2,\ldots,k$.  Extend $\beta_1$ to a basis of $V$, say $\beta=\{v_1,\ldots,v_k,v_{k+1},\ldots,v_n\}$.  We claim that $\beta_2=\{T(v_{k+1}),\ldots,T(v_n)\}$ is a basis of $\rng(T)$.  Let $x\in V$.  Then $x=\sum_{i=1}^n c_i v_i$ for some $c_i\in\mathbb{F}$.  Then
+\[
+T(x) = \sum_{i=k+1}^n c_i T(v_i)
+\]
+and this proves that $\spn(\beta_2)=\rng(T)$.  To prove that $\beta_2$ is linearly independent, suppose that $\sum_{i=k+1}^n c_i T(v_i) = 0$.  Then $\sum_{i=k+1}^n c_i v_i \in \ker(T)$ and therefore $\sum_{i=k+1}^n c_i v_i = \sum_{j=1}^{k} d_j v_j$ for some scalars $d_1,\ldots,d_k\in\mathbb{F}$.  Therefore,
+\[
+\sum_{j=1}^{k} d_j v_j - \sum_{i=k+1}^n c_i v_i  = 0.
+\]
+By linear independence of $\beta$, it holds that $c_i=0$ for all $i$ and $d_j=0$ for all $k$.  This proves that $\beta_2$ is linearly independent.  Thus, $\beta_2$ is indeed a basis for $\rng(T)$ and therefore $\rank(T) = n - k = n - \nullity(T)$.
+\end{proof}
+
+\begin{example}
+Let $A$ be a $n\times n$ matrix with entries in $\mathbb{F}$ and define $T_A:\mathbb{F}^n\rightarrow\mathbb{F}^n$ by
+\[
+T_A(x) = Ax.
+\]
+Then $T_A$ is linear operator.  If $\{v_1,v_2,\ldots,v_n\}$ denote the columns of $A$ then $\rng(T_A) = \spn\{v_1,v_2,\ldots,v_n\}$.  Give an example of a linear operator $T_A:\real^2\rightarrow\real^2$ such that $\rng(T)=\ker(T)$.
+\end{example}
+
+\begin{example}
+Recall that $\tv$ is one-to-one if whenever $T(x)=T(y)$ then $x=y$.  Prove the following.
+\begin{enumerate}[(a)]
+\item Prove that $T$ is one-to-one if and only if $\ker(T)=\{0\}$.
+\item Suppose that $T$ is one-to-one and that $S=\{v_1,v_2,\ldots,v_k\}$ is a subset of $V$.  Prove that $S$ is linearly independent if and only if $\{T(v_1),T(v_2),\ldots,T(v_k)\}$ is linearly independent.
+\end{enumerate}
+\end{example}
+
+Let $\gamma=\{v_1,v_2,\ldots,v_n\}$ be a basis for $V$.  If $x\in V$ then there are scalars $c_1,\ldots,c_n$ such that $x=\sum_{i=1}^n c_i v_i$.  The scalars $(c_1,c_2,\ldots,c_n)$ are called \textbf{the coordinates of $x$ relative to $\gamma$}.  The \textbf{coordinate vector of $x$ relative to $\gamma$} is defined as
+\[
+[x]_\gamma = \begin{bmatrix}c_1\\c_2\\\vdots\\c_n\end{bmatrix}.
+\]
+Now let $\tv$ be a linear operator.  Then for each $v_j\in\gamma$ we have that
+\[
+T(v_j) = \sum_{i=1}^n a_{ij} v_i
+\]
+for some constants $a_{1j},a_{2j},\ldots,a_{nj}\in\mathbb{F}$.  The \textbf{matrix representation of $T$ in the basis $\gamma$} is the $n\times n$ matrix $[T]_\gamma$ whose $(i,j)$ entry is $a_{ij}$.  Hence, the $j$th column of $[T]_\gamma$ is $[T(v_j)]_\gamma$, i.e., the coordinate vector of $T(v_j)$ in the basis $\gamma$.
+
+%\begin{example}
+%Let $A$ be a $n\times n$ matrix with entries in $\mathbb{F}$ and define $T_A:\mathbb{F}^n\rightarrow\mathbb{F}^n$ by
+%\[
+%T_A(x) = Ax.
+%\]
+%Then $T_A$ is linear (check this!).  In the standard basis $\gamma=\{e_1,e_2,\ldots,e_n\}$ of $V=\mathbb{F}^n$, we have that $[T_A]_\gamma = A$.  Let now $\beta=\{v_1,v_2,\ldots,v_n\}$ be another basis for $V=\field^n$ and define the matrix $P=\begin{bmatrix} v_1 & v_2 & \cdots & v_n\end{bmatrix}$.  Then
+%\[
+%T_A(v_j) = Av_j = P [T(v_j)]_\beta
+%\]
+%Hence,
+%\[
+%[T_A(v_j)]_\beta = P^{-1} A v_j
+%\]
+%Hence,
+%\[
+%[T_A]_\beta = P^{-1} A P
+%\]
+%is the matrix representation of the linear mapping $T_A$ in the basis $\beta$.
+%\end{example}
+
+To give the next definition, if $W_1, W_2$ are subsets of $V$, the \textbf{sum} of $W_1$ and $W_2$ is the set
+\[
+W_1 + W_2 = \{x+y\;|\; x\in W_1,\; y\in W_2\}.
+\]
+\begin{definition}
+Let $V$ be a vector space and suppose that  $W_1$ and $W_2$ are subspaces of $V$ that satisfy the following:
+\begin{compactenum}[(i)]
+\item $V=W_1+W_2$, and
+\item $W_1\cap W_2=\{0\}$.
+\end{compactenum}
+In this case we say that $V$ is the \textbf{direct sum} of $W_1$ and $W_2$ and we write $V=W_1 \oplus W_2$.
+\end{definition}
+
+\begin{example}
+Let $V=\real^3$ and $W_1$ be the $z=0$ plane and let $W_2$ be the line through the origin with direction vector $u=(1,2,-1)$, and thus $W_2=\spn(u)$.  Both $W_1$ and $W_2$ are subspaces and $W_1\cap W_2 = \{0\}$.  Every vector $x=(x_1,x_2,x_3)\in\real^3$ can be written as
+\[
+x = (x_1,x_2,x_3) = \underbrace{(x_1 + x_3, x_2 + 2x_3, 0)}_{w_1} + \underbrace{-x_3 (1,2,-1)}_{w_2}
+\]
+Clearly $w_1\in W_1$ and $w_2 \in W_2$.  Therefore, $\real^3 = W_1\oplus W_2$.
+\end{example}
+
+Below are some characterizations of the direct sum of subspaces.
+
+\begin{theorem}
+Let $V$ be finite dimensional.  The following are equivalent.
+\begin{compactenum}[(a)]
+\item$V=W_1\oplus W_2$.
+\item $V=W_1+W_2$ and if $w_1\in W_1$ and $w_2\in W_2$ and $w_1+w_2=0$ then $w_1=w_2=0$.
+\item Each $v\in V$ can be written uniquely as $v=w_1+w_2$ for some $w_i\in W_i$.
+\item If $\gamma_i$ is an ordered basis for $W_i$ then $\gamma_1\cup \gamma_2$ is an ordered basis for $V$.
+\end{compactenum}
+\end{theorem}
+\begin{proof}
+Assume (a) and suppose that $w_1+w_2=0$ for $w_i\in W_i$.  Then $w_1=-w_2$.  Since $W_1\cap W_2=\{0\}$ it holds that $w_1=w_2=0$.  
+
+Assume (b) and suppose that $v=w_1+w_2=w'_1+w'_2$.  Then $(w_1-w_1')+(w_2-w_2')=0$ and therefore $w_1=w_1'$ and $w_2=w_2'$.
+
+Assume (c) and let $\gamma_i$ be an ordered basis for $W_i$.  For each $v\in V$ it holds that $v=w_1+w_2$ for unique $w_i\in W_i$.  Now $w_i\in\spn(\gamma_i)$ and thus $\spn(\gamma)=V$.  Let $\gamma_1=\{v_1,\ldots,v_k\}$ and let $\gamma_2=\{u_1,\ldots,u_j\}$.  If $\sum c_i v_i + \sum d_k u_k = 0$ then necessarily $\sum c_i v_i = \sum d_k u_k = 0$.  By linear independence of $\gamma_i$ it holds that $c_i=0$ for all $i$ and $u_k=0$ for all $k$.  Hence, $\gamma$ is linear independent.
+
+Assume (d).  Then $V=\spn(\gamma) = \spn(\gamma_1) + \spn(\gamma_2)=W_1+W_2$.  If $x\in W_1\cap W_2$ then $x=\sum c_i v_i = \sum d_k u_k$ which implies that $\sum c_i v_i - \sum d_k u_k = 0$.  By linear independent of $\gamma$ it holds that $c_i=0$ and $u_k=0$ for all $i,k$.  Hence, $W_1\cap W_2=\{0\}$.
+\end{proof}
+
+\begin{example}\label{exm:img-ker}
+Let $V$ be finite dimensional and let $T:V\rightarrow V$ be a linear operator.  
+\begin{compactenum}[(a)]
+\item Suppose that $V=\rng(T) + \ker(T)$.  Prove that $V=\rng(T)\oplus \ker(T)$.\\
+\item Suppose that $\rng(T)\cap \ker(T)=\{0\}$.  Prove that $V=\rng(T)\oplus \ker(T)$.
+\end{compactenum}
+\end{example}
+\begin{proof}
+(a) Suppose, by contradiction, that $\rng(T)\cap \ker(T)\neq\{0\}$ and let $x\in\rng(T)\cap\ker(T)$ be a non-zero vector.  Extend $x$ to a basis of $\rng(T)$, call it $\gamma_1$, and extend $x$ to a basis of $\ker(T)$, call it $\gamma_2$.  We have that $|\gamma_1| = \rank(T)$ and $|\gamma_2| = \nullity(T)$.  Let $\gamma = \gamma_1\cup\gamma_2$.  Then 
+\[
+|\gamma| = |\gamma_1|+|\gamma_2| - |\gamma_1\cap\gamma_2| \leq \rank(T) + \nullity(T) - 1 < \dim(V).  
+\]
+On the other hand, since $V=\rng(T)+\ker(T)$, it follows that $V=\spn(\gamma)$, which is a contradiction.  Hence, $\rng(T)\cap\ker(T)=\{0\}$.  To prove (b), suppose that $\rng(T)\cap\ker(T)=\{0\}$.  If $\ker(T)=\{0\}$ there is nothing to prove so suppose that $\gamma_1=\{v_1,\ldots,v_k\}$ is a basis for $\ker(T)$ and let $\gamma_2=\{T(v_{k+1}),\ldots,T(v_{n})\}$ be a basis for $\rng(T)$.  We claim that $\gamma=\gamma_1\cup \gamma_2$ is a basis for $V$.  Since $\rng(T)\cap\ker(T)=\{0\}$, then $|\gamma|=n=\dim(V)$, and so we need only show that $\gamma$ is linearly independent.  Suppose then that $\sum \alpha_i v_i + \sum \beta_j T(v_j) = 0$.  Then $T(\sum \beta_j T(v_j)) = 0$ and therefore $\sum \beta_j T(v_j) \in \ker(T)$.  Clealy, $\sum\beta_j T(v_j) \in \rng(T)$ also, and thus $\sum \beta_j T(v_j) = 0$.  By linear independence of $\gamma_2$, we have that $\beta_j=0$ for all $j$, and therefore by the linear independence of $\gamma_1$, we have that $\alpha_i=0$ for all $i$.  Hence, $\gamma$ is linearly independent.  Hence, $V=\spn(\gamma)=\rng(T) + \ker(T)$, and this completes the proof.
+\end{proof}
+
+%=============================================
+\section{Diagonalization}
+We begin with the definition of diagonalizability.
+\begin{definition}
+A linear operator $\tv$ is \textbf{diagonalizable} if there exists a basis $\beta$ of $V$ such that $[T]_\beta$ is a diagonal matrix.
+\end{definition}
+
+Suppose that $T$ is diagonalizable and let $\beta=\{v_1,v_2,\ldots,v_n\}$ be a basis of $V$ such that $[T]_\beta$ is diagonal.  Recall that the $j$column of $[T]_\beta$ is $[T(v_j)]_\beta$.  Let $D_{ij}$ denote the entries of $[T]_\beta$.  Since $[T]_\beta$ is diagonal, it holds that
+\[
+T(v_j) = \sum_{i=1}^n D_{ij} v_i = D_{jj} v_j.
+\]
+Therefore, if $\beta$ is a basis that diagonalizes $T$ then $T(v_j) = D_{jj} v_j$.  Conversely, suppose that there exists a basis $\beta=\{v_1,v_2,\ldots,v_n\}$ such that if $T(v_j) = \lambda_j v_j$ for each $j$ and some scalars $\lambda_j\in\mathbb{F}$.  Then $[T]_\beta$ is the diagonal matrix
+\[
+[T]_\beta = \begin{bmatrix} \lambda_1 & 0 & \cdots & 0\\ 0 & \lambda_2 & \cdots & 0\\ \vdots & \vdots & \cdots & \vdots\\ 0 & 0 & \cdots & \lambda_n\end{bmatrix}
+\]
+We have proved the following.
+\begin{theorem}
+The linear operator $\tv$ is diagonalizable if and only if there exists a basis $\beta=\{v_1,v_2,\ldots,v_n\}$ of $V$ and scalars $\lambda_1,\lambda_2,\ldots,\lambda_n$ such that $T(v_j) = \lambda_j v_j$ for all $j=1,2,\ldots,n$.
+\end{theorem}
+The previous observation motivates the following definition.
+\begin{definition}
+Let $\tv$ be a linear operator.  A vector $v\in V$ is an \textbf{eigenvector} of $T$ if $T(v) = \lambda v$ for some scalar $\lambda\in\mathbb{F}$.  The scalar $\lambda$ is called an \textbf{eigenvalue} of $T$ corresponding to the eigenvector $v$.
+\end{definition}
+The next result follows by definition.
+\begin{theorem}
+The linear operator $\tv$ is diagonalizable if and only if there exists a basis $\beta=\{v_1,v_2,\ldots,v_n\}$ of $V$ consisting of eigenvectors of $T$. 
+\end{theorem}
+
+\begin{theorem}
+Let $\tv$ be a linear operator and let $\lambda$ be an eigenvalue of $T$.  Then $v\in V$ is an eigenvector of $T$ corresponding to $\lambda$ if and only if $v\neq 0$ and $v\in\ker(T-\lambda I)$.
+\end{theorem}
+\begin{proof}
+If $T(v) = \lambda v$ then $T(v) - \lambda v = 0$ which can be written as
+\[
+(T-\lambda I) v = 0
+\]
+where $I$ is the identity operator.  Thus $v\in\ker(T-\lambda I)$.
+\end{proof}
+
+\begin{definition}
+Let $\tv$ be a linear operator on an $n$-dimensional vector space $V$.  Let $\beta$ be an ordered basis for $V$ and let $A=[T]_\beta$.  The \textbf{characteristic polynomial} $f(t)$ of $T$ is
+\[
+f(t) = \det(A-tI).
+\]
+\end{definition}
+If $\gamma$ is another basis for $V$ and $B=[T]_\gamma$ then $\det(A-tI) = \det(B-tI)$ since $A$ and $B$ are similar matrices.  
+
+\begin{theorem}
+The roots of the characteristic polynomial of $T$ are the eigenvalues of $T$.
+\end{theorem}
+
+\begin{theorem}
+Let $\tv$ be a linear operator on $V$.  Let $v_1,\ldots,v_k$ be eigenvectors of $T$ corresponding to distinct eigenvalues $\lambda_1,\ldots,\lambda_k$, respectively.  Then $\{v_1,\ldots,v_k\}$ is linearly independent.
+\end{theorem}
+
+\begin{corollary}
+If $T$ has $n$ distinct eigenvalues then it is diagonalizable.
+\end{corollary}
+
+%=============================================
+\section{Invariant Subspaces}
+
+We begin with the definition of an invariant subspace.
+\begin{definition}
+Let $V$ be a vector space and let $T:V\rightarrow V$ be a linear operator.  A subspace $W$ of $V$ is said to be $T$\textbf{-invariant} if $T(x)\in W$ for every $x\in W$.  If $W$ is $T$-invariant, we define the restriction of $T$ on $W$ as the mapping $T_W:W\rightarrow W$ defined by $T_W(x)=T(x)$ for all $x\in W$.
+\end{definition}
+
+If $W$ is $T$-invariant, then it is not difficult to see that $T_W:W\rightarrow W$ is a linear operator.  
+
+\begin{example}
+Let $T:V\rightarrow V$ be a linear operator.  Suppose that $V=\rng(T)\oplus W$ and $W$ is $T$-invariant.  
+\begin{compactenum}[(a)]
+\item Prove that $W\subseteq \ker(T)$.
+\item Show that if $V$ is finite dimensional then $W=\ker(T)$.
+\end{compactenum}
+\end{example}
+\begin{proof}
+If $w\in W$ then $T(w)\in W$ by invariance.  Thus, $T(w) \in \rng(T)\cap W = \{0\}$, and therefore $T(w)=0$, i.e., $w\in \ker(T)$.  This proves that $W\subseteq \ker(T)$.  Now, if $V$ is finite dimensional then from the Rank theorem, $\dim(V) = \rank(T) + \nullity(T)$.  Now, since $V=\rng(T)\oplus W$, we also have that $\dim(V) = \rank(T) + \dim(W)$.  It follows then that $\dim(W) = \nullity(T)$ and therefore $W = \ker(T)$.
+\end{proof}
+
+\begin{example}
+Let $T:V\rightarrow V$ be a linear operator.  Let $x\in V$ and consider the subspace
+\[
+W = \spn\{x,T(x),T^2(x),\ldots\}.
+\]
+Suppose that $v\in W$ and write $v=\sum_{j=1}^k \alpha_j T^j(x)$ for some $k\geq 0$ and $\alpha_j\in\real$.  Then $T(v) = \sum_{j=1}^k \alpha_j T^{j+1}(x)$ and thus $T(v) \in W$.  This shows that $W$ is $T$-invariant.  If $W'$ is a subspace of $V$ that contains $x$ and is $T$-invariant then $T^k(x)\in W'$ for all $k\geq 0$ and therefore $W\subseteq W'$.  Hence, $W$ is the smallest $T$-invariant subspace containing $x$.  The subspace $W$ is called the \textbf{$T$-cyclic subspace generated by $x$}.
+\end{example}
+
+\begin{theorem}
+Let $T:V\rightarrow V$ be a linear operator and suppose that $W$ is $T$-invariant.  Then the characteristic polynomial of $T_W:W\rightarrow W$ divides the characteristic polynomial of $T$.
+\end{theorem}
+\begin{proof}
+Let $\gamma_1=\{v_1,v_2,\ldots,v_k\}$ be a basis for $W$ and extend it to a basis $\gamma$ of $V$.  Let $A_1=[T_W]_{\gamma_1}$.  Then 
+\[
+[T]_\gamma = \begin{bmatrix} A_1 & A_2\\ 0 & A_3\end{bmatrix}.
+\]
+The characteristic polynomial $f(t)$ of $T$ is therefore $f(t) = \det(A_1-tI) \det(A_3-tI)$.  Hence, $\det(A_1-tI)$ divides $f(t)$.
+\end{proof}
+
+\begin{theorem}
+Let $V$ be finite dimensional, let $T:V\rightarrow V$ be a linear operator, and let $W=\spn\{x,T(x),T^2(x),\ldots,\}$, where $x\neq 0$.  Let $k=\dim(W)$.  The following hold.
+\begin{compactenum}[(a)]
+\item $\{x,T(x),\ldots,T^{k-1}(x)\}$ is a basis for $W$.
+\item If $a_0x+a_1T(x) + \cdots + a_{k-1} T^{k-1}(x) + T^k(x) = 0$, then the characteristic polynomial of $T|_W$ is $f(t) = (-1)^k(a_0+a_1t+\cdots+a_{k-1}t^{k-1} + t^k)$.
+\end{compactenum}
+\end{theorem}
+\begin{proof}
+Since $V$ is finite dimensional, there exists a largest integer $j$ for which $$\beta=\{x,T(x),\ldots,T^{j-1}(x)\}$$ is linearly independent.  Let $Z=\spn(\beta)$.  By definition of $j$, $T^j(v)\in Z$.  Therefore, if $z\in Z$ then $z$ is a linear combination of $\beta$ and so is $T(z)$.  Hence, $T(z)\in Z$.  This shows that $Z$ is $T$-invariant.  Since $W$ is the smallest $T$-invariant subspace containing $x$, it follows that $W\subset Z$.  Clearly, $Z\subset W$ and this proves that $Z=W$.  Hence, $\dim(W)=j$, and thus $j=k$.
+
+In the basis $\beta$, we have that
+\[
+[T_W]_\beta = \begin{bmatrix}0 & 0 & \cdots & 0 & -a_0\\1 & 0 & \cdots & 0 & -a_1\\\vdots & \vdots & & \vdots & \vdots\\
+0 & 0 & \cdots & 1 & -a_{k-1}\end{bmatrix}.
+\]
+By induction on $k$, one can show that the characteristic polynomial of $[T_W]_\beta$ is $f(t) = (-1)^k(a_0+a_1t+\cdots+a_{k-1}t^{k-1} + t^k)$, and thus of $T$ also.
+\end{proof}
+
+
+\begin{theorem}
+Let $T:V\rightarrow V$ be a linear operator.  Suppose that $V=W_1\oplus W_2$, and assume that $W_1$ and $W_2$ are $T$-invariant.  Let $\gamma_i$ be an ordered basis for $W_i$ and let $\gamma=\gamma_1\cup\gamma_2$.  Let $A=[T]_\gamma$, let $A_1=[T_{W_1}]_{\gamma_1}$, and let $[T_{W_2}]_{\gamma_2}$.  Then
+\[
+A = \begin{bmatrix} A_1 & O\\O & A_2\end{bmatrix}.
+\]
+Hence, if $f(t)$ is the characteristic polynomial of $T$, $f_1(t)$ is the characteristic polynomial of $T_{W_1}$, and $f_2(t)$ is the characteristic polynomial of $T_{W_2}$, then $f(t) = f_1(t) f_2(t)$.
+\end{theorem}
+\begin{proof}
+The proof is straightforward.
+\end{proof}
+
+If $g(x) = a_0 + a_1t + \cdots + a_n t^n$ is a polynomial and $\tv$ is a linear operator, we define a new operator $g(T)$ by
+\[
+g(T) = a_0I + a_1 T + \cdots + a_n T^n
+\]
+so that for any $x\in V$ we have that
+\[
+g(T)(x) = a_0x + a_1 T(x) + \cdots + a_n T^n(x).
+\]
+
+\begin{theorem}[Cayley-Hamilton]
+Let $\tv$ be a linear operator and let $f(t)$ be the characteristic polynomial of $T$.  Then $f(T)=0$.
+\end{theorem}
+\begin{proof}
+We prove that for every $v\in V$, it holds that $f(T)(v)=0$.  Assume that $v\neq 0$ and let $W$ be the $T$-cyclic subspace generated by $v$.  Let $k=\dim(W)$, and thus $\{v,T(v),\ldots,T^{k-1}(v)\}$ is a basis for $W$.  Hence, there exists scalars $a_i$ such that
+\[
+a_0v + a_1 T(v) + \cdots + a_{k-1}T^{k-1}(v) + T^k(v)=0.
+\]
+The polynomial $g(t)=(-1)^k(a_0+a_1t+\cdots + a_{k-1}t^{k-1}+t^k)$ is the characteristic polynomial of $T_W$.  Thus, $f(t)=h(t)g(t)$ for some polynomial $h(t)$.  Hence, $f(T)(v)=h(g(T)(v))=0$.
+\end{proof}
+
+
+\begin{example}
+Let $\tv$ be a linear operator and let $W$ be a $T$-invariant subspace.  Prove that $W$ is $g(T)$-invariant for any polynomial $g(t)$.
+\end{example}
+
+\begin{example}
+Let $\tv$ be a linear operator and let $W$ be a $T$-invariant subspace of $V$.  Prove that if $v$ is an eigenvector of $T_W$ with eigenvalue $\lambda$ then $v$ is an eigenvector of $T$ also with eigenvalue $\lambda$.
+\end{example}
+
+A polynomial $g(t)$ over a field $\mathbb{F}$ is said to \textbf{split over} $\mathbb{F}$ if
+\[
+g(t) = c(t-a_1)(t-a_2)\cdots (t-a_n)
+\]
+where $c,a_1,\ldots,a_n \in \mathbb{F}$.  In other words, $g(t)$ can be completely factored as a product of linear factors. 
+
+\begin{example}
+Let $\tv$ be a linear operator on a finite dimensional vector space $V$.
+\begin{compactenum}[(a)]
+\item Let $W$ be $T$-invariant.  Prove that if the characteristic polynomial of $T$ splits then so those the characteristic polynomial of $T_W$.
+\item \textbf{Deduce that if the characteristic polynomial of $T$ splits then any nontrivial $T$-invariant subspace of $V$ contains an eigenvector of $T$.}
+\end{compactenum}
+\end{example}
+
+\begin{example}\label{exm:v-sum}
+Let $\tv$ be a linear operator and suppose that $W$ is $T$-invariant.  Suppose that $v_1,v_2,\ldots,v_k$ are eigenvectors of $V$ corresponding to distinct eigenvalues.  Prove that if $v_1+v_2+\cdots+v_k\in W$ then $v_i \in W$ for all $i$.  \textit{Hint:}  Use mathematical induction on $k$.
+\end{example}
+
+We now introduce the direct sum of subspaces.
+
+\begin{definition}
+Let $W_1,W_2,\ldots,W_k$ be subspaces of $V$.  We call $V$ the \textbf{direct sum} of the subspaces $W_1,\ldots,W_k$ and write 
+\[
+V = W_1\oplus W_2 \oplus \cdots \oplus W_k
+\]
+if $V=W_1+W_2+\cdots+W_k = \{v_1+v_2+\cdots+v_k\;|\; v_i \in W_i\}$ and for each $j\in\{1,\ldots,k\}$
+\[
+W_j \cap \sum_{i\neq j} W_i = \{0\}.
+\]
+\end{definition}
+
+\begin{theorem}
+The following are equivalent.
+\begin{compactenum}[(a)]
+\item $V=W_1\oplus W_2\oplus \cdots\oplus W_k$
+\item $V=\sum_{i=1}^k W_i$ and for any vectors $v_1,v_2,\ldots,v_k$ such that $v_i\in W_i$ if $v_1+v_2+\cdots+v_k=0$ then $v_i=0$ for all $i$.
+\item Each vector $v\in V$ can be written uniquely in the form $v=v_1+v_2+\cdots+v_k$ where $v_i \in W_i$.
+\item If $\gamma_i$ is an ordered basis for $W_i$ then $\gamma_1\cup\gamma_2\cup\cdots\cup\gamma_k$ is an ordered basis for $V$.
+\item For each $W_i$ there exists an ordered basis $\gamma_i$ such that $\gamma_1\cup\gamma_2\cup\cdots\cup\gamma_k$ is an ordered basis for $V$.
+\end{compactenum}
+\end{theorem}
+
+\begin{example}
+Let $\tv$ be a linear operator and suppose that $W$ is a nontrivial $T$-invariant subspace.  Prove that if $T$ is diagonalizable then so is $T_W$.
+\end{example}
+\begin{proof}
+Let $\lambda_1,\lambda_2,\ldots,\lambda_k$ denote the distinct eigenvalues of $T$.  If $T$ is diagonalizable, then $V=E_1\oplus E_2 \oplus \cdots \oplus E_k$, where $E_i=\ker(T-\lambda_i I)$ is the eigenspace of $T$ corresponding to the eigenvalue $\lambda_i$.  Since $W$ is non-trivial, the characteristic polynomial of $T_W$ splits, and therefore $T_W$ has an eigenvector, which is naturally an eigenvector of $T$ also.  Hence, after a possible reordering, there exists a largest integer $j$ such that $1\leq j\leq k$ and $W\cap E_i\neq\{0\}$ for all $1\leq i\leq j$.  We claim that
+\[
+W = (W\cap E_1) \oplus (W\cap E_2) \oplus \cdots \oplus (W\cap E_j).
+\]
+Indeed, let $w\in W$.  Then from $V=E_1\oplus \cdots\oplus E_k$ we can write that 
+\[
+w=\sum_{i=1}^k \sum_{\ell=1}^{\dim(E_i)} c_{i\ell}\tilde{v}_{i\ell}
+\]
+where $\{v_{i\ell}\}_{\ell=1}^{\dim(E_i)}$ is a basis for $E_i$ and $c_{i\ell}\in\mathbb{F}$, for all $i$.  Let $v_i = \sum_{\ell=1}^{\dim(E_i)} c_{i\ell}\tilde{v}_{i\ell}$ so that $w=v_1+v_2+\cdots+v_k$.  If $j< k$, then by Example~\ref{exm:v-sum}, we must have that $v_i = 0$ for all $i>j$, otherwise $v_i \in W$ and thus $W\cap E_i \neq \{0\}$ which is a contradiction.  Hence $w=v_1+\cdots+v_j$ and $v_1,\ldots,v_j \in W$.  It is clear that $(W\cap E_i) \cap \sum_{\ell\neq i} (W\cap E_\ell) = \{0\}$, for all $i$, and our claim is proved.  A basis of $W\cap E_i$, for $1\leq i\leq j$, consists of eigenvectors of $T_W$, and thus there exists a basis of $W$ of eigenvectors of $T_W$.
+\end{proof}
+
+Let $\tv$ be a linear operator on the $n$-dimensional vector space $V$.  We say that $V$ is \textbf{$T$-cyclic} if there exists $v\in V$ such that $V=\spn\{v,T(v),\ldots,T^{n-1}(v)\}$.
+\begin{example}
+Suppose that $\tv$ has $n=\dim(V)$ distinct eigenvalues.  Prove that $V$ is $T$-cyclic.
+\end{example}
+\begin{proof}
+Let $v_1,\ldots,v_n$ be linearly independent eigenvectors of $T$ corresponding to distinct eigenvalues $\lambda_1,\ldots,\lambda_n$.  Let $v=v_1+\cdots+v_n$.  Then $T^j(v) = \lambda_1^j v_ 1 + \cdots + \lambda_n^j v_n$ for all $j$.  Suppose that
+\[
+c_1 v + c_2 T(v) + \cdots + c_n T^{n-1}(v)  = 0.
+\]
+Then
+\[
+(c_1 + c_2\lambda_1+\cdots+c_n \lambda^{n-1}_1)v_1 + \cdots + (c_1+c_2\lambda_n + \cdots + c_n \lambda_n^{n-1}) v_n = 0.
+\]
+Since $v_1,\ldots,v_n$ are linearly independent, it follows that
+\[
+\begin{bmatrix} 
+1 & \lambda_1 & \lambda^2_1 & \cdots & \lambda_1^{n-1}\\
+1 & \lambda_2 & \lambda^2_2 & \cdots & \lambda_2^{n-1}\\
+\vdots & \vdots & \vdots & \cdots & \vdots \\
+1 & \lambda_n & \lambda^2_n & \cdots & \lambda_n^{n-1}
+\end{bmatrix}\begin{bmatrix}c_1\\c_2\\\vdots\\c_n\end{bmatrix} = \begin{bmatrix}0\\0\\\vdots\\0\end{bmatrix}
+\]
+The Vandermonde matrix appearing above has determinant
+\[
+\prod_{i<j} (\lambda_i-\lambda_j)
+\]
+and is therefore non-zero since the $\lambda$'s are distinct.  This proves that $c_1=\cdots=c_n=0$, and thus $\{v,T(v),\ldots,T^{n-1}(v)\}$ is a basis for $V$.
+\end{proof}
+
+%=============================================
+\section{Inner Product Spaces and the Adjoint}
+
+From now on $V$ is an inner product space with inner product $\indot{\cdot,\cdot}$.  Recall that a set of vectors $\gamma=\{v_1,v_2,\ldots,v_k\}$ is an \textbf{orthogonal set} if $\indot{v_i,v_j}=0$ for every distinct $i$ and $j$.  If in addition $\indot{v_i,v_i}=1$ for all $i$ then $\gamma$ is called an \textbf{orthonormal set}.  An \textbf{orthonormal basis} for $V$ is a basis $\beta=\{v_1,v_2,\ldots,v_n\}$ of $V$ that is an orthonormal set.  
+
+\begin{theorem}[Gram-Schmidt Procedure]
+Let $V$ be an inner product space and let $\gamma=\{w_1,w_2,\ldots,w_k\}$ be linearly independent.  Define $\gamma'=\{v_1,v_2,\ldots,v_k\}$ by $v_1=w_1$ and 
+\[
+w_j = v_j - \sum_{i=1}^{j-1} \frac{\indot{w_j,v_i}}{\|v_i\|^2} v_i
+\]
+for $j=2,\ldots,k$.  Then $\spn(\gamma) = \spn(\gamma')$ and $\gamma'$ is an orthogonal set of nonzero vectors.
+\end{theorem}
+
+\begin{theorem}
+Let $V$ be a nonzero finite-dimensional inner product space.  Then $V$ has an orthonormal basis $\beta$.  Furthermore, if $\beta=\{v_1,v_2,\ldots,v_n\}$ and $x\in V$ then
+\[
+x = \sum_{i=1}^n \indot{x,v_i} v_i.
+\]
+\end{theorem}
+
+Let $S$ be a subset of $V$.  The \textbf{orthogonal complement} of $S$ is the set
+\[
+S^\perp = \{v\in V\;|\; \indot{v,x}=0, \; \forall x\in S\}.
+\]
+
+\begin{example}
+Prove that $S^\perp$ is a subspace for any set $S\subset V$.
+\end{example}
+
+\begin{example}
+Let $W\subseteq V$ be a subspace and suppose that $V$ is finite-dimensional.  Prove that $V=W\oplus W^\perp$.  
+\end{example}
+\begin{proof}
+Let $\beta=\{w_1,\ldots,w_k\}$ be an orthonormal basis for $W$.  Let $x\in V$.  Let $w_x = \sum_{j=1}^k \indot{x,v_j} v_j$ and let $u_x = x-w_x$.  Then clearly $x=w_x + u_x$.  Now, for $j=1,2,\ldots,k$, we have that
+\[
+\indot{u_x,v_j} = \indot{x,v_j} - \indot{x,v_j}\indot{v_j,v_j} = 0.
+\]
+Hence, $u_x\in W^\perp$.  This proves that $V=W+W^\perp$.  Now suppose that $w\in W\cap W^\perp$.  Then $w=\sum_{j=1}^k \indot{w,v_j} v_j$.  But $w\in W^\perp$ implies that $\indot{w,v_j}=0$ for all $j$ and therefore $w=0$.  This proves that $W\cap W^\perp =\{0\}$.  Hence, $V=W\oplus W^\perp$.
+\end{proof}
+
+\begin{theorem}
+Let $V$ be a finite-dimensional inner product space, and let $\tv$ be a linear operator.  Then there exists a unique linear operator $T^*:V\rightarrow V$ such that $\indot{T(x),y}=\indot{x,T^*(y)}$ for all $x,y\in V$.  The linear operator $T^*$ is called the \textbf{adjoint} of the operator $T$.
+\end{theorem}
+
+Let $A$ be a $n\times n$ matrix.  The linear mapping $T_A(x) = Ax$ has adjoint
+\[
+(T_A)^*(x) = A^*x
+\]
+where $A^*$ denotes the complex conjugate transpose of $A$:
+\[
+(A^*)_{ij} = \overline{A_{ij}}
+\]
+If $A$ is a real matrix then $A^*$ is the transpose of $A$, and we use the notation $A^T$ instead.
+
+\begin{theorem}
+Let $V$ be finite-dimensional and let $\beta$ be an orthonormal basis for $V$.  If $\tv$ is a linear operator then
+\[
+[T^*]_\beta = [T]_\beta^*.
+\]
+\end{theorem}
+
+\begin{example}
+Let $\tv$ be a linear operator on the inner product space $V$.  Prove the following.
+\begin{compactenum}[(a)]
+\item $\rng(T^*)^\perp = \ker(T)$
+\item If $V$ is finite dimensional then $\rng(T^*)=\ker(T)^\perp$.
+\end{compactenum}
+\begin{proof}
+Let $z\in \rng(T^*)^\perp$.  Then $\indot{z,T^*(x)}=0$ for all $x\in V$.  Thus, $\indot{T(z),x}=0$ for all $x\in V$.  Hence, $T(z)=0$ and thus $z\in\ker(T)$.  Conversely, suppose that $z\in\ker(T)$.  Then $\indot{x,T(z)}=0$ for all $x$ and thus $\indot{T^*(x),z}=0$ for all $x$.  Hence, $z\in\rng(T^*)^\perp$.  If $V$ is finite-dimensional, then for any subspace $W$ of $V$ it holds that $(W^\perp)^\perp = W$.  Thus, we can apply this to $W=\rng(T^*)$.
+\end{proof}
+
+\end{example}
+
+\begin{example}
+Let $\tv$ be a linear operator on finite-dimensional $V$.  Prove the following.
+\begin{compactenum}[(a)]
+\item $\ker(T^*T)=\ker(T)$.  Deduce that $\rank(T^*T)=\rank(T)$.
+\item $\rank(T)=\rank(T^*)$.  Deduce from (a) that $\rank(TT^*)=\rank(T)$.
+\end{compactenum}
+\begin{proof}
+If $T(x)=0$ then clearly $T^*T(x)=0$ so that $\ker(T)\subset\ker(T^*T)$.  Conversely, suppose that $(T^*T)(x)=0$, i.e., $x\in\ker(T^*T)$.  Then $T(x)\in \ker(T^*) = \rng(T)^\perp$.  Hence, for all $z\in V$ it holds that $0= \indot{T(x),T(z)}$.  In particular, $0=\indot{T(x),T(x)}$ and therefore $T(x)=0$.  Thus, $x\in\ker(T)$.  From the Rank theorem, we deduce that $\rank(T^*T)=\rank(T)$.
+
+To prove (b), we have that $V = \rng(T^*)\oplus \rng(T^*)^\perp = \rng(T^*) \oplus \ker(T)$.  Therefore, $\rank(T^*)=\dim(V)-\nullity(T) = \rank(T)$.  Therefore, $\rank(TT^*)=\rank(T^*)=\rank(T)$.
+\end{proof}
+\end{example}
+
+%=================================================
+\section{Normal and Self-Adjoint Operators}
+
+\textbf{Goal:}  Show that for certain classes of operators $\tv$, there exists an orthonormal basis of eigenvectors of $T$.  
+
+\begin{lemma}
+Let $\tv$ be a linear operator on the finite-dimensional inner product space $V$.  If $T$ has an eigenvector then so does $T^*$.
+\end{lemma}
+\begin{proof}
+Suppose that $T(v)=\lambda v$ and $v\neq 0$ and $\lambda\in\mathbb{C}$.  Then for all $x$
+\[
+0=\indot{0,x} = \indot{(T-\lambda I)v,x} = \indot{v,(T^*-\overline{\lambda}I) x}. 
+\]
+Hence, $v$ is orthogonal to the range of $(T^*-\overline{\lambda}I)$ and thus $(T^*-\overline{\lambda} I)$ is not onto, and therefore not one-to-one.  Hence, $\ker(T^*-\overline{\lambda} I)$ is non-trivial.
+\end{proof}
+
+\begin{theorem}[Schur]
+Let $\tv$ be a linear operator on finite-dimensional inner product space $V$.  Suppose that the characteristic polynomial of $T$ splits.  Then there exists an orthonormal basis $\beta$ for $V$ such that the matrix $[T]_\beta$ is upper triangular.
+\end{theorem}
+
+\begin{proof}
+The proof is by induction on $n=\dim(V)$.  The case $n=1$ is trivial.  Suppose that $n=\dim(V)\geq 1$ and consider $\tv$.  Since the characteristic polynomial of $T$ splits, it has an eigenvalue and thus an eigenvector.  By the lemma, $T^*$ has an eigenvector, say $z$, which we can assume to be of unit length.  Let $\lambda$ be such that $T(z)=\lambda z$.  Let $W=\spn(\{z\})$.  Suppose that $y\in W^\perp$.  Then
+\[
+\indot{T(y),z} = \indot{y,T^*(z)} = \indot{y,\lambda z} = \overline{\lambda} \indot{y,z}=0.
+\]  
+Hence, $T(y)\in W^\perp$.  This proves that $W^\perp$ is $T$-invariant.  Now, $W^\perp$ is a $(n-1)$-dimensional subspace, and thus by the induction hypothesis, there exists an orthonormal basis $\gamma$ for $W^\perp$ such that $[T_{W^\perp}]_{\gamma}$ is upper triangular.  Clearly, $\beta=\gamma\cup\{z\}$ is an orthonormal basis for $V$ such that $[T]_\beta$ is upper triangular. 
+\end{proof}
+
+\begin{definition}
+Let $V$ be an inner product space and let $\tv$ be a linear operator.  We say that $T$ is \textbf{normal} if $TT^*=T^*T$.
+\end{definition}
+
+\begin{example}
+Consider the rotation matrix
+\[
+A = \begin{bmatrix} \cos\theta & -\sin\theta\\\sin\theta & \cos\theta\end{bmatrix}
+\]
+Then $AA^* = I = A^*A$, and thus $A$ is normal.  If $0<\theta<\pi$ then $A$ does not possess any real eigenvalues and thus no real eigenvectors.
+\end{example}
+
+\begin{example}
+If $A$ is \textit{skew-symmetric}, i.e., $A^T = -A$ then $AA^T = A^TA = -A^2$, and thus $A$ is normal.
+\end{example}
+
+\begin{theorem}
+Let $V$ be an inner product space and let $\tv$ be a normal linear operator.  The following hold.
+\begin{compactenum}[(a)]
+\item $\|T(x)\| = \|T^*(x)\|$ for all $x\in V$.
+\item $T-cI$ is normal for every $c\in\mathbb{F}$.
+\item If $T(x) = \lambda x$ then $T^*(x) = \overline{\lambda} x$, that is, $T$ and $T^*$ have the same eigenvectors.
+\item If $x_1$ and $x_2$ are two eigenvectors of $T$ corresponding to distinct eigenvalues then $x_1$ and $x_2$ are orthogonal.
+\end{compactenum}
+\end{theorem}
+
+
+\begin{theorem}
+Let $\tv$ be a linear operator on finite-dimensional \textbf{complex} inner product space $V$.  The operator $T$ is normal if and only if there exists an orthonormal basis for $V$ consisting of eigenvectors of $T$.
+\end{theorem}
+\begin{proof}
+By the fundamental theorem of algebra, the characteristic polynomial of $T$ splits.  By Shur's theorem, there exists an orthonormal basis $\beta=\{v_1,v_2,\ldots,v_k\}$ of $V$ south that $[T]_\beta$ is upper triangular.  Hence, $v_1$ is an eigenvector of $T$.  Suppose by induction that $v_1,\ldots,v_{k-1}$ are eigenvectors of $T$ with eigenvalues $\lambda_1,\ldots,\lambda_{k-1}$, respectively.  Let $A=[T]_\beta$.  Since $A$ is upper triangular it holds that
+\[
+T(v_k) = A_{1k} v_1 + A_{2k} v_2 + \cdots + A_{kk} v_k.
+\]
+Now, for $j<k$ we have that
+\[
+A_{jk} = \indot{T(v_k),v_j} = \indot{v_k, T^*(v_j)} = \indot{v_k, \overline{\lambda} v_j} = \lambda\indot{v_k,v_j} =0.
+\]
+Hence, $T(v_k) = A_{kk} v_k$, and thus $v_k$ is an eigenvector of $T$.  Hence, by induction, $\beta$ consists of eigenvectors of $T$.
+
+Conversely, if there exists an orthonormal basis $\beta$ for $V$ consisting of eigenvectors of $T$ then $[T]_\beta$ and $[T^*]_\beta = [T]_\beta^*$ are diagonal, and clearly commute, i.e. $T$ is normal.
+\end{proof}
+
+As we saw with the rotation matrix example, normality is not enough to guarantee the existence of an orthonormal basis of eigenvectors when $V$ is a real inner-product space.  We need a stronger condition for this.
+\begin{definition}
+A linear operator $\tv$ is \textbf{self-adjoint} or \textbf{Hermitian} if $T^*=T$.
+\end{definition}    
+
+\begin{lemma}
+Let $\tv$ be a self-adjoint linear operator on finite-dimensional $V$.  The following holds.
+\begin{compactenum}[(a)]
+\item Every eigenvalue of $T$ is real.
+\item Suppose that $V$ is a real inner product space.  Then the characteristic polynomial of $T$ splits.
+\end{compactenum}
+\begin{proof}
+To prove (a), we note that $T$ is normal.  If $T(x)=\lambda x$ then $\lambda x = T(x) = T^*(x) = \overline{\lambda} x$ and thus $\lambda = \overline{\lambda}$, i.e., $\lambda$ is real.
+
+To prove (b), the characteristic polynomial of $T$ splits in $\mathbb{C}$.  The roots of the char.poly are the eigenvalues, and from (a) these are all real.  Hence, the characteristic polynomial of $T$ splits in $\real$.
+\end{proof}
+\end{lemma}
+
+
+\begin{theorem}
+Let $\tv$ be a linear operator on finite-dimensional \textbf{real} inner product space $V$.  The operator $T$ is self-adjoint if and only if there exists an orthonormal basis for $V$ consisting of eigenvectors of $T$.
+\end{theorem}
+\begin{proof}
+Suppose that $T$ is self-adjoint.  Then its characteristic polynomial splits, and thus by Schur's Theorem, there is an orthonormal basis $\beta$ such that $A=[T]_\beta$ is upper triangular.  Now $A$ is self-adjoint, and thus   
+\[
+A^* = [T]_\beta^* = [T^*]_\beta = [T]_\beta = A.
+\]
+Hence, $A$ must be diagonal.  Hence, $\beta$ consists of eigenvectors of $T$.  Conversely, if there exists such a basis $\beta$, then $A^*=A$ since the eigenvalues of $A$ are real.  Hence, $T$ is self-adjoint.
+\end{proof}
+
+\begin{example}
+Let $\tv$ be a linear operator on an inner product space $V$.  Let $W$ be a $T$-invariant subspace of $V$.  Prove the following.
+\begin{compactenum}[(a)]
+\item If $T$ is self-adjoint, then $T_W$ is self-adjoint.
+\item $W^\perp$ is $T^*$-invariant.
+\item If $W$ is both $T$- and $T^*$-invariant, then $(T_W)^*=(T^*)_W$.
+\item If $W$ is both $T$- and $T^*$-invariant and $T$ is normal then $T_W$ is normal.
+\end{compactenum}
+\end{example}
+
+\end{document}
