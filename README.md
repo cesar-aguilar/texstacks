@@ -1,6 +1,7 @@
 # texstacks
 Takes .tex/.aux source strings and converts to HTML.
 String .aux is optional but needed for equation references.
+See the samples/ folder for an example LaTeX source.
 
 ## How to use
 ```php
