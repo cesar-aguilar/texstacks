@@ -1,21 +1,26 @@
 # texstacks
-Takes .tex file path and converts to HTML.
+Takes .tex/.aux source strings and converts to HTML.
+String .aux is optional but needed for equation references.
 
 ## How to use
 ```php
 <?php
 
-use TexStacks\LatexArticleController;
+use TexStacks\LatexTransformer;
 
-$filepath = "myfiles/myarticles/myarticle.tex";
+$tex_path = "myfiles/myarticles/myarticle.tex";
+$aux_path = "myfiles/myarticles/myarticle.aux";
 
-$article = new LatexArticleController($filepath);
+$tex_src = file_get_contents($tex_path);
+$aux_src = file_get_contents($aux_path)
 
-$body = $article->convert();
+$tr = new LatexTransformer($tex_src, $aux_src);
 
-$math_macros = $article->getMathMacros();
+$body = $tr->transform();
 
-$front_matter = $article->getFrontMatter();
+$math_macros = $tr->getMathMacros();
+
+$front_matter = $tr->getFrontMatter();
 
 ?>
 
@@ -36,6 +41,8 @@ $front_matter = $article->getFrontMatter();
         }
       };    
   </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <body>

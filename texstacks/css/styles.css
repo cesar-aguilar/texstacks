@@ -1,0 +1,218 @@
+html {
+  line-height: 1.5;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  color: #1a1a1a;
+  background-color: #fdfdfd;
+}
+body {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  hyphens: auto;
+  overflow-wrap: break-word;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+}
+figure {
+  border: 1px solid lightgray;
+  border-radius: 4px;
+  text-align: center;
+  padding: 1em;
+  max-width: 600px;
+  margin: 1em auto;
+}
+figcaption {
+  border-top: 1px solid lightgray;
+  padding-top: 1em;
+  font-size: 0.9em;
+}
+.table-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1em;
+}
+.table-container table {
+  border-collapse: collapse;
+}
+td {
+  padding: 0.25rem 0.5rem;
+}
+.table-caption {
+  font-size: 0.9em;
+  margin-top: 0.5em;
+  border-top: 1px solid lightgray;
+  padding: 1em 0;
+}
+.thm-env {
+  margin: 1em 0 1.5em;
+}
+.thm-style-plain .thm-env-head,
+.thm-style-definition .thm-env-head
+  {
+  display: inline-block;
+  font-weight: bold;
+  border-top: 1px solid lightgray;
+  border-left: 1px solid lightgray;
+  border-right: 1px solid lightgray;
+  padding: 0.25em 0.5em;
+  background: rgb(245, 245, 245);
+}
+.thm-style-plain .thm-env-body,
+.thm-style-definition .thm-env-body {
+  border: 1px solid lightgray;
+  padding: 0.5em 0.5em;
+  background: rgb(245, 245, 245);
+}
+.thm-style-remark > div {
+  display: inline;
+}
+.thm-style-remark .thm-env-head {
+  margin-right: 0.35em;
+  font-weight: bold;
+}
+.thm-style-remark .thm-env-head::after {
+  content: '.';
+}
+.example-env {
+  margin: 1em 0 0.5em;
+}
+.proof-env {
+  margin: 0.5em 0;
+}
+.example-head,
+.proof-head {
+  font-style: italic;
+}
+.unknown-env {
+  border: 1px solid red;
+  padding: 0.25em 0.5em;
+  margin: 1em 0;
+}
+.abstract-container {
+  min-width: 300px;
+  max-width: 80%;
+  margin: 2em auto;
+}
+.abstract-head {
+  font-weight: bold;
+  text-align: center;
+}
+.abstract-body {
+  font-size: 0.8rem;
+  text-align: justify;
+  text-justify: inter-word;
+}
+.parse-error {
+  padding: 0.25rem 0.5rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 0.25rem;
+  margin: 1rem 0.5rem;
+  color: #721c24;
+}
+details.footnote{
+  display: inline;
+  margin-right: 0.1rem;
+}
+summary.footnote {
+  list-style: none;
+}
+summary.footnote::marker,
+summary.footnote::-webkit-details-marker {
+  display:none;
+}
+summary.footnote {
+  transform: translateY(-0.35rem);      
+  font-size: 0.8rem;
+  padding: 0 0.1rem;
+  cursor: pointer;
+  color: blue;
+}
+.footnote-content {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 1rem;
+  font-size: 1rem;
+  background: lightyellow;
+  box-shadow: 0 0 100px black;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  z-index: 1000;
+}
+.references {
+  list-style: none;
+  counter-reset: bibitem-counter;      
+}
+.references li {
+  margin-bottom: 0.5rem;
+  counter-increment: bibitem-counter;
+  position: relative;
+  padding: 0 2rem;
+}
+.references li::before {
+  content: "[" counter(bibitem-counter) "] ";      
+  position: absolute;
+  transform: translateX(-140%);
+}
+.font-serif {
+  font-family: Georgia, serif;
+}
+.italic {
+  font-style: italic;
+}
+.small-caps {
+  font-variant: small-caps;
+}
+.font-mono {
+  font-family: monospace;
+}
+.font-bold {
+  font-weight: bold;
+}
+.font-medium {
+  font-weight: 500;
+}
+.non-italic {
+  font-style: normal;
+}
+.text-xs {
+  font-size: 0.75rem;
+}
+.text-sm {
+  font-size: 0.875rem;
+}
+.text-base {
+  font-size: 1rem;
+}
+.text-lg {
+  font-size: 1.125rem;
+}
+.text-xl {
+  font-size: 1.25rem;
+}
+.text-2xl {
+  font-size: 1.5rem;
+}
+.text-3xl {
+  font-size: 1.875rem;
+}
+.text-4xl {
+  font-size: 2.25rem;
+}
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
