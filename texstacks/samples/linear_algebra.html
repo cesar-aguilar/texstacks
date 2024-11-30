@@ -1,0 +1,395 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>TexStacks</title>
+  <script>
+    window.MathJax = {
+      loader: {load: ['ui/lazy', '[tex]/mathtools']},
+      tex: {        
+        packages: {
+          '[+]': ['mathtools'],          
+        }
+        }
+      };    
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 1200px;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    figure {
+      border: 1px solid lightgray;
+      border-radius: 4px;
+      text-align: center;
+      padding: 1em;
+      max-width: 600px;
+      margin: 1em auto;
+    }
+    figcaption {
+      border-top: 1px solid lightgray;
+      padding-top: 1em;
+      font-size: 0.9em;
+    }
+    .table-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1em;
+    }
+    .table-container table {
+      border-collapse: collapse;
+    }
+    td {
+      padding: 0.25rem 0.5rem;
+    }
+    .table-caption {
+      font-size: 0.9em;
+      margin-top: 0.5em;
+      border-top: 1px solid lightgray;
+      padding: 1em 0;
+    }
+    .thm-env {
+      margin: 1em 0 1.5em;
+    }
+    .thm-style-plain .thm-env-head,
+    .thm-style-definition .thm-env-head
+     {
+      display: inline-block;
+      font-weight: bold;
+      border-top: 1px solid lightgray;
+      border-left: 1px solid lightgray;
+      border-right: 1px solid lightgray;
+      padding: 0.25em 0.5em;
+      background: rgb(245, 245, 245);
+    }
+    .thm-style-plain .thm-env-body,
+    .thm-style-definition .thm-env-body {
+      border: 1px solid lightgray;
+      padding: 0.5em 0.5em;
+      background: rgb(245, 245, 245);
+    }
+    .thm-style-remark > div {
+      display: inline;
+    }
+    .thm-style-remark .thm-env-head {
+      margin-right: 0.35em;
+      font-weight: bold;
+    }
+    .thm-style-remark .thm-env-head::after {
+      content: '.';
+    }
+    .thm-env ol {
+      /* list-style-type: lower-roman; */
+    }
+    .example-env {
+      margin: 1em 0 0.5em;
+    }
+    .proof-env {
+      margin: 0.5em 0;
+    }
+    .example-head,
+    .proof-head {
+      font-style: italic;
+    }
+    .unknown-env {
+      border: 1px solid red;
+      padding: 0.25em 0.5em;
+      margin: 1em 0;
+    }
+    .abstract-container {
+      min-width: 300px;
+      max-width: 80%;
+      margin: 2em auto;
+    }
+    .abstract-head {
+      font-weight: bold;
+      text-align: center;
+    }
+    .abstract-body {
+      font-size: 0.8rem;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+    .parse-error {
+      padding: 0.25rem 0.5rem;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 0.25rem;
+      margin: 1rem 0.5rem;
+      color: #721c24;
+    }
+    details.footnote{
+      display: inline;
+      margin-right: 0.1rem;
+    }
+    summary.footnote {
+      list-style: none;
+    }
+    summary.footnote::marker,
+    summary.footnote::-webkit-details-marker {
+      display:none;
+    }
+    summary.footnote {
+      transform: translateY(-0.35rem);      
+      font-size: 0.8rem;
+      padding: 0 0.1rem;
+      cursor: pointer;
+      color: blue;
+    }
+    .footnote-content {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90%;
+      padding: 1rem;
+      font-size: 1rem;
+      background: lightyellow;
+      box-shadow: 0 0 100px black;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      z-index: 1000;
+    }
+    .references {
+      list-style: none;
+      counter-reset: bibitem-counter;      
+    }
+    .references li {
+      margin-bottom: 0.5rem;
+      counter-increment: bibitem-counter;
+      position: relative;
+      padding: 0 2rem;
+    }
+    .references li::before {
+      content: "[" counter(bibitem-counter) "] ";      
+      position: absolute;
+      transform: translateX(-140%);
+    }
+    .font-serif {
+      font-family: Georgia, serif;
+    }
+    .italic {
+      font-style: italic;
+    }
+    .small-caps {
+      font-variant: small-caps;
+    }
+    .font-mono {
+      font-family: monospace;
+    }
+    .font-bold {
+      font-weight: bold;
+    }
+    .font-medium {
+      font-weight: 500;
+    }
+    .non-italic {
+      font-style: normal;
+    }
+    .text-xs {
+      font-size: 0.75rem;
+    }
+    .text-sm {
+      font-size: 0.875rem;
+    }
+    .text-base {
+      font-size: 1rem;
+    }
+    .text-lg {
+      font-size: 1.125rem;
+    }
+    .text-xl {
+      font-size: 1.25rem;
+    }
+    .text-2xl {
+      font-size: 1.5rem;
+    }
+    .text-3xl {
+      font-size: 1.875rem;
+    }
+    .text-4xl {
+      font-size: 2.25rem;
+    }
+    .text-left {
+      text-align: left;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .text-right {
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  
+  <div style="text-align:center">
+    <h1>Linear Algebra Notes</h1>
+    <div style="display:flex;justify-content:space-around;max-width:800px;margin:0 auto;font-size:1.25em">
+      <span>Cesar O. Aguilar <br>Department of Mathematics, SUNY Geneseo</span>
+    </div>    
+  </div>
+
+  <div style="display:none">
+    \[
+    \DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\spn}{span}
+\DeclareMathOperator{\rng}{img}
+\DeclareMathOperator{\nullity}{nullity}
+    \]
+  </div>
+  <main>
+    <section id="sec:node-84" class="section"><h2>1&nbsp;&nbsp;&nbsp;Basics</h2>We will use the symbol \(\mathbb{F}\) to denote a  <strong>field</strong> .  Throughout these notes you may safely assume that \(\mathbb{F}=\mathbb{R}\), that is the field of real numbers, or \(\mathbb{F}=\mathbb{C}\), that is the field of complex numbers.  Throughout these notes, \(V\) will denote a vector space over the field \(\mathbb{F}\).  The most familiar vector space to you is \(V=\mathbb{R}^n\) but we will use the more generic symbol \(V\).<br><br>Recall some basic definitions.<ul><li>A subset \(W\subseteq V\) is called a  <strong>subspace</strong>  of \(V\) if it is closed under addition and scalar multiplication:<ol type="i"><li>if \(x, y\in W\) then \(x+y\in W\) (closed under addition)</li><li>if \(x\in W\) and \(c\in\mathbb{F}\) then \(cx \in W\) (closed under scalar multiplication)</li></ol>Geometrically, a subspace is a plane that goes through the origin in \(V\).</li><li>Let \(\beta=\{v_1,v_2,\ldots,v_k\}\) be a set of vectors in \(V\).  The  <strong>span</strong>  of \(\beta\) is the set of all linear combinations of vectors in \(\beta\), that is,
+<div>\begin{equation*}\spn(\beta) = \{c_1 v_1 + c_2 v_2 + \cdots + c_k v_k\;; |\;; c_1,\ldots,c_k\in\mathbb{F} \}.
+\end{equation*}</div>
+The \(\spn(\beta)\) is a subspace of \(V\).  The opposite is true; if \(W\) is a subspace then there exists vectors \(\gamma=\{w_1,w_2,\ldots,w_k\}\) in \(W\) such that \(W=\spn(\gamma)\).</li><li>A set of vectors \(\beta=\{v_1,v_2,\ldots,v_k\}\) in \(V\) is called  <strong>linearly independent</strong>  if whenever we have
+<div>\begin{equation*}c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = 0
+\end{equation*}</div>
+then necessarily \(c_1=c_2=\cdots=c_k=0\).  Thus, \(\beta\) is linearly independent if the only way to write the zero vector as a linear combination of the vectors in \(\beta\) is to set all \(c_1=c_2=\cdots=c_k=0\).</li><li>Let \(W\subseteq V\) be a subspace.  A  <strong>basis</strong>  of \(W\) is a set \(\beta=\{v_1,v_2,\ldots,v_k\}\) that is linearly independent and that spans \(W\), that is, \(\spn(\beta) = W\).   It is a fact that every subspace \(W\) has a basis and all bases of \(W\) will have the same number of elements.  The  <strong>dimension</strong>  of \(W\) is then the number of vectors in any basis of \(W\), hence in this case \(\dim(W) = k\).</li><li>A mapping \(T:V\rightarrow V\) is called a  <strong>linear operator</strong>  or a  <strong>linear mapping</strong>  if the following two conditions hold:<ol type="i"><li>\(T(u+v) = T(u) + T(v)\), for all \(u,v\in V\)</li><li>\(T(c v) = c T(v)\), for all \(v\in V\) and \(c\in\mathbb{F}\)</li></ol>If \(T\) is linear then if \(x = c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = \sum_{i=1}^k c_i v_i\) then
+<div>\begin{equation*}T(x) = T\left(\sum_{i=1}^k c_i v_i\right) = \sum_{i=1}^k c_i T(v_i)
+\end{equation*}</div></li><li>If \(T:V\rightarrow V\) is a linear operator, the  <strong>image</strong>  or  <strong>range</strong>  of \(T\) will be denoted by
+<div>\begin{equation*}\rng(T) = \{T(x)\in V\;;|\;; x\in V\}.
+\end{equation*}</div>
+The dimension of \(\rng(T)\) is called the  <strong>rank</strong>  of \(T\), denoted by \(\rank(T)=\dim(\rng(T))\).  The  <strong>kernel</strong>  of \(T\) is
+<div>\begin{equation*}\ker(T) = \{x\in V \;;|\;; T(x) = 0\}.
+\end{equation*}</div>
+The dimension of \(\ker(T)\) is the  <strong>nullity</strong>  of \(T\), denoted by \(\nullity(T)=\dim(\ker(T))\).  The kernel is never empty since if \(T\) is linear then \(T(0) = 0\) and thus \(0\in\ker(T)\).  It may be the case however that \(\ker(T)=\{0\}\).</li></ul><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 1.1</div><div class="thm-env-body">If \(V\) is finite dimensional and \(T:V\rightarrow V\) is a linear operator then
+<div>\begin{equation*}\dim(V) = \rank(T) + \nullity(T).
+\end{equation*}</div></div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Let \(\dim(V)=n\) and suppose that \(k=\nullity(T)\).  Let \(\beta_1=\{v_1,\ldots,v_k\}\) be a basis for \(\ker(T)\), and thus \(T(v_i)=0\) for \(i=1,2,\ldots,k\).  Extend \(\beta_1\) to a basis of \(V\), say \(\beta=\{v_1,\ldots,v_k,v_{k+1},\ldots,v_n\}\).  We claim that \(\beta_2=\{T(v_{k+1}),\ldots,T(v_n)\}\) is a basis of \(\rng(T)\).  Let \(x\in V\).  Then \(x=\sum_{i=1}^n c_i v_i\) for some \(c_i\in\mathbb{F}\).  Then
+<div>\begin{equation*}T(x) = \sum_{i=k+1}^n c_i T(v_i)
+\end{equation*}</div>
+and this proves that \(\spn(\beta_2)=\rng(T)\).  To prove that \(\beta_2\) is linearly independent, suppose that \(\sum_{i=k+1}^n c_i T(v_i) = 0\).  Then \(\sum_{i=k+1}^n c_i v_i \in \ker(T)\) and therefore \(\sum_{i=k+1}^n c_i v_i = \sum_{j=1}^{k} d_j v_j\) for some scalars \(d_1,\ldots,d_k\in\mathbb{F}\).  Therefore,
+<div>\begin{equation*}\sum_{j=1}^{k} d_j v_j - \sum_{i=k+1}^n c_i v_i  = 0.
+\end{equation*}</div>
+By linear independence of \(\beta\), it holds that \(c_i=0\) for all \(i\) and \(d_j=0\) for all \(k\).  This proves that \(\beta_2\) is linearly independent.  Thus, \(\beta_2\) is indeed a basis for \(\rng(T)\) and therefore \(\rank(T) = n - k = n - \nullity(T)\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 1.1</div><div class="thm-env-body">Let \(A\) be a \(n\times n\) matrix with entries in \(\mathbb{F}\) and define \(T_A:\mathbb{F}^n\rightarrow\mathbb{F}^n\) by
+<div>\begin{equation*}T_A(x) = Ax.
+\end{equation*}</div>
+Then \(T_A\) is linear operator.  If \(\{v_1,v_2,\ldots,v_n\}\) denote the columns of \(A\) then \(\rng(T_A) = \spn\{v_1,v_2,\ldots,v_n\}\).  Give an example of a linear operator \(T_A:\mathbb{R}^2\rightarrow\mathbb{R}^2\) such that \(\rng(T)=\ker(T)\).</div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 1.2</div><div class="thm-env-body">Recall that \(T:V\rightarrow V\) is one-to-one if whenever \(T(x)=T(y)\) then \(x=y\).  Prove the following.<ol type="a"><li>Prove that \(T\) is one-to-one if and only if \(\ker(T)=\{0\}\).</li><li>Suppose that \(T\) is one-to-one and that \(S=\{v_1,v_2,\ldots,v_k\}\) is a subset of \(V\).  Prove that \(S\) is linearly independent if and only if \(\{T(v_1),T(v_2),\ldots,T(v_k)\}\) is linearly independent.</li></ol></div></div>Let \(\gamma=\{v_1,v_2,\ldots,v_n\}\) be a basis for \(V\).  If \(x\in V\) then there are scalars \(c_1,\ldots,c_n\) such that \(x=\sum_{i=1}^n c_i v_i\).  The scalars \((c_1,c_2,\ldots,c_n)\) are called  <strong>the coordinates of \(x\) relative to \(\gamma\)</strong> .  The  <strong>coordinate vector of \(x\) relative to \(\gamma\)</strong>  is defined as
+<div>\begin{equation*}[x]_\gamma =\begin{bmatrix}c_1\\c_2\\\vdots\\c_n\end{bmatrix}.
+\end{equation*}</div>
+Now let \(T:V\rightarrow V\) be a linear operator.  Then for each \(v_j\in\gamma\) we have that
+<div>\begin{equation*}T(v_j) = \sum_{i=1}^n a_{ij} v_i
+\end{equation*}</div>
+for some constants \(a_{1j},a_{2j},\ldots,a_{nj}\in\mathbb{F}\).  The  <strong>matrix representation of \(T\) in the basis \(\gamma\)</strong>  is the \(n\times n\) matrix \([T]_\gamma\) whose \((i,j)\) entry is \(a_{ij}\).  Hence, the \(j\)th column of \([T]_\gamma\) is \([T(v_j)]_\gamma\), i.e., the coordinate vector of \(T(v_j)\) in the basis \(\gamma\).<br><br>To give the next definition, if \(W_1, W_2\) are subsets of \(V\), the  <strong>sum</strong>  of \(W_1\) and \(W_2\) is the set
+<div>\begin{equation*}W_1 + W_2 = \{x+y\;;|\;; x\in W_1,\;; y\in W_2\}.
+\end{equation*}</div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 1.1</div><div class="thm-env-body">Let \(V\) be a vector space and suppose that  \(W_1\) and \(W_2\) are subspaces of \(V\) that satisfy the following:<ol type="i"><li>\(V=W_1+W_2\), and</li><li>\(W_1\cap W_2=\{0\}\).</li></ol>In this case we say that \(V\) is the  <strong>direct sum</strong>  of \(W_1\) and \(W_2\) and we write \(V=W_1 \oplus W_2\).</div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 1.3</div><div class="thm-env-body">Let \(V=\mathbb{R}^3\) and \(W_1\) be the \(z=0\) plane and let \(W_2\) be the line through the origin with direction vector \(u=(1,2,-1)\), and thus \(W_2=\spn(u)\).  Both \(W_1\) and \(W_2\) are subspaces and \(W_1\cap W_2 = \{0\}\).  Every vector \(x=(x_1,x_2,x_3)\in\mathbb{R}^3\) can be written as
+<div>\begin{equation*}x = (x_1,x_2,x_3) = \underbrace{(x_1 + x_3, x_2 + 2x_3, 0)}_{w_1} + \underbrace{-x_3 (1,2,-1)}_{w_2}\end{equation*}</div>
+Clearly \(w_1\in W_1\) and \(w_2 \in W_2\).  Therefore, \(\mathbb{R}^3 = W_1\oplus W_2\).</div></div>Below are some characterizations of the direct sum of subspaces.<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 1.2</div><div class="thm-env-body">Let \(V\) be finite dimensional.  The following are equivalent.<ol type="a"><li>\(V=W_1\oplus W_2\).</li><li>\(V=W_1+W_2\) and if \(w_1\in W_1\) and \(w_2\in W_2\) and \(w_1+w_2=0\) then \(w_1=w_2=0\).</li><li>Each \(v\in V\) can be written uniquely as \(v=w_1+w_2\) for some \(w_i\in W_i\).</li><li>If \(\gamma_i\) is an ordered basis for \(W_i\) then \(\gamma_1\cup \gamma_2\) is an ordered basis for \(V\).</li></ol></div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Assume (a) and suppose that \(w_1+w_2=0\) for \(w_i\in W_i\).  Then \(w_1=-w_2\).  Since \(W_1\cap W_2=\{0\}\) it holds that \(w_1=w_2=0\).  <br><br>Assume (b) and suppose that \(v=w_1+w_2=w'_1+w'_2\).  Then \((w_1-w_1')+(w_2-w_2')=0\) and therefore \(w_1=w_1'\) and \(w_2=w_2'\).<br><br>Assume (c) and let \(\gamma_i\) be an ordered basis for \(W_i\).  For each \(v\in V\) it holds that \(v=w_1+w_2\) for unique \(w_i\in W_i\).  Now \(w_i\in\spn(\gamma_i)\) and thus \(\spn(\gamma)=V\).  Let \(\gamma_1=\{v_1,\ldots,v_k\}\) and let \(\gamma_2=\{u_1,\ldots,u_j\}\).  If \(\sum c_i v_i + \sum d_k u_k = 0\) then necessarily \(\sum c_i v_i = \sum d_k u_k = 0\).  By linear independence of \(\gamma_i\) it holds that \(c_i=0\) for all \(i\) and \(u_k=0\) for all \(k\).  Hence, \(\gamma\) is linear independent.<br><br>Assume (d).  Then \(V=\spn(\gamma) = \spn(\gamma_1) + \spn(\gamma_2)=W_1+W_2\).  If \(x\in W_1\cap W_2\) then \(x=\sum c_i v_i = \sum d_k u_k\) which implies that \(\sum c_i v_i - \sum d_k u_k = 0\).  By linear independent of \(\gamma\) it holds that \(c_i=0\) and \(u_k=0\) for all \(i,k\).  Hence, \(W_1\cap W_2=\{0\}\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id="exm:img-ker"><div class="thm-env-head">Example 1.4</div><div class="thm-env-body">Let \(V\) be finite dimensional and let \(T:V\rightarrow V\) be a linear operator.<ol type="a"><li>Suppose that \(V=\rng(T) + \ker(T)\).  Prove that \(V=\rng(T)\oplus \ker(T)\).<br></li><li>Suppose that \(\rng(T)\cap \ker(T)=\{0\}\).  Prove that \(V=\rng(T)\oplus \ker(T)\).</li></ol></div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; (a) Suppose, by contradiction, that \(\rng(T)\cap \ker(T)\neq\{0\}\) and let \(x\in\rng(T)\cap\ker(T)\) be a non-zero vector.  Extend \(x\) to a basis of \(\rng(T)\), call it \(\gamma_1\), and extend \(x\) to a basis of \(\ker(T)\), call it \(\gamma_2\).  We have that \(|\gamma_1| = \rank(T)\) and \(|\gamma_2| = \nullity(T)\).  Let \(\gamma = \gamma_1\cup\gamma_2\).  Then 
+<div>\begin{equation*}|\gamma| = |\gamma_1|+|\gamma_2| - |\gamma_1\cap\gamma_2| \leq \rank(T) + \nullity(T) - 1 &lt; \dim(V).  
+\end{equation*}</div>
+On the other hand, since \(V=\rng(T)+\ker(T)\), it follows that \(V=\spn(\gamma)\), which is a contradiction.  Hence, \(\rng(T)\cap\ker(T)=\{0\}\).  To prove (b), suppose that \(\rng(T)\cap\ker(T)=\{0\}\).  If \(\ker(T)=\{0\}\) there is nothing to prove so suppose that \(\gamma_1=\{v_1,\ldots,v_k\}\) is a basis for \(\ker(T)\) and let \(\gamma_2=\{T(v_{k+1}),\ldots,T(v_{n})\}\) be a basis for \(\rng(T)\).  We claim that \(\gamma=\gamma_1\cup \gamma_2\) is a basis for \(V\).  Since \(\rng(T)\cap\ker(T)=\{0\}\), then \(|\gamma|=n=\dim(V)\), and so we need only show that \(\gamma\) is linearly independent.  Suppose then that \(\sum \alpha_i v_i + \sum \beta_j T(v_j) = 0\).  Then \(T(\sum \beta_j T(v_j)) = 0\) and therefore \(\sum \beta_j T(v_j) \in \ker(T)\).  Clealy, \(\sum\beta_j T(v_j) \in \rng(T)\) also, and thus \(\sum \beta_j T(v_j) = 0\).  By linear independence of \(\gamma_2\), we have that \(\beta_j=0\) for all \(j\), and therefore by the linear independence of \(\gamma_1\), we have that \(\alpha_i=0\) for all \(i\).  Hence, \(\gamma\) is linearly independent.  Hence, \(V=\spn(\gamma)=\rng(T) + \ker(T)\), and this completes the proof. <span style="font-variant: small-caps">QED</span></div></section><section id="sec:node-1253" class="section"><h2>2&nbsp;&nbsp;&nbsp;Diagonalization</h2>We begin with the definition of diagonalizability.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 2.1</div><div class="thm-env-body">A linear operator \(T:V\rightarrow V\) is  <strong>diagonalizable</strong>  if there exists a basis \(\beta\) of \(V\) such that \([T]_\beta\) is a diagonal matrix.</div></div>Suppose that \(T\) is diagonalizable and let \(\beta=\{v_1,v_2,\ldots,v_n\}\) be a basis of \(V\) such that \([T]_\beta\) is diagonal.  Recall that the \(j\)column of \([T]_\beta\) is \([T(v_j)]_\beta\).  Let \(D_{ij}\) denote the entries of \([T]_\beta\).  Since \([T]_\beta\) is diagonal, it holds that
+<div>\begin{equation*}T(v_j) = \sum_{i=1}^n D_{ij} v_i = D_{jj} v_j.
+\end{equation*}</div>
+Therefore, if \(\beta\) is a basis that diagonalizes \(T\) then \(T(v_j) = D_{jj} v_j\).  Conversely, suppose that there exists a basis \(\beta=\{v_1,v_2,\ldots,v_n\}\) such that if \(T(v_j) = \lambda_j v_j\) for each \(j\) and some scalars \(\lambda_j\in\mathbb{F}\).  Then \([T]_\beta\) is the diagonal matrix
+<div>\begin{equation*}[T]_\beta =\begin{bmatrix}\lambda_1 & 0 & \cdots & 0\\0 & \lambda_2 & \cdots & 0\\\vdots & \vdots & \cdots & \vdots\\0 & 0 & \cdots & \lambda_n\end{bmatrix}\end{equation*}</div>
+We have proved the following.<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 2.1</div><div class="thm-env-body">The linear operator \(T:V\rightarrow V\) is diagonalizable if and only if there exists a basis \(\beta=\{v_1,v_2,\ldots,v_n\}\) of \(V\) and scalars \(\lambda_1,\lambda_2,\ldots,\lambda_n\) such that \(T(v_j) = \lambda_j v_j\) for all \(j=1,2,\ldots,n\).</div></div>The previous observation motivates the following definition.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 2.2</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator.  A vector \(v\in V\) is an  <strong>eigenvector</strong>  of \(T\) if \(T(v) = \lambda v\) for some scalar \(\lambda\in\mathbb{F}\).  The scalar \(\lambda\) is called an  <strong>eigenvalue</strong>  of \(T\) corresponding to the eigenvector \(v\).</div></div>The next result follows by definition.<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 2.2</div><div class="thm-env-body">The linear operator \(T:V\rightarrow V\) is diagonalizable if and only if there exists a basis \(\beta=\{v_1,v_2,\ldots,v_n\}\) of \(V\) consisting of eigenvectors of \(T\).</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 2.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and let \(\lambda\) be an eigenvalue of \(T\).  Then \(v\in V\) is an eigenvector of \(T\) corresponding to \(\lambda\) if and only if \(v\neq 0\) and \(v\in\ker(T-\lambda I)\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; If \(T(v) = \lambda v\) then \(T(v) - \lambda v = 0\) which can be written as
+<div>\begin{equation*}(T-\lambda I) v = 0
+\end{equation*}</div>
+where \(I\) is the identity operator.  Thus \(v\in\ker(T-\lambda I)\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 2.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on an \(n\)-dimensional vector space \(V\).  Let \(\beta\) be an ordered basis for \(V\) and let \(A=[T]_\beta\).  The  <strong>characteristic polynomial</strong>  \(f(t)\) of \(T\) is
+<div>\begin{equation*}f(t) = \det(A-tI).
+\end{equation*}</div></div></div>If \(\gamma\) is another basis for \(V\) and \(B=[T]_\gamma\) then \(\det(A-tI) = \det(B-tI)\) since \(A\) and \(B\) are similar matrices.<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 2.4</div><div class="thm-env-body">The roots of the characteristic polynomial of \(T\) are the eigenvalues of \(T\).</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 2.5</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on \(V\).  Let \(v_1,\ldots,v_k\) be eigenvectors of \(T\) corresponding to distinct eigenvalues \(\lambda_1,\ldots,\lambda_k\), respectively.  Then \(\{v_1,\ldots,v_k\}\) is linearly independent.</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Corollary 2.1</div><div class="thm-env-body">If \(T\) has \(n\) distinct eigenvalues then it is diagonalizable.</div></div></section><section id="sec:node-1574" class="section"><h2>3&nbsp;&nbsp;&nbsp;Invariant Subspaces</h2>We begin with the definition of an invariant subspace.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 3.1</div><div class="thm-env-body">Let \(V\) be a vector space and let \(T:V\rightarrow V\) be a linear operator.  A subspace \(W\) of \(V\) is said to be \(T\) <strong>-invariant</strong>  if \(T(x)\in W\) for every \(x\in W\).  If \(W\) is \(T\)-invariant, we define the restriction of \(T\) on \(W\) as the mapping \(T_W:W\rightarrow W\) defined by \(T_W(x)=T(x)\) for all \(x\in W\).</div></div>If \(W\) is \(T\)-invariant, then it is not difficult to see that \(T_W:W\rightarrow W\) is a linear operator.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.1</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator.  Suppose that \(V=\rng(T)\oplus W\) and \(W\) is \(T\)-invariant.<ol type="a"><li>Prove that \(W\subseteq \ker(T)\).</li><li>Show that if \(V\) is finite dimensional then \(W=\ker(T)\).</li></ol></div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; If \(w\in W\) then \(T(w)\in W\) by invariance.  Thus, \(T(w) \in \rng(T)\cap W = \{0\}\), and therefore \(T(w)=0\), i.e., \(w\in \ker(T)\).  This proves that \(W\subseteq \ker(T)\).  Now, if \(V\) is finite dimensional then from the Rank theorem, \(\dim(V) = \rank(T) + \nullity(T)\).  Now, since \(V=\rng(T)\oplus W\), we also have that \(\dim(V) = \rank(T) + \dim(W)\).  It follows then that \(\dim(W) = \nullity(T)\) and therefore \(W = \ker(T)\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.2</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator.  Let \(x\in V\) and consider the subspace
+<div>\begin{equation*}W = \spn\{x,T(x),T^2(x),\ldots\}.
+\end{equation*}</div>
+Suppose that \(v\in W\) and write \(v=\sum_{j=1}^k \alpha_j T^j(x)\) for some \(k\geq 0\) and \(\alpha_j\in\mathbb{R}\).  Then \(T(v) = \sum_{j=1}^k \alpha_j T^{j+1}(x)\) and thus \(T(v) \in W\).  This shows that \(W\) is \(T\)-invariant.  If \(W'\) is a subspace of \(V\) that contains \(x\) and is \(T\)-invariant then \(T^k(x)\in W'\) for all \(k\geq 0\) and therefore \(W\subseteq W'\).  Hence, \(W\) is the smallest \(T\)-invariant subspace containing \(x\).  The subspace \(W\) is called the  <strong>\(T\)-cyclic subspace generated by \(x\)</strong> .</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 3.1</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and suppose that \(W\) is \(T\)-invariant.  Then the characteristic polynomial of \(T_W:W\rightarrow W\) divides the characteristic polynomial of \(T\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Let \(\gamma_1=\{v_1,v_2,\ldots,v_k\}\) be a basis for \(W\) and extend it to a basis \(\gamma\) of \(V\).  Let \(A_1=[T_W]_{\gamma_1}\).  Then 
+<div>\begin{equation*}[T]_\gamma =\begin{bmatrix}A_1 & A_2\\0 & A_3\end{bmatrix}.
+\end{equation*}</div>
+The characteristic polynomial \(f(t)\) of \(T\) is therefore \(f(t) = \det(A_1-tI) \det(A_3-tI)\).  Hence, \(\det(A_1-tI)\) divides \(f(t)\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 3.2</div><div class="thm-env-body">Let \(V\) be finite dimensional, let \(T:V\rightarrow V\) be a linear operator, and let \(W=\spn\{x,T(x),T^2(x),\ldots,\}\), where \(x\neq 0\).  Let \(k=\dim(W)\).  The following hold.<ol type="a"><li>\(\{x,T(x),\ldots,T^{k-1}(x)\}\) is a basis for \(W\).</li><li>If \(a_0x+a_1T(x) + \cdots + a_{k-1} T^{k-1}(x) + T^k(x) = 0\), then the characteristic polynomial of \(T|_W\) is \(f(t) = (-1)^k(a_0+a_1t+\cdots+a_{k-1}t^{k-1} + t^k)\).</li></ol></div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Since \(V\) is finite dimensional, there exists a largest integer \(j\) for which<div>\begin{equation*}\beta=\{x,T(x),\ldots,T^{j-1}(x)\}\end{equation*}</div>is linearly independent.  Let \(Z=\spn(\beta)\).  By definition of \(j\), \(T^j(v)\in Z\).  Therefore, if \(z\in Z\) then \(z\) is a linear combination of \(\beta\) and so is \(T(z)\).  Hence, \(T(z)\in Z\).  This shows that \(Z\) is \(T\)-invariant.  Since \(W\) is the smallest \(T\)-invariant subspace containing \(x\), it follows that \(W\subset Z\).  Clearly, \(Z\subset W\) and this proves that \(Z=W\).  Hence, \(\dim(W)=j\), and thus \(j=k\).<br><br>In the basis \(\beta\), we have that
+<div>\begin{equation*}[T_W]_\beta =\begin{bmatrix}0 & 0 & \cdots & 0 & -a_0\\1 & 0 & \cdots & 0 & -a_1\\\vdots & \vdots & & \vdots & \vdots\\
+0 & 0 & \cdots & 1 & -a_{k-1}\end{bmatrix}.
+\end{equation*}</div>
+By induction on \(k\), one can show that the characteristic polynomial of \([T_W]_\beta\) is \(f(t) = (-1)^k(a_0+a_1t+\cdots+a_{k-1}t^{k-1} + t^k)\), and thus of \(T\) also. <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 3.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator.  Suppose that \(V=W_1\oplus W_2\), and assume that \(W_1\) and \(W_2\) are \(T\)-invariant.  Let \(\gamma_i\) be an ordered basis for \(W_i\) and let \(\gamma=\gamma_1\cup\gamma_2\).  Let \(A=[T]_\gamma\), let \(A_1=[T_{W_1}]_{\gamma_1}\), and let \([T_{W_2}]_{\gamma_2}\).  Then
+<div>\begin{equation*}A =\begin{bmatrix}A_1 & O\\O & A_2\end{bmatrix}.
+\end{equation*}</div>
+Hence, if \(f(t)\) is the characteristic polynomial of \(T\), \(f_1(t)\) is the characteristic polynomial of \(T_{W_1}\), and \(f_2(t)\) is the characteristic polynomial of \(T_{W_2}\), then \(f(t) = f_1(t) f_2(t)\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; The proof is straightforward. <span style="font-variant: small-caps">QED</span></div>If \(g(x) = a_0 + a_1t + \cdots + a_n t^n\) is a polynomial and \(T:V\rightarrow V\) is a linear operator, we define a new operator \(g(T)\) by
+<div>\begin{equation*}g(T) = a_0I + a_1 T + \cdots + a_n T^n
+\end{equation*}</div>
+so that for any \(x\in V\) we have that
+<div>\begin{equation*}g(T)(x) = a_0x + a_1 T(x) + \cdots + a_n T^n(x).
+\end{equation*}</div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 3.4 (Cayley-Hamilton)</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and let \(f(t)\) be the characteristic polynomial of \(T\).  Then \(f(T)=0\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; We prove that for every \(v\in V\), it holds that \(f(T)(v)=0\).  Assume that \(v\neq 0\) and let \(W\) be the \(T\)-cyclic subspace generated by \(v\).  Let \(k=\dim(W)\), and thus \(\{v,T(v),\ldots,T^{k-1}(v)\}\) is a basis for \(W\).  Hence, there exists scalars \(a_i\) such that
+<div>\begin{equation*}a_0v + a_1 T(v) + \cdots + a_{k-1}T^{k-1}(v) + T^k(v)=0.
+\end{equation*}</div>
+The polynomial \(g(t)=(-1)^k(a_0+a_1t+\cdots + a_{k-1}t^{k-1}+t^k)\) is the characteristic polynomial of \(T_W\).  Thus, \(f(t)=h(t)g(t)\) for some polynomial \(h(t)\).  Hence, \(f(T)(v)=h(g(T)(v))=0\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and let \(W\) be a \(T\)-invariant subspace.  Prove that \(W\) is \(g(T)\)-invariant for any polynomial \(g(t)\).</div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.4</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and let \(W\) be a \(T\)-invariant subspace of \(V\).  Prove that if \(v\) is an eigenvector of \(T_W\) with eigenvalue \(\lambda\) then \(v\) is an eigenvector of \(T\) also with eigenvalue \(\lambda\).</div></div>A polynomial \(g(t)\) over a field \(\mathbb{F}\) is said to  <strong>split over</strong>  \(\mathbb{F}\) if
+<div>\begin{equation*}g(t) = c(t-a_1)(t-a_2)\cdots (t-a_n)
+\end{equation*}</div>
+where \(c,a_1,\ldots,a_n \in \mathbb{F}\).  In other words, \(g(t)\) can be completely factored as a product of linear factors.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.5</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on a finite dimensional vector space \(V\).<ol type="a"><li>Let \(W\) be \(T\)-invariant.  Prove that if the characteristic polynomial of \(T\) splits then so those the characteristic polynomial of \(T_W\).</li><li><strong>Deduce that if the characteristic polynomial of \(T\) splits then any nontrivial \(T\)-invariant subspace of \(V\) contains an eigenvector of \(T\).</strong></li></ol></div></div><div class="thm-env thm-style-definition" id="exm:v-sum"><div class="thm-env-head">Example 3.6</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and suppose that \(W\) is \(T\)-invariant.  Suppose that \(v_1,v_2,\ldots,v_k\) are eigenvectors of \(V\) corresponding to distinct eigenvalues.  Prove that if \(v_1+v_2+\cdots+v_k\in W\) then \(v_i \in W\) for all \(i\).  <em>Hint:</em>  Use mathematical induction on \(k\).</div></div>We now introduce the direct sum of subspaces.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 3.2</div><div class="thm-env-body">Let \(W_1,W_2,\ldots,W_k\) be subspaces of \(V\).  We call \(V\) the  <strong>direct sum</strong>  of the subspaces \(W_1,\ldots,W_k\) and write 
+<div>\begin{equation*}V = W_1\oplus W_2 \oplus \cdots \oplus W_k
+\end{equation*}</div>
+if \(V=W_1+W_2+\cdots+W_k = \{v_1+v_2+\cdots+v_k\;;|\;; v_i \in W_i\}\) and for each \(j\in\{1,\ldots,k\}\)<div>\begin{equation*}W_j \cap \sum_{i\neq j} W_i = \{0\}.
+\end{equation*}</div></div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 3.5</div><div class="thm-env-body">The following are equivalent.<ol type="a"><li>\(V=W_1\oplus W_2\oplus \cdots\oplus W_k\)</li><li>\(V=\sum_{i=1}^k W_i\) and for any vectors \(v_1,v_2,\ldots,v_k\) such that \(v_i\in W_i\) if \(v_1+v_2+\cdots+v_k=0\) then \(v_i=0\) for all \(i\).</li><li>Each vector \(v\in V\) can be written uniquely in the form \(v=v_1+v_2+\cdots+v_k\) where \(v_i \in W_i\).</li><li>If \(\gamma_i\) is an ordered basis for \(W_i\) then \(\gamma_1\cup\gamma_2\cup\cdots\cup\gamma_k\) is an ordered basis for \(V\).</li><li>For each \(W_i\) there exists an ordered basis \(\gamma_i\) such that \(\gamma_1\cup\gamma_2\cup\cdots\cup\gamma_k\) is an ordered basis for \(V\).</li></ol></div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.7</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator and suppose that \(W\) is a nontrivial \(T\)-invariant subspace.  Prove that if \(T\) is diagonalizable then so is \(T_W\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Let \(\lambda_1,\lambda_2,\ldots,\lambda_k\) denote the distinct eigenvalues of \(T\).  If \(T\) is diagonalizable, then \(V=E_1\oplus E_2 \oplus \cdots \oplus E_k\), where \(E_i=\ker(T-\lambda_i I)\) is the eigenspace of \(T\) corresponding to the eigenvalue \(\lambda_i\).  Since \(W\) is non-trivial, the characteristic polynomial of \(T_W\) splits, and therefore \(T_W\) has an eigenvector, which is naturally an eigenvector of \(T\) also.  Hence, after a possible reordering, there exists a largest integer \(j\) such that \(1\leq j\leq k\) and \(W\cap E_i\neq\{0\}\) for all \(1\leq i\leq j\).  We claim that
+<div>\begin{equation*}W = (W\cap E_1) \oplus (W\cap E_2) \oplus \cdots \oplus (W\cap E_j).
+\end{equation*}</div>
+Indeed, let \(w\in W\).  Then from \(V=E_1\oplus \cdots\oplus E_k\) we can write that 
+<div>\begin{equation*}w=\sum_{i=1}^k \sum_{\ell=1}^{\dim(E_i)} c_{i\ell}\tilde{v}_{i\ell}\end{equation*}</div>
+where \(\{v_{i\ell}\}_{\ell=1}^{\dim(E_i)}\) is a basis for \(E_i\) and \(c_{i\ell}\in\mathbb{F}\), for all \(i\).  Let \(v_i = \sum_{\ell=1}^{\dim(E_i)} c_{i\ell}\tilde{v}_{i\ell}\) so that \(w=v_1+v_2+\cdots+v_k\).  If \(j&lt; k\), then by Example <a href='#exm:v-sum'>3.6</a>, we must have that \(v_i = 0\) for all \(i&gt;j\), otherwise \(v_i \in W\) and thus \(W\cap E_i \neq \{0\}\) which is a contradiction.  Hence \(w=v_1+\cdots+v_j\) and \(v_1,\ldots,v_j \in W\).  It is clear that \((W\cap E_i) \cap \sum_{\ell\neq i} (W\cap E_\ell) = \{0\}\), for all \(i\), and our claim is proved.  A basis of \(W\cap E_i\), for \(1\leq i\leq j\), consists of eigenvectors of \(T_W\), and thus there exists a basis of \(W\) of eigenvectors of \(T_W\). <span style="font-variant: small-caps">QED</span></div>Let \(T:V\rightarrow V\) be a linear operator on the \(n\)-dimensional vector space \(V\).  We say that \(V\) is  <strong>\(T\)-cyclic</strong>  if there exists \(v\in V\) such that \(V=\spn\{v,T(v),\ldots,T^{n-1}(v)\}\).<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 3.8</div><div class="thm-env-body">Suppose that \(T:V\rightarrow V\) has \(n=\dim(V)\) distinct eigenvalues.  Prove that \(V\) is \(T\)-cyclic.</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Let \(v_1,\ldots,v_n\) be linearly independent eigenvectors of \(T\) corresponding to distinct eigenvalues \(\lambda_1,\ldots,\lambda_n\).  Let \(v=v_1+\cdots+v_n\).  Then \(T^j(v) = \lambda_1^j v_ 1 + \cdots + \lambda_n^j v_n\) for all \(j\).  Suppose that
+<div>\begin{equation*}c_1 v + c_2 T(v) + \cdots + c_n T^{n-1}(v)  = 0.
+\end{equation*}</div>
+Then
+<div>\begin{equation*}(c_1 + c_2\lambda_1+\cdots+c_n \lambda^{n-1}_1)v_1 + \cdots + (c_1+c_2\lambda_n + \cdots + c_n \lambda_n^{n-1}) v_n = 0.
+\end{equation*}</div>
+Since \(v_1,\ldots,v_n\) are linearly independent, it follows that
+<div>\begin{equation*}\begin{bmatrix}1 & \lambda_1 & \lambda^2_1 & \cdots & \lambda_1^{n-1}\\
+1 & \lambda_2 & \lambda^2_2 & \cdots & \lambda_2^{n-1}\\
+\vdots & \vdots & \vdots & \cdots & \vdots \\
+1 & \lambda_n & \lambda^2_n & \cdots & \lambda_n^{n-1}\end{bmatrix}\begin{bmatrix}c_1\\c_2\\\vdots\\c_n\end{bmatrix}=\begin{bmatrix}0\\0\\\vdots\\0\end{bmatrix}\end{equation*}</div>
+The Vandermonde matrix appearing above has determinant
+<div>\begin{equation*}\prod_{i&lt;j} (\lambda_i-\lambda_j)
+\end{equation*}</div>
+and is therefore non-zero since the \(\lambda\)'s are distinct.  This proves that \(c_1=\cdots=c_n=0\), and thus \(\{v,T(v),\ldots,T^{n-1}(v)\}\) is a basis for \(V\). <span style="font-variant: small-caps">QED</span></div></section><section id="sec:node-2796" class="section"><h2>4&nbsp;&nbsp;&nbsp;Inner Product Spaces and the Adjoint</h2>From now on \(V\) is an inner product space with inner product \(\left\langle \cdot,\cdot \right\rangle\).  Recall that a set of vectors \(\gamma=\{v_1,v_2,\ldots,v_k\}\) is an  <strong>orthogonal set</strong>  if \(\left\langle v_i,v_j \right\rangle=0\) for every distinct \(i\) and \(j\).  If in addition \(\left\langle v_i,v_i \right\rangle=1\) for all \(i\) then \(\gamma\) is called an  <strong>orthonormal set</strong> .  An  <strong>orthonormal basis</strong>  for \(V\) is a basis \(\beta=\{v_1,v_2,\ldots,v_n\}\) of \(V\) that is an orthonormal set.<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 4.1 (Gram-Schmidt Procedure)</div><div class="thm-env-body">Let \(V\) be an inner product space and let \(\gamma=\{w_1,w_2,\ldots,w_k\}\) be linearly independent.  Define \(\gamma'=\{v_1,v_2,\ldots,v_k\}\) by \(v_1=w_1\) and 
+<div>\begin{equation*}w_j = v_j - \sum_{i=1}^{j-1} \frac{\left\langle w_j,v_i \right\rangle}{\||v_i\||^2} v_i
+\end{equation*}</div>
+for \(j=2,\ldots,k\).  Then \(\spn(\gamma) = \spn(\gamma')\) and \(\gamma'\) is an orthogonal set of nonzero vectors.</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 4.2</div><div class="thm-env-body">Let \(V\) be a nonzero finite-dimensional inner product space.  Then \(V\) has an orthonormal basis \(\beta\).  Furthermore, if \(\beta=\{v_1,v_2,\ldots,v_n\}\) and \(x\in V\) then
+<div>\begin{equation*}x = \sum_{i=1}^n \left\langle x,v_i \right\rangle v_i.
+\end{equation*}</div></div></div>Let \(S\) be a subset of \(V\).  The  <strong>orthogonal complement</strong>  of \(S\) is the set
+<div>\begin{equation*}S^\perp = \{v\in V\;;|\;; \left\langle v,x \right\rangle=0, \;; \forall x\in S\}.
+\end{equation*}</div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 4.1</div><div class="thm-env-body">Prove that \(S^\perp\) is a subspace for any set \(S\subset V\).</div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 4.2</div><div class="thm-env-body">Let \(W\subseteq V\) be a subspace and suppose that \(V\) is finite-dimensional.  Prove that \(V=W\oplus W^\perp\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Let \(\beta=\{w_1,\ldots,w_k\}\) be an orthonormal basis for \(W\).  Let \(x\in V\).  Let \(w_x = \sum_{j=1}^k \left\langle x,v_j \right\rangle v_j\) and let \(u_x = x-w_x\).  Then clearly \(x=w_x + u_x\).  Now, for \(j=1,2,\ldots,k\), we have that
+<div>\begin{equation*}\left\langle u_x,v_j \right\rangle = \left\langle x,v_j \right\rangle - \left\langle x,v_j \right\rangle\left\langle v_j,v_j \right\rangle = 0.
+\end{equation*}</div>
+Hence, \(u_x\in W^\perp\).  This proves that \(V=W+W^\perp\).  Now suppose that \(w\in W\cap W^\perp\).  Then \(w=\sum_{j=1}^k \left\langle w,v_j \right\rangle v_j\).  But \(w\in W^\perp\) implies that \(\left\langle w,v_j \right\rangle=0\) for all \(j\) and therefore \(w=0\).  This proves that \(W\cap W^\perp =\{0\}\).  Hence, \(V=W\oplus W^\perp\). <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 4.3</div><div class="thm-env-body">Let \(V\) be a finite-dimensional inner product space, and let \(T:V\rightarrow V\) be a linear operator.  Then there exists a unique linear operator \(T^*:V\rightarrow V\) such that \(\left\langle T(x),y \right\rangle=\left\langle x,T^*(y) \right\rangle\) for all \(x,y\in V\).  The linear operator \(T^*\) is called the  <strong>adjoint</strong>  of the operator \(T\).</div></div>Let \(A\) be a \(n\times n\) matrix.  The linear mapping \(T_A(x) = Ax\) has adjoint
+<div>\begin{equation*}(T_A)^*(x) = A^*x
+\end{equation*}</div>
+where \(A^*\) denotes the complex conjugate transpose of \(A\):
+<div>\begin{equation*}(A^*)_{ij} = \overline{A_{ij}}\end{equation*}</div>
+If \(A\) is a real matrix then \(A^*\) is the transpose of \(A\), and we use the notation \(A^T\) instead.<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 4.4</div><div class="thm-env-body">Let \(V\) be finite-dimensional and let \(\beta\) be an orthonormal basis for \(V\).  If \(T:V\rightarrow V\) is a linear operator then
+<div>\begin{equation*}[T^*]_\beta = [T]_\beta^*.
+\end{equation*}</div></div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 4.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on the inner product space \(V\).  Prove the following.<ol type="a"><li>\(\rng(T^*)^\perp = \ker(T)\)</li><li>If \(V\) is finite dimensional then \(\rng(T^*)=\ker(T)^\perp\).</li></ol><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Let \(z\in \rng(T^*)^\perp\).  Then \(\left\langle z,T^*(x) \right\rangle=0\) for all \(x\in V\).  Thus, \(\left\langle T(z),x \right\rangle=0\) for all \(x\in V\).  Hence, \(T(z)=0\) and thus \(z\in\ker(T)\).  Conversely, suppose that \(z\in\ker(T)\).  Then \(\left\langle x,T(z) \right\rangle=0\) for all \(x\) and thus \(\left\langle T^*(x),z \right\rangle=0\) for all \(x\).  Hence, \(z\in\rng(T^*)^\perp\).  If \(V\) is finite-dimensional, then for any subspace \(W\) of \(V\) it holds that \((W^\perp)^\perp = W\).  Thus, we can apply this to \(W=\rng(T^*)\). <span style="font-variant: small-caps">QED</span></div></div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 4.4</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on finite-dimensional \(V\).  Prove the following.<ol type="a"><li>\(\ker(T^*T)=\ker(T)\).  Deduce that \(\rank(T^*T)=\rank(T)\).</li><li>\(\rank(T)=\rank(T^*)\).  Deduce from (a) that \(\rank(TT^*)=\rank(T)\).</li></ol><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; If \(T(x)=0\) then clearly \(T^*T(x)=0\) so that \(\ker(T)\subset\ker(T^*T)\).  Conversely, suppose that \((T^*T)(x)=0\), i.e., \(x\in\ker(T^*T)\).  Then \(T(x)\in \ker(T^*) = \rng(T)^\perp\).  Hence, for all \(z\in V\) it holds that \(0= \left\langle T(x),T(z) \right\rangle\).  In particular, \(0=\left\langle T(x),T(x) \right\rangle\) and therefore \(T(x)=0\).  Thus, \(x\in\ker(T)\).  From the Rank theorem, we deduce that \(\rank(T^*T)=\rank(T)\).<br><br>To prove (b), we have that \(V = \rng(T^*)\oplus \rng(T^*)^\perp = \rng(T^*) \oplus \ker(T)\).  Therefore, \(\rank(T^*)=\dim(V)-\nullity(T) = \rank(T)\).  Therefore, \(\rank(TT^*)=\rank(T^*)=\rank(T)\). <span style="font-variant: small-caps">QED</span></div></div></div></section><section id="sec:node-3291" class="section"><h2>5&nbsp;&nbsp;&nbsp; Normal and Self-Adjoint Operators</h2><strong>Goal:</strong>   Show that for certain classes of operators \(T:V\rightarrow V\), there exists an orthonormal basis of eigenvectors of \(T\).<div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Lemma 5.1</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on the finite-dimensional inner product space \(V\).  If \(T\) has an eigenvector then so does \(T^*\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Suppose that \(T(v)=\lambda v\) and \(v\neq 0\) and \(\lambda\in\mathbb{C}\).  Then for all \(x\)<div>\begin{equation*}0=\left\langle 0,x \right\rangle = \left\langle (T-\lambda I)v,x \right\rangle = \left\langle v,(T^*-\overline{\lambda}I) x \right\rangle. 
+\end{equation*}</div>
+Hence, \(v\) is orthogonal to the range of \((T^*-\overline{\lambda}I)\) and thus \((T^*-\overline{\lambda} I)\) is not onto, and therefore not one-to-one.  Hence, \(\ker(T^*-\overline{\lambda} I)\) is non-trivial. <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 5.1</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on finite-dimensional inner product space \(V\).  Suppose that the characteristic polynomial of \(T\) splits.  Then there exists an orthonormal basis \(\beta\) for \(V\) such that the matrix \([T]_\beta\) is upper triangular.</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; The proof is by induction on \(n=\dim(V)\).  The case \(n=1\) is trivial.  Suppose that \(n=\dim(V)\geq 1\) and consider \(T:V\rightarrow V\).  Since the characteristic polynomial of \(T\) splits, it has an eigenvalue and thus an eigenvector.  By the lemma, \(T^*\) has an eigenvector, say \(z\), which we can assume to be of unit length.  Let \(\lambda\) be such that \(T(z)=\lambda z\).  Let \(W=\spn(\{z\})\).  Suppose that \(y\in W^\perp\).  Then
+<div>\begin{equation*}\left\langle T(y),z \right\rangle = \left\langle y,T^*(z) \right\rangle = \left\langle y,\lambda z \right\rangle = \overline{\lambda} \left\langle y,z \right\rangle=0.
+\end{equation*}</div>  
+Hence, \(T(y)\in W^\perp\).  This proves that \(W^\perp\) is \(T\)-invariant.  Now, \(W^\perp\) is a \((n-1)\)-dimensional subspace, and thus by the induction hypothesis, there exists an orthonormal basis \(\gamma\) for \(W^\perp\) such that \([T_{W^\perp}]_{\gamma}\) is upper triangular.  Clearly, \(\beta=\gamma\cup\{z\}\) is an orthonormal basis for \(V\) such that \([T]_\beta\) is upper triangular. <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 5.1</div><div class="thm-env-body">Let \(V\) be an inner product space and let \(T:V\rightarrow V\) be a linear operator.  We say that \(T\) is  <strong>normal</strong>  if \(TT^*=T^*T\).</div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 5.1</div><div class="thm-env-body">Consider the rotation matrix
+<div>\begin{equation*}A =\begin{bmatrix}\cos\theta & -\sin\theta\\\sin\theta & \cos\theta\end{bmatrix}\end{equation*}</div>
+Then \(AA^* = I = A^*A\), and thus \(A\) is normal.  If \(0&lt;\theta&lt;\pi\) then \(A\) does not possess any real eigenvalues and thus no real eigenvectors.</div></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 5.2</div><div class="thm-env-body">If \(A\) is <em>skew-symmetric</em>, i.e., \(A^T = -A\) then \(AA^T = A^TA = -A^2\), and thus \(A\) is normal.</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 5.2</div><div class="thm-env-body">Let \(V\) be an inner product space and let \(T:V\rightarrow V\) be a normal linear operator.  The following hold.<ol type="a"><li>\(\||T(x)\|| = \||T^*(x)\||\) for all \(x\in V\).</li><li>\(T-cI\) is normal for every \(c\in\mathbb{F}\).</li><li>If \(T(x) = \lambda x\) then \(T^*(x) = \overline{\lambda} x\), that is, \(T\) and \(T^*\) have the same eigenvectors.</li><li>If \(x_1\) and \(x_2\) are two eigenvectors of \(T\) corresponding to distinct eigenvalues then \(x_1\) and \(x_2\) are orthogonal.</li></ol></div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 5.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on finite-dimensional  <strong>complex</strong>  inner product space \(V\).  The operator \(T\) is normal if and only if there exists an orthonormal basis for \(V\) consisting of eigenvectors of \(T\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; By the fundamental theorem of algebra, the characteristic polynomial of \(T\) splits.  By Shur's theorem, there exists an orthonormal basis \(\beta=\{v_1,v_2,\ldots,v_k\}\) of \(V\) south that \([T]_\beta\) is upper triangular.  Hence, \(v_1\) is an eigenvector of \(T\).  Suppose by induction that \(v_1,\ldots,v_{k-1}\) are eigenvectors of \(T\) with eigenvalues \(\lambda_1,\ldots,\lambda_{k-1}\), respectively.  Let \(A=[T]_\beta\).  Since \(A\) is upper triangular it holds that
+<div>\begin{equation*}T(v_k) = A_{1k} v_1 + A_{2k} v_2 + \cdots + A_{kk} v_k.
+\end{equation*}</div>
+Now, for \(j&lt;k\) we have that
+<div>\begin{equation*}A_{jk} = \left\langle T(v_k),v_j \right\rangle = \left\langle v_k, T^*(v_j) \right\rangle = \left\langle v_k, \overline{\lambda} v_j \right\rangle = \lambda\left\langle v_k,v_j \right\rangle =0.
+\end{equation*}</div>
+Hence, \(T(v_k) = A_{kk} v_k\), and thus \(v_k\) is an eigenvector of \(T\).  Hence, by induction, \(\beta\) consists of eigenvectors of \(T\).<br><br>Conversely, if there exists an orthonormal basis \(\beta\) for \(V\) consisting of eigenvectors of \(T\) then \([T]_\beta\) and \([T^*]_\beta = [T]_\beta^*\) are diagonal, and clearly commute, i.e. \(T\) is normal. <span style="font-variant: small-caps">QED</span></div>As we saw with the rotation matrix example, normality is not enough to guarantee the existence of an orthonormal basis of eigenvectors when \(V\) is a real inner-product space.  We need a stronger condition for this.<div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Definition 5.2</div><div class="thm-env-body">A linear operator \(T:V\rightarrow V\) is  <strong>self-adjoint</strong>  or  <strong>Hermitian</strong>  if \(T^*=T\).</div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Lemma 5.2</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a self-adjoint linear operator on finite-dimensional \(V\).  The following holds.<ol type="a"><li>Every eigenvalue of \(T\) is real.</li><li>Suppose that \(V\) is a real inner product space.  Then the characteristic polynomial of \(T\) splits.</li></ol><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; To prove (a), we note that \(T\) is normal.  If \(T(x)=\lambda x\) then \(\lambda x = T(x) = T^*(x) = \overline{\lambda} x\) and thus \(\lambda = \overline{\lambda}\), i.e., \(\lambda\) is real.<br><br>To prove (b), the characteristic polynomial of \(T\) splits in \(\mathbb{C}\).  The roots of the char.poly are the eigenvalues, and from (a) these are all real.  Hence, the characteristic polynomial of \(T\) splits in \(\mathbb{R}\). <span style="font-variant: small-caps">QED</span></div></div></div><div class="thm-env thm-style-plain" id=""><div class="thm-env-head">Theorem 5.4</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on finite-dimensional  <strong>real</strong>  inner product space \(V\).  The operator \(T\) is self-adjoint if and only if there exists an orthonormal basis for \(V\) consisting of eigenvectors of \(T\).</div></div><div class="proof-env"><span class="proof-head" id="">Proof. </span>&nbsp; Suppose that \(T\) is self-adjoint.  Then its characteristic polynomial splits, and thus by Schur's Theorem, there is an orthonormal basis \(\beta\) such that \(A=[T]_\beta\) is upper triangular.  Now \(A\) is self-adjoint, and thus   
+<div>\begin{equation*}A^* = [T]_\beta^* = [T^*]_\beta = [T]_\beta = A.
+\end{equation*}</div>
+Hence, \(A\) must be diagonal.  Hence, \(\beta\) consists of eigenvectors of \(T\).  Conversely, if there exists such a basis \(\beta\), then \(A^*=A\) since the eigenvalues of \(A\) are real.  Hence, \(T\) is self-adjoint. <span style="font-variant: small-caps">QED</span></div><div class="thm-env thm-style-definition" id=""><div class="thm-env-head">Example 5.3</div><div class="thm-env-body">Let \(T:V\rightarrow V\) be a linear operator on an inner product space \(V\).  Let \(W\) be a \(T\)-invariant subspace of \(V\).  Prove the following.<ol type="a"><li>If \(T\) is self-adjoint, then \(T_W\) is self-adjoint.</li><li>\(W^\perp\) is \(T^*\)-invariant.</li><li>If \(W\) is both \(T\)- and \(T^*\)-invariant, then \((T_W)^*=(T^*)_W\).</li><li>If \(W\) is both \(T\)- and \(T^*\)-invariant and \(T\) is normal then \(T_W\) is normal.</li></ol></div></div></section>
+      </main>
+  
+
+</body>
+</html>
